@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: initial Next.js setup with CI/CD workflows\n\n- Next.js 15 with TypeScript, Tailwind CSS, ESLint, App Router\n- Environment files structure \\(.env.example, .env.local\\)\n- GitHub Actions workflows for CI and deployments\n  - ci.yml: lint, type-check, test, build on PRs\n  - deploy-dev.yml: deploy develop → dev.fitgym.ng\n  - deploy-staging.yml: deploy staging → staging.fitgym.ng\n  - deploy-prod.yml: deploy main → fitgym.ng\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}
