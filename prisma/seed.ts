@@ -1,0 +1,322 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('🌱 Seeding database...');
+
+  // Create FitGym (first tenant)
+  const fitgym = await prisma.gym.upsert({
+    where: { slug: 'fitgym' },
+    update: {},
+    create: {
+      name: 'FIT GYM',
+      slug: 'fitgym',
+      customDomain: 'fitgym.ng',
+      logo: '/Fit Gym.png',
+      primaryColor: '#6366F1',
+      secondaryColor: '#818CF8',
+      description: 'Transform Your Body, Elevate Your Life. Join the most advanced fitness facility in Abuja.',
+      tagline: 'Transform Your Body, Elevate Your Life',
+      address: 'RiverPark Estate',
+      city: 'Abuja',
+      state: 'FCT',
+      country: 'Nigeria',
+      phone: '+234 800 000 0000',
+      email: 'info@fitgym.ng',
+      website: 'https://fitgym.ng',
+      instagram: 'https://instagram.com/fitgym',
+      twitter: 'https://twitter.com/fitgym',
+      facebook: 'https://facebook.com/fitgym',
+      youtube: 'https://youtube.com/fitgym',
+      metaTitle: 'FIT GYM | Transform Your Body, Elevate Your Life',
+      metaDescription: 'Join the most advanced fitness facility in Abuja. State-of-the-art equipment, world-class trainers, and a community that pushes you to achieve your best.',
+      metaKeywords: ['gym', 'fitness', 'Abuja', 'Nigeria', 'personal training', 'workout', 'health'],
+      businessHours: {
+        monday: { open: '06:00', close: '22:00' },
+        tuesday: { open: '06:00', close: '22:00' },
+        wednesday: { open: '06:00', close: '22:00' },
+        thursday: { open: '06:00', close: '22:00' },
+        friday: { open: '06:00', close: '22:00' },
+        saturday: { open: '07:00', close: '20:00' },
+        sunday: { open: '08:00', close: '18:00' },
+      },
+      heroContent: {
+        badge: 'Now Open in RiverPark Estate Abuja',
+        title: 'TRANSFORM YOUR BODY, ELEVATE YOUR LIFE',
+        subtitle: 'Join the most advanced fitness facility in Abuja. State-of-the-art equipment, world-class trainers, and a community that pushes you to achieve your best.',
+        ctaText: 'Start Your Journey',
+        ctaLink: '#pricing',
+        secondaryCtaText: 'View Classes',
+        secondaryCtaLink: '#schedule',
+        backgroundImage: 'https://res.cloudinary.com/dws3lnn4d/image/upload/v1767215000/woman-training-weightlifting-gym_rlaviu.jpg',
+        stats: [
+          { value: '500+', label: 'Members' },
+          { value: '15+', label: 'Trainers' },
+          { value: '50+', label: 'Classes/Week' },
+        ],
+      },
+      features: [
+        {
+          icon: 'faDumbbell',
+          title: 'PREMIUM EQUIPMENT',
+          description: 'State-of-the-art machines and free weights from top brands. Everything maintained to perfection for your optimal workout.',
+        },
+        {
+          icon: 'faUsers',
+          title: 'EXPERT TRAINERS',
+          description: 'Certified professionals who create personalized programs tailored to your goals, fitness level, and schedule.',
+        },
+        {
+          icon: 'faMobileScreen',
+          title: 'SMART TRACKING',
+          description: 'Our digital platform tracks your progress, schedules classes, and keeps you motivated with insights and achievements.',
+        },
+        {
+          icon: 'faAppleWhole',
+          title: 'NUTRITION GUIDANCE',
+          description: 'Complementary nutrition consultations to optimize your diet and accelerate your fitness results.',
+        },
+        {
+          icon: 'faShower',
+          title: 'LUXURY AMENITIES',
+          description: 'Clean locker rooms, hot showers, sauna, and a relaxation lounge. Refresh and recover in comfort.',
+        },
+        {
+          icon: 'faClock',
+          title: '24/7 ACCESS',
+          description: 'Work out on your schedule. Premium members enjoy round-the-clock access to all facilities.',
+        },
+      ],
+      settings: {
+        timezone: 'Africa/Lagos',
+        currency: 'NGN',
+        dateFormat: 'DD/MM/YYYY',
+        timeFormat: '12h',
+        allowOnlineBooking: true,
+        allowOnlinePayment: true,
+        requireEmailVerification: true,
+        maxBookingsPerDay: 3,
+      },
+    },
+  });
+
+  console.log(`✅ Created gym: ${fitgym.name} (${fitgym.slug})`);
+
+  // Create membership plans for FitGym
+  const basicPlan = await prisma.membershipPlan.upsert({
+    where: { gymId_name: { gymId: fitgym.id, name: 'Basic' } },
+    update: {},
+    create: {
+      gymId: fitgym.id,
+      name: 'Basic',
+      description: 'Perfect for getting started on your fitness journey',
+      price: 25000,
+      currency: 'NGN',
+      duration: 30,
+      features: [
+        'Access to gym floor',
+        'Basic equipment usage',
+        'Locker room access',
+        '2 group classes/week',
+        'Fitness assessment',
+      ],
+      isActive: true,
+      isFeatured: false,
+      sortOrder: 1,
+    },
+  });
+
+  const premiumPlan = await prisma.membershipPlan.upsert({
+    where: { gymId_name: { gymId: fitgym.id, name: 'Premium' } },
+    update: {},
+    create: {
+      gymId: fitgym.id,
+      name: 'Premium',
+      description: 'Our most popular choice for serious fitness enthusiasts',
+      price: 45000,
+      currency: 'NGN',
+      duration: 30,
+      features: [
+        'Full gym access 24/7',
+        'All equipment & classes',
+        'Personal training (2x/month)',
+        'Nutrition consultation',
+        'Sauna & spa access',
+        'Guest passes (2/month)',
+      ],
+      isActive: true,
+      isFeatured: true,
+      sortOrder: 2,
+    },
+  });
+
+  const vipPlan = await prisma.membershipPlan.upsert({
+    where: { gymId_name: { gymId: fitgym.id, name: 'VIP' } },
+    update: {},
+    create: {
+      gymId: fitgym.id,
+      name: 'VIP',
+      description: 'The ultimate experience for dedicated athletes',
+      price: 75000,
+      currency: 'NGN',
+      duration: 30,
+      features: [
+        'Everything in Premium',
+        'Unlimited personal training',
+        'Priority class booking',
+        'Private locker',
+        'Complimentary supplements',
+        'Unlimited guest passes',
+      ],
+      isActive: true,
+      isFeatured: false,
+      sortOrder: 3,
+    },
+  });
+
+  console.log(`✅ Created ${3} membership plans`);
+
+  // Create trainers for FitGym
+  const trainers = [
+    {
+      firstName: 'Chidi',
+      lastName: 'Okonkwo',
+      email: 'chidi@fitgym.ng',
+      bio: 'Certified personal trainer with 8+ years of experience specializing in strength training and body transformation.',
+      specialties: ['Strength Training', 'Body Building', 'Weight Loss'],
+      certifications: ['NASM-CPT', 'CrossFit L2'],
+      yearsExperience: 8,
+      imageUrl: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400',
+      sortOrder: 1,
+    },
+    {
+      firstName: 'Amara',
+      lastName: 'Eze',
+      email: 'amara@fitgym.ng',
+      bio: 'Yoga and Pilates instructor passionate about helping clients achieve mind-body balance.',
+      specialties: ['Yoga', 'Pilates', 'Flexibility'],
+      certifications: ['RYT-500', 'Pilates Certified'],
+      yearsExperience: 6,
+      imageUrl: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400',
+      sortOrder: 2,
+    },
+    {
+      firstName: 'Emeka',
+      lastName: 'Nwachukwu',
+      email: 'emeka@fitgym.ng',
+      bio: 'HIIT and cardio specialist dedicated to pushing you beyond your limits.',
+      specialties: ['HIIT', 'Cardio', 'Endurance'],
+      certifications: ['ACE-CPT', 'Spinning Certified'],
+      yearsExperience: 5,
+      imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400',
+      sortOrder: 3,
+    },
+    {
+      firstName: 'Ngozi',
+      lastName: 'Adeyemi',
+      email: 'ngozi@fitgym.ng',
+      bio: 'Boxing and self-defense coach empowering clients through combat fitness.',
+      specialties: ['Boxing', 'Kickboxing', 'Self-Defense'],
+      certifications: ['USA Boxing Coach', 'First Aid Certified'],
+      yearsExperience: 7,
+      imageUrl: 'https://images.unsplash.com/photo-1609899464926-209bc98fc65e?w=400',
+      sortOrder: 4,
+    },
+  ];
+
+  for (const trainer of trainers) {
+    await prisma.trainer.upsert({
+      where: { gymId_email: { gymId: fitgym.id, email: trainer.email } },
+      update: {},
+      create: {
+        gymId: fitgym.id,
+        ...trainer,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${trainers.length} trainers`);
+
+  // Create testimonials for FitGym
+  const testimonials = [
+    {
+      name: 'Adaeze O.',
+      role: 'Premium Member',
+      content: "FIT GYM completely transformed my approach to fitness. The trainers are incredibly knowledgeable and the facilities are top-notch. I've lost 15kg in 6 months!",
+      rating: 5,
+      sortOrder: 1,
+    },
+    {
+      name: 'Chukwuma E.',
+      role: 'VIP Member',
+      content: "The 24/7 access is a game-changer for my busy schedule. I can work out at 5 AM before work or late at night. Best investment I've made in my health.",
+      rating: 5,
+      sortOrder: 2,
+    },
+    {
+      name: 'Aisha M.',
+      role: 'Basic Member',
+      content: "Started as a complete beginner and the staff made me feel so welcome. The group classes are fun and motivating. Already seeing results after just 2 months!",
+      rating: 5,
+      sortOrder: 3,
+    },
+  ];
+
+  for (const testimonial of testimonials) {
+    await prisma.testimonial.upsert({
+      where: {
+        id: `${fitgym.id}-${testimonial.name.replace(/\s/g, '-').toLowerCase()}`,
+      },
+      update: {},
+      create: {
+        id: `${fitgym.id}-${testimonial.name.replace(/\s/g, '-').toLowerCase()}`,
+        gymId: fitgym.id,
+        ...testimonial,
+        isActive: true,
+        isFeatured: true,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${testimonials.length} testimonials`);
+
+  // Create gym classes
+  const gymClasses = [
+    { name: 'HIIT Blast', category: 'HIIT', duration: 45, capacity: 20, description: 'High-intensity interval training to maximize calorie burn' },
+    { name: 'Power Yoga', category: 'YOGA', duration: 60, capacity: 15, description: 'Strengthen and stretch with power yoga flows' },
+    { name: 'Spin Class', category: 'SPIN', duration: 45, capacity: 25, description: 'Indoor cycling for cardio endurance' },
+    { name: 'Strength 101', category: 'STRENGTH', duration: 50, capacity: 12, description: 'Fundamentals of strength training' },
+    { name: 'Boxing Basics', category: 'BOXING', duration: 60, capacity: 16, description: 'Learn boxing techniques while getting fit' },
+    { name: 'CrossFit WOD', category: 'CROSSFIT', duration: 60, capacity: 15, description: 'Workout of the day CrossFit style' },
+  ];
+
+  for (const gymClass of gymClasses) {
+    await prisma.gymClass.upsert({
+      where: { gymId_name: { gymId: fitgym.id, name: gymClass.name } },
+      update: {},
+      create: {
+        gymId: fitgym.id,
+        name: gymClass.name,
+        category: gymClass.category as any,
+        duration: gymClass.duration,
+        capacity: gymClass.capacity,
+        description: gymClass.description,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${gymClasses.length} gym classes`);
+
+  console.log('✅ Seeding completed!');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

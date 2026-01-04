@@ -3,7 +3,32 @@
     "allow": [
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: initial Next.js setup with CI/CD workflows\n\n- Next.js 15 with TypeScript, Tailwind CSS, ESLint, App Router\n- Environment files structure \\(.env.example, .env.local\\)\n- GitHub Actions workflows for CI and deployments\n  - ci.yml: lint, type-check, test, build on PRs\n  - deploy-dev.yml: deploy develop → dev.fitgym.ng\n  - deploy-staging.yml: deploy staging → staging.fitgym.ng\n  - deploy-prod.yml: deploy main → fitgym.ng\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: initial Next.js setup with CI/CD workflows\n\n- Next.js 15 with TypeScript, Tailwind CSS, ESLint, App Router\n- Environment files structure \\(.env.example, .env.local\\)\n- GitHub Actions workflows for CI and deployments\n  - ci.yml: lint, type-check, test, build on PRs\n  - deploy-dev.yml: deploy develop → dev.fitgym.ng\n  - deploy-staging.yml: deploy staging → staging.fitgym.ng\n  - deploy-prod.yml: deploy main → fitgym.ng\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(cat:*)",
+      "Bash(git -C /c/Users/user/Documents/GitHub/fitgym-app log --oneline -10)",
+      "Bash(git -C /c/Users/user/Documents/GitHub/fitgym-app branch -a)",
+      "Bash(gh secret set:*)",
+      "Bash(winget install:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" --version)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret set VERCEL_TOKEN --body \"zlkuIRqeJyHMuYVLjXm7FbUd\")",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret set VERCEL_ORG_ID --body \"JGgKgyJQQgKdJNpWcJDqTZMr\")",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret set VERCEL_PROJECT_ID --body \"team_inhO8gGERncbRGu7eHw4NBzb\")",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret list)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma init)",
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(cmd //c \"taskkill /F /IM node.exe\")",
+      "Bash(curl:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }
