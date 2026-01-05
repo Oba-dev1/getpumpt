@@ -35,4 +35,4 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
-          alias-domains: fitgym.ng
+          alias-domains: fitgym-app.vercel.app
