@@ -32,7 +32,12 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npx prisma db push:*)",
-      "Bash(npx dotenv:*)"
+      "Bash(npx dotenv:*)",
+      "Bash(openssl rand:*)",
+      "Bash(npx vercel link)",
+      "Bash(npx vercel login)",
+      "Bash(npx vercel:*)",
+      "Bash(gh secret:*)"
     ]
   }
 }

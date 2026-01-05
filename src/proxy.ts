@@ -24,7 +24,7 @@ const RESERVED_SUBDOMAINS = [
   'register',
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 
@@ -34,7 +34,7 @@ export function middleware(request: NextRequest) {
   // Get the pathname
   const pathname = url.pathname;
 
-  // Skip middleware for static files and API routes
+  // Skip proxy for static files and API routes
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
