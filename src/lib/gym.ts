@@ -160,10 +160,16 @@ export async function getAllGyms(): Promise<Gym[]> {
 // Get gym membership plans
 export async function getGymMembershipPlans(gymId: string) {
   try {
-    return await prisma.membershipPlan.findMany({
+    const plans = await prisma.membershipPlan.findMany({
       where: { gymId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
+
+    return plans.map(plan => ({
+      ...plan,
+      price: Number(plan.price),
+      classCredits: plan.classCredits ?? undefined,
+    }));
   } catch (error) {
     console.error('Error fetching membership plans:', error);
     return [];

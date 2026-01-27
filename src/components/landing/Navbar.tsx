@@ -39,9 +39,8 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <Image
-              src="/Fit Gym.png"
-              alt="FIT GYM"
-              width={80}
+              src="/FitStudio.png"
+                      alt="FitStudio"              width={80}
               height={40}
               className="h-8 md:h-10 w-auto"
               priority

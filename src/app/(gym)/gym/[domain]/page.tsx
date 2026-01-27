@@ -37,12 +37,12 @@ export default async function GymLandingPage({ params }: GymPageProps) {
     <>
       <Navbar />
       <main>
-        <Hero />
-        <Features />
-        <Pricing />
-        <Schedule />
-        <Trainers />
-        <Testimonials />
+        <Hero heroContent={gym.heroContent} />
+        <Features features={gym.features} />
+        <Pricing plans={membershipPlans} />
+        <Schedule schedules={schedules} />
+        <Trainers trainers={trainers} />
+        <Testimonials testimonials={testimonials} />
         <CTA />
         <Contact />
       </main>

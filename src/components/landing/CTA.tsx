@@ -18,7 +18,7 @@ export default function CTA() {
           READY TO TRANSFORM YOUR LIFE?
         </h2>
         <p className="text-base md:text-lg lg:text-[1.2rem] mb-6 md:mb-8 opacity-90">
-          Join FIT GYM today and start your journey to a healthier, stronger you. First week free for all new members!
+          Join FitStudio today and start your journey to a healthier, stronger you. First week free for all new members!
         </p>
         <Link
           href="#pricing"

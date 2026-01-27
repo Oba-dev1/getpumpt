@@ -1,43 +1,68 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: initial Next.js setup with CI/CD workflows\n\n- Next.js 15 with TypeScript, Tailwind CSS, ESLint, App Router\n- Environment files structure \\(.env.example, .env.local\\)\n- GitHub Actions workflows for CI and deployments\n  - ci.yml: lint, type-check, test, build on PRs\n  - deploy-dev.yml: deploy develop → dev.fitgym.ng\n  - deploy-staging.yml: deploy staging → staging.fitgym.ng\n  - deploy-prod.yml: deploy main → fitgym.ng\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(cat:*)",
-      "Bash(git -C /c/Users/user/Documents/GitHub/fitgym-app log --oneline -10)",
-      "Bash(git -C /c/Users/user/Documents/GitHub/fitgym-app branch -a)",
-      "Bash(gh secret set:*)",
-      "Bash(winget install:*)",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" --version)",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status)",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret set VERCEL_TOKEN --body \"zlkuIRqeJyHMuYVLjXm7FbUd\")",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret set VERCEL_ORG_ID --body \"JGgKgyJQQgKdJNpWcJDqTZMr\")",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret set VERCEL_PROJECT_ID --body \"team_inhO8gGERncbRGu7eHw4NBzb\")",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" secret list)",
-      "Bash(npm run build:*)",
-      "Bash(npm install:*)",
-      "Bash(npx prisma init)",
-      "Bash(mkdir:*)",
-      "Bash(grep:*)",
-      "Bash(npm run lint:*)",
-      "Bash(npm run dev:*)",
-      "Bash(taskkill:*)",
-      "Bash(tasklist:*)",
-      "Bash(cmd //c \"taskkill /F /IM node.exe\")",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(openssl:*)",
       "Bash(curl:*)",
-      "Bash(npx prisma generate:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npm uninstall:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(npx prisma db push:*)",
-      "Bash(npx dotenv:*)",
-      "Bash(openssl rand:*)",
-      "Bash(npx vercel link)",
-      "Bash(npx vercel login)",
-      "Bash(npx vercel:*)",
-      "Bash(gh secret:*)"
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "tool == \"Edit\" && tool_input.file_path matches \"\\\\.(ts|tsx)$\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');const f=process.env.file_path||'';if(f&&fs.existsSync(f)){const c=fs.readFileSync(f,'utf8');const m=c.match(/console\\.log/g);if(m)console.error('[Hook] WARNING: '+m.length+' console.log found in '+f+' - remove before commit')}\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const{execSync}=require('child_process');try{const files=execSync('git diff --name-only HEAD',{encoding:'utf8'}).split('\\n').filter(f=>f.match(/\\.(ts|tsx|js|jsx)$/));const fs=require('fs');let found=false;files.forEach(f=>{if(fs.existsSync(f)){const c=fs.readFileSync(f,'utf8');if(c.includes('console.log')){console.error('[Hook] WARNING: console.log in '+f);found=true}}});if(found)console.error('[Hook] Remove console.log before committing')}catch(e){}\""
+          }
+        ]
+      }
+    ]
+  },
+  "agents": {
+    "planner": ".claude/agents/planner.md",
+    "architect": ".claude/agents/architect.md",
+    "code-reviewer": ".claude/agents/code-reviewer.md",
+    "security-reviewer": ".claude/agents/security-reviewer.md",
+    "tdd-guide": ".claude/agents/tdd-guide.md",
+    "build-error-resolver": ".claude/agents/build-error-resolver.md",
+    "e2e-runner": ".claude/agents/e2e-runner.md",
+    "refactor-cleaner": ".claude/agents/refactor-cleaner.md",
+    "doc-updater": ".claude/agents/doc-updater.md"
+  },
+  "commands": {
+    "tdd": ".claude/commands/tdd.md",
+    "plan": ".claude/commands/plan.md",
+    "code-review": ".claude/commands/code-review.md",
+    "build-fix": ".claude/commands/build-fix.md",
+    "e2e": ".claude/commands/e2e.md",
+    "refactor-clean": ".claude/commands/refactor-clean.md",
+    "update-docs": ".claude/commands/update-docs.md",
+    "test-coverage": ".claude/commands/test-coverage.md",
+    "verify": ".claude/commands/verify.md",
+    "learn": ".claude/commands/learn.md"
   }
 }

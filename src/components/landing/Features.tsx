@@ -1,3 +1,5 @@
+'use client';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faDumbbell,
@@ -5,58 +7,45 @@ import {
   faMobileScreen,
   faAppleWhole,
   faShower,
-  faClock
+  faClock,
+  faShieldAlt,
+  faHeartbeat,
+  faSpa,
 } from '@fortawesome/free-solid-svg-icons';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import type { FeatureItem } from '@/types/gym';
 
-const features: Array<{
-  icon: IconDefinition;
-  title: string;
-  description: string;
-}> = [
-  {
-    icon: faDumbbell,
-    title: 'PREMIUM EQUIPMENT',
-    description: 'State-of-the-art machines and free weights from top brands. Everything maintained to perfection for your optimal workout.',
-  },
-  {
-    icon: faUsers,
-    title: 'EXPERT TRAINERS',
-    description: 'Certified professionals who create personalized programs tailored to your goals, fitness level, and schedule.',
-  },
-  {
-    icon: faMobileScreen,
-    title: 'SMART TRACKING',
-    description: 'Our digital platform tracks your progress, schedules classes, and keeps you motivated with insights and achievements.',
-  },
-  {
-    icon: faAppleWhole,
-    title: 'NUTRITION GUIDANCE',
-    description: 'Complementary nutrition consultations to optimize your diet and accelerate your fitness results.',
-  },
-  {
-    icon: faShower,
-    title: 'LUXURY AMENITIES',
-    description: 'Clean locker rooms, hot showers, sauna, and a relaxation lounge. Refresh and recover in comfort.',
-  },
-  {
-    icon: faClock,
-    title: '24/7 ACCESS',
-    description: 'Work out on your schedule. Premium members enjoy round-the-clock access to all facilities.',
-  },
-];
+const iconMap: { [key: string]: IconDefinition } = {
+  faDumbbell,
+  faUsers,
+  faMobileScreen,
+  faAppleWhole,
+  faShower,
+  faClock,
+  faShieldAlt,
+  faHeartbeat,
+  faSpa,
+};
 
-export default function Features() {
+interface FeaturesProps {
+  features: FeatureItem[] | null;
+}
+
+export default function Features({ features }: FeaturesProps) {
+    if (!features || features.length === 0) {
+        return null;
+    }
+
   return (
     <section id="features" className="py-20 md:py-28 lg:py-32 bg-[#141414]">
       <div className="container-custom">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="inline-block bg-[#6366F1]/10 border border-[#6366F1]/30 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[#6366F1] mb-6 rounded">
+          <span className="inline-block bg-[rgba(var(--gym-primary-rgb),0.1)] border border-[rgba(var(--gym-primary-rgb),0.3)] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))] mb-6 rounded-md">
             Why Choose Us
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            EVERYTHING YOU NEED TO SUCCEED
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-white">
+            Everything You Need to Succeed
           </h2>
           <p className="text-gray-400 text-lg">
             Experience fitness like never before with our premium facilities, expert guidance, and supportive community.
@@ -68,12 +57,12 @@ export default function Features() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-[#0A0A0A] border border-white/5 p-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1]/30 hover:shadow-xl group"
+              className="bg-[#0A0A0A] border border-white/5 p-8 rounded-lg transition-all duration-300 hover:-translate-y-2 hover:border-[rgba(var(--gym-primary-rgb),0.3)] hover:shadow-2xl hover:shadow-[rgba(var(--gym-primary-rgb),0.1)] group"
             >
-              <div className="w-14 h-14 bg-[#6366F1]/10 rounded-lg flex items-center justify-center text-xl mb-6 text-[#6366F1] group-hover:bg-[#6366F1]/20 transition-colors">
-                <FontAwesomeIcon icon={feature.icon} />
+              <div className="w-16 h-16 bg-[rgba(var(--gym-primary-rgb),0.1)] rounded-lg flex items-center justify-center text-2xl mb-6 text-[rgb(var(--gym-primary))] group-hover:bg-[rgba(var(--gym-primary-rgb),0.2)] transition-colors duration-300">
+                <FontAwesomeIcon icon={iconMap[feature.icon] || faDumbbell} />
               </div>
-              <h3 className="text-xl font-bold tracking-wide mb-3">
+              <h3 className="text-xl font-bold tracking-wide mb-3 text-white">
                 {feature.title}
               </h3>
               <p className="text-gray-400 text-sm leading-relaxed">

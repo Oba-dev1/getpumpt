@@ -44,8 +44,8 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4 md:mb-6">
               <Image
-                src="/Fit Gym.png"
-                alt="FIT GYM"
+                src="/FitStudio.png"
+                alt="FitStudio"
                 width={100}
                 height={40}
                 className="h-10 md:h-12 w-auto object-contain"
@@ -129,7 +129,7 @@ export default function Footer() {
         {/* Footer Bottom */}
         <div className="border-t border-white/5 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4">
           <p className="text-[#A0A0A0] text-xs md:text-[0.9rem]">
-            © {new Date().getFullYear()} FIT GYM. All rights reserved.
+            © {new Date().getFullYear()} GymFlow Pro. All rights reserved.
           </p>
           <div className="flex gap-4 md:gap-8">
             <Link href="#" className="text-[#A0A0A0] text-xs md:text-[0.9rem] transition-colors duration-300 hover:text-[#6366F1]">

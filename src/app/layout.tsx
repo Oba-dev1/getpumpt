@@ -30,8 +30,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "FIT GYM | Transform Your Body, Elevate Your Life",
-  description: "Join Lagos' premier fitness destination. State-of-the-art equipment, world-class trainers, and a community that pushes you to achieve your best.",
+  title: "FIT STUDIO | Transform Your Body, Elevate Your Life",
+  description: "Join FIT STUDIO's premier fitness destination. State-of-the-art equipment, world-class trainers, and a community that pushes you to achieve your best.",
   keywords: ["gym", "fitness", "Lagos", "Nigeria", "personal training", "workout", "health"],
 };
 

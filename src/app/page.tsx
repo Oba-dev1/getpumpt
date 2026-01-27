@@ -26,12 +26,12 @@ export default function Home() {
     <>
       <Navbar />
       <main>
-        <Hero />
-        <Features />
-        <Pricing />
-        <Schedule />
-        <Trainers />
-        <Testimonials />
+        <Hero heroContent={null} />
+        <Features features={null} />
+        <Pricing plans={[]} />
+        <Schedule schedules={[]} />
+        <Trainers trainers={[]} />
+        <Testimonials testimonials={[]} />
         <Contact />
         <CTA />
       </main>
