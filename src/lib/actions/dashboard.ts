@@ -14,6 +14,7 @@ export async function getDashboardStats(gymId: string) {
     monthlyRevenue,
     todayBookings,
     expiringMemberships,
+    expiringMembershipList,
     recentPayments,
     membersByPlan,
   ] = await Promise.all([
@@ -54,6 +55,20 @@ export async function getDashboardStats(gymId: string) {
       },
     }),
 
+    prisma.membership.findMany({
+      where: {
+        gymId,
+        status: 'ACTIVE',
+        endDate: { gte: now, lte: sevenDaysFromNow },
+      },
+      include: {
+        user: { select: { firstName: true, lastName: true, email: true } },
+        plan: { select: { name: true } },
+      },
+      orderBy: { endDate: 'asc' },
+      take: 5,
+    }),
+
     prisma.payment.findMany({
       where: { gymId },
       include: {
@@ -81,6 +96,9 @@ export async function getDashboardStats(gymId: string) {
     planName: planMap.get(group.planId) ?? 'Unknown',
     count: group._count.id,
   }))
+  const sortedMembershipBreakdown = [...membershipBreakdown].sort(
+    (a, b) => b.count - a.count
+  )
 
   return {
     totalMembers,
@@ -88,6 +106,14 @@ export async function getDashboardStats(gymId: string) {
     monthlyRevenue: Number(monthlyRevenue._sum.amount ?? 0),
     todayBookings,
     expiringMemberships,
+    expiringMembershipList: expiringMembershipList.map((membership) => ({
+      id: membership.id,
+      memberId: membership.userId,
+      memberName: `${membership.user.firstName} ${membership.user.lastName}`,
+      memberEmail: membership.user.email,
+      planName: membership.plan.name,
+      endDate: membership.endDate,
+    })),
     recentPayments: recentPayments.map((p) => ({
       id: p.id,
       amount: Number(p.amount),
@@ -98,6 +124,6 @@ export async function getDashboardStats(gymId: string) {
       memberEmail: p.user.email,
       createdAt: p.createdAt,
     })),
-    membershipBreakdown,
+    membershipBreakdown: sortedMembershipBreakdown,
   }
 }

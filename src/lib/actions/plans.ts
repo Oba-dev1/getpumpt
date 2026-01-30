@@ -68,20 +68,19 @@ export async function getMembershipPlans(gymId: string, includeInactive = false)
 export async function getPlanById(gymId: string, planId: string) {
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId, gymId },
-    include: {
-      memberships: {
-        where: { status: 'ACTIVE' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-        },
-      },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      price: true,
+      currency: true,
+      billingCycle: true,
+      durationValue: true,
+      durationType: true,
+      classCredits: true,
+      features: true,
+      isActive: true,
+      isFeatured: true,
     },
   })
 
@@ -90,8 +89,18 @@ export async function getPlanById(gymId: string, planId: string) {
   }
 
   return {
-    ...plan,
+    id: plan.id,
+    name: plan.name,
+    description: plan.description,
     price: Number(plan.price),
+    currency: plan.currency,
+    billingCycle: plan.billingCycle,
+    durationValue: plan.durationValue,
+    durationType: plan.durationType,
+    classCredits: plan.classCredits,
+    features: plan.features,
+    isActive: plan.isActive,
+    isFeatured: plan.isFeatured,
   }
 }
 
@@ -130,8 +139,8 @@ export async function createMembershipPlan(input: CreatePlanInput) {
     })
   }
 
-  revalidatePath('/admin/membership-plans')
-  return plan
+  revalidatePath('/admin/plans')
+  return { id: plan.id }
 }
 
 export async function updateMembershipPlan(
@@ -155,9 +164,9 @@ export async function updateMembershipPlan(
     })
   }
 
-  revalidatePath('/admin/membership-plans')
-  revalidatePath(`/admin/membership-plans/${planId}`)
-  return plan
+  revalidatePath('/admin/plans')
+  revalidatePath(`/admin/plans/${planId}`)
+  return { id: plan.id }
 }
 
 export async function deleteMembershipPlan(gymId: string, planId: string) {
@@ -173,7 +182,7 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
     where: { id: planId, gymId },
   })
 
-  revalidatePath('/admin/membership-plans')
+  revalidatePath('/admin/plans')
 }
 
 export async function togglePlanStatus(gymId: string, planId: string) {
@@ -190,6 +199,6 @@ export async function togglePlanStatus(gymId: string, planId: string) {
     data: { isActive: !plan.isActive },
   })
 
-  revalidatePath('/admin/membership-plans')
-  return updated
+  revalidatePath('/admin/plans')
+  return { id: updated.id, isActive: updated.isActive }
 }

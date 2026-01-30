@@ -1,0 +1,242 @@
+'use server'
+
+import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+import type { Prisma } from '@prisma/client'
+
+export async function getGymSchedules(
+  gymId: string,
+  options?: {
+    classId?: string
+    trainerId?: string
+    dayOfWeek?: string
+    status?: 'ACTIVE' | 'INACTIVE'
+    page?: number
+    limit?: number
+  }
+) {
+  const page = options?.page ?? 1
+  const limit = options?.limit ?? 20
+  const skip = (page - 1) * limit
+
+  const where: Prisma.ClassScheduleWhereInput = {
+    gymId,
+    ...(options?.classId && { classId: options.classId }),
+    ...(options?.trainerId && { trainerId: options.trainerId }),
+    ...(options?.dayOfWeek && { dayOfWeek: options.dayOfWeek as any }),
+    ...(options?.status && { isActive: options.status === 'ACTIVE' }),
+  }
+
+  const [schedules, total] = await Promise.all([
+    prisma.classSchedule.findMany({
+      where,
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+      skip,
+      take: limit,
+      include: {
+        gymClass: { select: { name: true } },
+        trainer: { select: { firstName: true, lastName: true } },
+        _count: { select: { bookings: true } },
+      },
+    }),
+    prisma.classSchedule.count({ where }),
+  ])
+
+  return {
+    schedules: schedules.map((schedule) => ({
+      id: schedule.id,
+      classId: schedule.classId,
+      trainerId: schedule.trainerId,
+      dayOfWeek: schedule.dayOfWeek,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      maxCapacity: schedule.maxCapacity,
+      location: schedule.location,
+      isActive: schedule.isActive,
+      className: schedule.gymClass.name,
+      trainerName: `${schedule.trainer.firstName} ${schedule.trainer.lastName}`,
+      bookingCount: schedule._count.bookings,
+    })),
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  }
+}
+
+export async function getScheduleFormOptions(gymId: string) {
+  const [classes, trainers] = await Promise.all([
+    prisma.gymClass.findMany({
+      where: { gymId, isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    }),
+    prisma.trainer.findMany({
+      where: { gymId, isActive: true },
+      orderBy: { firstName: 'asc' },
+      select: { id: true, firstName: true, lastName: true },
+    }),
+  ])
+
+  return {
+    classes,
+    trainers: trainers.map((trainer) => ({
+      id: trainer.id,
+      name: `${trainer.firstName} ${trainer.lastName}`,
+    })),
+  }
+}
+
+export async function getScheduleOptionsByClass(
+  gymId: string,
+  classId?: string
+) {
+  const schedules = await prisma.classSchedule.findMany({
+    where: {
+      gymId,
+      isActive: true,
+      ...(classId ? { classId } : {}),
+    },
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    include: {
+      gymClass: { select: { name: true } },
+      trainer: { select: { firstName: true, lastName: true } },
+    },
+  })
+
+  return schedules.map((schedule) => ({
+    id: schedule.id,
+    dayOfWeek: schedule.dayOfWeek,
+    label: `${schedule.gymClass.name} · ${schedule.dayOfWeek.charAt(0) + schedule.dayOfWeek.slice(1).toLowerCase()} ${schedule.startTime}-${schedule.endTime} · ${schedule.trainer.firstName} ${schedule.trainer.lastName}`,
+  }))
+}
+
+export async function getGymScheduleById(gymId: string, scheduleId: string) {
+  const schedule = await prisma.classSchedule.findUnique({
+    where: { id: scheduleId, gymId },
+    include: {
+      gymClass: { select: { name: true, description: true, category: true, duration: true } },
+      trainer: { select: { firstName: true, lastName: true, email: true } },
+      _count: { select: { bookings: true } },
+    },
+  })
+
+  if (!schedule) {
+    throw new Error('Schedule not found')
+  }
+
+  return {
+    id: schedule.id,
+    classId: schedule.classId,
+    trainerId: schedule.trainerId,
+    dayOfWeek: schedule.dayOfWeek,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
+    maxCapacity: schedule.maxCapacity,
+    location: schedule.location,
+    isActive: schedule.isActive,
+    className: schedule.gymClass.name,
+    classDescription: schedule.gymClass.description,
+    classCategory: schedule.gymClass.category,
+    classDuration: schedule.gymClass.duration,
+    trainerName: `${schedule.trainer.firstName} ${schedule.trainer.lastName}`,
+    trainerEmail: schedule.trainer.email,
+    bookingCount: schedule._count.bookings,
+  }
+}
+
+export async function createGymSchedule(input: {
+  gymId: string
+  classId: string
+  trainerId: string
+  dayOfWeek: string
+  startTime: string
+  endTime: string
+  maxCapacity: number
+  location?: string
+  isActive?: boolean
+}) {
+  const schedule = await prisma.classSchedule.create({
+    data: {
+      gymId: input.gymId,
+      classId: input.classId,
+      trainerId: input.trainerId,
+      dayOfWeek: input.dayOfWeek as any,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      maxCapacity: input.maxCapacity,
+      location: input.location,
+      isActive: input.isActive ?? true,
+    },
+  })
+
+  revalidatePath('/admin/schedules')
+  return { id: schedule.id }
+}
+
+export async function updateGymSchedule(
+  gymId: string,
+  scheduleId: string,
+  input: {
+    classId?: string
+    trainerId?: string
+    dayOfWeek?: string
+    startTime?: string
+    endTime?: string
+    maxCapacity?: number
+    location?: string
+    isActive?: boolean
+  }
+) {
+  const updated = await prisma.classSchedule.update({
+    where: { id: scheduleId, gymId },
+    data: {
+      classId: input.classId,
+      trainerId: input.trainerId,
+      dayOfWeek: input.dayOfWeek as any,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      maxCapacity: input.maxCapacity,
+      location: input.location,
+      isActive: input.isActive,
+    },
+  })
+
+  revalidatePath('/admin/schedules')
+  revalidatePath(`/admin/schedules/${scheduleId}/edit`)
+  return { id: updated.id }
+}
+
+export async function deleteGymSchedule(gymId: string, scheduleId: string) {
+  const bookingsCount = await prisma.classBooking.count({
+    where: { gymId, scheduleId },
+  })
+
+  if (bookingsCount > 0) {
+    throw new Error('Cannot delete schedule with existing bookings')
+  }
+
+  await prisma.classSchedule.delete({
+    where: { id: scheduleId, gymId },
+  })
+
+  revalidatePath('/admin/schedules')
+}
+
+export async function toggleGymScheduleStatus(gymId: string, scheduleId: string) {
+  const schedule = await prisma.classSchedule.findUnique({
+    where: { id: scheduleId, gymId },
+  })
+
+  if (!schedule) {
+    throw new Error('Schedule not found')
+  }
+
+  const updated = await prisma.classSchedule.update({
+    where: { id: scheduleId, gymId },
+    data: { isActive: !schedule.isActive },
+  })
+
+  revalidatePath('/admin/schedules')
+  return { id: updated.id, isActive: updated.isActive }
+}

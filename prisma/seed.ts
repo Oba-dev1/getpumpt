@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -102,6 +103,44 @@ async function main() {
   });
 
   console.log(`✅ Created gym: ${fitgym.name} (${fitgym.slug})`);
+
+  // Create admin user for FitStudio
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminUser = await prisma.user.upsert({
+    where: { gymId_email: { gymId: fitgym.id, email: 'admin@fitstudio.ng' } },
+    update: {},
+    create: {
+      gymId: fitgym.id,
+      email: 'admin@fitstudio.ng',
+      passwordHash: adminPassword,
+      firstName: 'Admin',
+      lastName: 'User',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      phone: '+234 800 000 0001',
+    },
+  });
+
+  console.log(`✅ Created admin user: ${adminUser.email} (password: admin123)`);
+
+  // Create a test member user
+  const memberPassword = await bcrypt.hash('member123', 10);
+  const memberUser = await prisma.user.upsert({
+    where: { gymId_email: { gymId: fitgym.id, email: 'member@test.com' } },
+    update: {},
+    create: {
+      gymId: fitgym.id,
+      email: 'member@test.com',
+      passwordHash: memberPassword,
+      firstName: 'John',
+      lastName: 'Doe',
+      role: 'MEMBER',
+      status: 'ACTIVE',
+      phone: '+234 800 000 0002',
+    },
+  });
+
+  console.log(`✅ Created test member: ${memberUser.email} (password: member123)`);
 
   // Create membership plans for FitGym
   const basicPlan = await prisma.membershipPlan.upsert({

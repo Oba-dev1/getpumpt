@@ -42,12 +42,16 @@ interface UpdateMemberInput {
 export async function getMembers(gymId: string, options?: {
   search?: string
   status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
+  sortBy?: 'NAME' | 'JOINED' | 'STATUS'
+  sortDir?: 'asc' | 'desc'
   page?: number
   limit?: number
 }) {
   const page = options?.page ?? 1
   const limit = options?.limit ?? 20
   const skip = (page - 1) * limit
+  const sortBy = options?.sortBy ?? 'JOINED'
+  const sortDir = options?.sortDir ?? 'desc'
 
   const where: Prisma.UserWhereInput = {
     gymId,
@@ -62,6 +66,13 @@ export async function getMembers(gymId: string, options?: {
     ...(options?.status && { status: options.status }),
   }
 
+  const orderBy: Prisma.UserOrderByWithRelationInput[] =
+    sortBy === 'NAME'
+      ? [{ firstName: sortDir }, { lastName: sortDir }]
+      : sortBy === 'STATUS'
+        ? [{ status: sortDir }, { createdAt: 'desc' }]
+        : [{ createdAt: sortDir }]
+
   const [members, total] = await Promise.all([
     prisma.user.findMany({
       where,
@@ -72,7 +83,7 @@ export async function getMembers(gymId: string, options?: {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       skip,
       take: limit,
     }),

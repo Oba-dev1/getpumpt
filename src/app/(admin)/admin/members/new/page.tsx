@@ -267,14 +267,16 @@ export default function NewMemberPage() {
                 <div className="space-y-2">
                   <Label htmlFor="planId">Membership Plan (Optional)</Label>
                   <Select
-                    value={selectedPlan}
-                    onValueChange={(value) => setValue('planId', value)}
+                    value={selectedPlan ?? 'none'}
+                    onValueChange={(value) =>
+                      setValue('planId', value === 'none' ? undefined : value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a plan" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No plan</SelectItem>
+                      <SelectItem value="none">No plan</SelectItem>
                       {plans.map((plan) => (
                         <SelectItem key={plan.id} value={plan.id}>
                           {plan.name} - {plan.currency} {plan.price}/

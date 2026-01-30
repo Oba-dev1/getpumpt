@@ -12,7 +12,7 @@ import {
 const navLinks = [
     { href: '/admin', label: 'Dashboard', icon: faTachometerAlt },
     { href: '/admin/members', label: 'Members', icon: faUsers },
-    { href: '/admin/membership-plans', label: 'Plans', icon: faIdCard },
+    { href: '/admin/plans', label: 'Plans', icon: faIdCard },
     { href: '/admin/classes', label: 'Classes', icon: faDumbbell },
     { href: '/admin/schedules', label: 'Schedules', icon: faCalendarAlt },
     { href: '/admin/bookings', label: 'Bookings', icon: faClipboardList },

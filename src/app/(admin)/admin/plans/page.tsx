@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Plus, MoreVertical, Edit, Trash2, Star, Power } from 'lucide-react'
+import { Plus, MoreVertical, Edit, Trash2, Star, Power, Check, RefreshCcw } from 'lucide-react'
 import {
   getMembershipPlans,
   deleteMembershipPlan,
@@ -35,23 +35,24 @@ export default function PlansPage() {
   const router = useRouter()
   const sessionData = useSession()
   const session = sessionData?.data
-  const sessionStatus = sessionData?.status || 'loading'
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [toggling, setToggling] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const fetchPlans = async () => {
     if (!session?.user?.gymId) return
 
     setLoading(true)
+    setErrorMessage(null)
     try {
       const result = await getMembershipPlans(session.user.gymId, true)
       setPlans(result)
     } catch (error) {
-      console.error('Failed to fetch plans:', error)
+      setErrorMessage('Unable to load plans right now.')
       toast.error('Failed to load plans')
     } finally {
       setLoading(false)
@@ -104,34 +105,52 @@ export default function PlansPage() {
   }
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId)
+  const formatCycle = (cycle: string) => {
+    const formatted = cycle.toLowerCase().replace('_', ' ')
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+  }
+  const formatDurationType = (type: string) => {
+    const formatted = type.toLowerCase().replace('_', ' ')
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <main className="space-y-6" aria-labelledby="plans-title">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-gray-800">
+          <h1 id="plans-title" className="text-3xl font-semibold text-gray-900">
             Membership Plans
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-600">
             Manage subscription plans and pricing
           </p>
         </div>
-        <Button onClick={() => router.push('/admin/plans/new')}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button variant="gym" onClick={() => router.push('/admin/plans/new')}>
+          <Plus className="h-4 w-4" />
           Create Plan
         </Button>
       </div>
 
       {loading ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-80" />
           ))}
         </div>
+      ) : errorMessage ? (
+        <Card className="p-12">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <p className="text-sm text-gray-600">{errorMessage}</p>
+            <Button variant="outline" onClick={fetchPlans}>
+              <RefreshCcw className="h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </Card>
       ) : plans.length === 0 ? (
         <Card className="p-12">
           <div className="text-center">
-            <p className="text-gray-500">No membership plans yet</p>
+            <p className="text-gray-600">No membership plans yet</p>
             <Button
               variant="outline"
               className="mt-4"
@@ -142,7 +161,10 @@ export default function PlansPage() {
           </div>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <section
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+          aria-label="Membership plans"
+        >
           {plans.map((plan) => (
             <Card
               key={plan.id}
@@ -161,19 +183,23 @@ export default function PlansPage() {
                 </div>
               )}
 
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+              <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <CardTitle className="text-2xl text-gray-900">{plan.name}</CardTitle>
                     {plan.description && (
-                      <CardDescription className="mt-2">
+                      <CardDescription className="text-sm text-gray-600">
                         {plan.description}
                       </CardDescription>
                     )}
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Open actions for ${plan.name}`}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -194,6 +220,7 @@ export default function PlansPage() {
                       <DropdownMenuItem
                         onClick={() => openDeleteDialog(plan.id)}
                         className="text-red-600"
+                        disabled={(plan._count?.memberships || 0) > 0}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -205,28 +232,28 @@ export default function PlansPage() {
 
               <CardContent className="space-y-4">
                 <div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-gray-900">
-                      {plan.currency} {Number(plan.price).toLocaleString()}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-gray-900">
+                      {new Intl.NumberFormat('en-NG', {
+                        style: 'currency',
+                        currency: plan.currency,
+                        maximumFractionDigits: 0,
+                      }).format(Number(plan.price))}
                     </span>
-                    <span className="text-gray-500">/ {plan.billingCycle}</span>
+                    <span className="text-sm text-gray-600">/ {formatCycle(plan.billingCycle)}</span>
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Duration: {plan.durationValue} {plan.durationType}
+                  <p className="mt-1 text-sm text-gray-600">
+                    Duration: {plan.durationValue} {formatDurationType(plan.durationType)}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between border-t pt-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Status</p>
-                    <StatusBadge
-                      status={plan.isActive ? 'ACTIVE' : 'INACTIVE'}
-                    />
+                <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-600">Status</p>
+                    <StatusBadge status={plan.isActive ? 'ACTIVE' : 'INACTIVE'} />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
-                      Subscribers
-                    </p>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-600">Subscribers</p>
                     <p className="text-2xl font-bold text-indigo-600">
                       {plan._count?.memberships || 0}
                     </p>
@@ -234,15 +261,15 @@ export default function PlansPage() {
                 </div>
 
                 {plan.features && plan.features.length > 0 && (
-                  <div className="border-t pt-4">
+                  <div className="border-t border-gray-100 pt-4">
                     <p className="mb-2 text-sm font-medium text-gray-700">
-                      Features:
+                      Features
                     </p>
                     <ul className="space-y-1">
                       {plan.features.slice(0, 3).map((feature: string, i: number) => (
                         <li key={i} className="flex items-start text-sm text-gray-600">
-                          <span className="mr-2 text-indigo-600">✓</span>
-                          {feature}
+                          <Check className="mr-2 h-4 w-4 text-indigo-600" aria-hidden="true" />
+                          <span>{feature}</span>
                         </li>
                       ))}
                       {plan.features.length > 3 && (
@@ -257,14 +284,14 @@ export default function PlansPage() {
                 {plan.classCredits && (
                   <div className="rounded-lg bg-gray-50 p-3">
                     <p className="text-sm font-medium text-gray-700">
-                      {plan.classCredits} class credits per {plan.billingCycle}
+                      {plan.classCredits} class credits per {formatCycle(plan.billingCycle)}
                     </p>
                   </div>
                 )}
               </CardContent>
             </Card>
           ))}
-        </div>
+        </section>
       )}
 
       <ConfirmDialog
@@ -285,6 +312,6 @@ export default function PlansPage() {
         }
         isLoading={deleting}
       />
-    </div>
+    </main>
   )
 }
