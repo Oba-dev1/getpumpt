@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,100 +8,82 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ==================== GYM/TENANT ====================
-
 model Gym {
-  id            String   @id @default(cuid())
-  name          String   // e.g., "FitGym"
-  slug          String   @unique // e.g., "fitgym" — used for subdomain
-  customDomain  String?  @unique // e.g., "fitgym.ng"
-  logo          String?
-  favicon       String?
-  primaryColor  String   @default("#6366F1")
-  secondaryColor String  @default("#818CF8")
-  description   String?  @db.Text
-  tagline       String?  // Short tagline for hero section
-  address       String?
-  city          String?
-  state         String?
-  country       String   @default("Nigeria")
-  phone         String?
-  email         String?
-  website       String?
-
-  // Social Media
-  facebook      String?
-  instagram     String?
-  twitter       String?
-  youtube       String?
-  tiktok        String?
-
-  // Business Hours (JSON for flexibility)
-  businessHours Json?    // { monday: { open: "06:00", close: "22:00" }, ... }
-
-  // SEO & Metadata
-  metaTitle       String?
-  metaDescription String?
-  metaKeywords    String[]
-
-  // Landing Page Content (JSON for flexibility)
-  heroContent     Json?    // { title, subtitle, ctaText, ctaLink, backgroundImage }
-  features        Json?    // Array of feature objects
-  aboutContent    Json?    // { title, description, image, stats }
-
-  // Settings
-  settings      Json?    // Flexible settings object
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations - All tenant-specific data
-  users           User[]
-  membershipPlans MembershipPlan[]
-  memberships     Membership[]
-  gymClasses      GymClass[]
-  classSchedules  ClassSchedule[]
-  classBookings   ClassBooking[]
-  trainers        Trainer[]
-  trainingSessions TrainingSession[]
-  payments        Payment[]
-  notifications   Notification[]
+  id               String            @id @default(cuid())
+  name             String
+  slug             String            @unique
+  customDomain     String?           @unique
+  logo             String?
+  favicon          String?
+  primaryColor     String            @default("#6366F1")
+  secondaryColor   String            @default("#818CF8")
+  description      String?
+  tagline          String?
+  address          String?
+  city             String?
+  state            String?
+  country          String            @default("Nigeria")
+  phone            String?
+  email            String?
+  website          String?
+  facebook         String?
+  instagram        String?
+  twitter          String?
+  youtube          String?
+  tiktok           String?
+  businessHours    Json?
+  metaTitle        String?
+  metaDescription  String?
+  metaKeywords     String[]
+  heroContent      Json?
+  features         Json?
+  aboutContent     Json?
+  settings         Json?
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  announcements    Announcement[]
+  classBookings    ClassBooking[]
+  classSchedules   ClassSchedule[]
   contactInquiries ContactInquiry[]
-  testimonials    Testimonial[]
-  announcements   Announcement[]
-  equipment       Equipment[]
+  equipment        Equipment[]
+  gymClasses       GymClass[]
+  membershipPlans  MembershipPlan[]
+  memberships      Membership[]
+  notifications    Notification[]
+  payments         Payment[]
+  testimonials     Testimonial[]
+  trainers         Trainer[]
+  trainingSessions TrainingSession[]
+  users            User[]
 
   @@map("gyms")
 }
 
-// ==================== USER & AUTH ====================
-
 model User {
-  id            String    @id @default(cuid())
-  gymId         String
-  email         String
-  emailVerified DateTime?
-  passwordHash  String?
-  firstName     String
-  lastName      String
-  phone         String?
-  avatar        String?
-  role          UserRole  @default(MEMBER)
-  status        UserStatus @default(ACTIVE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  gym              Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  membership       Membership?
-  bookings         ClassBooking[]
-  payments         Payment[]
-  trainingSessions TrainingSession[]
+  id               String            @id @default(cuid())
+  gymId            String
+  email            String
+  emailVerified    DateTime?
+  passwordHash     String?
+  firstName        String
+  lastName         String
+  phone            String?
+  avatar           String?
+  role             UserRole          @default(MEMBER)
+  status           UserStatus        @default(ACTIVE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   accounts         Account[]
-  authSessions     Session[]
+  bookings         ClassBooking[]
+  membership       Membership?
   notifications    Notification[]
+  payments         Payment[]
+  authSessions     Session[]
+  trainingSessions TrainingSession[]
+  gym              Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
 
-  @@unique([gymId, email]) // Email unique per gym
+  @@unique([gymId, email])
   @@index([gymId])
   @@map("users")
 }
@@ -115,15 +94,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -148,44 +126,27 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-enum UserRole {
-  MEMBER
-  TRAINER
-  ADMIN
-  SUPER_ADMIN
-}
-
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-}
-
-// ==================== MEMBERSHIP ====================
-
 model MembershipPlan {
-  id            String        @id @default(cuid())
+  id            String       @id @default(cuid())
   gymId         String
   name          String
   description   String?
-  price         Decimal       @db.Decimal(10, 2)
-  currency      String        @default("NGN")
-  billingCycle  BillingCycle  @default(MONTHLY)
-  durationValue Int           // e.g., 1, 3, 12
-  durationType  DurationType  @default(MONTHS)
-  classCredits  Int?          // Optional: number of class credits
-  features      String[]      // Array of feature strings
-  isActive      Boolean       @default(true)
-  isFeatured    Boolean       @default(false)
-  sortOrder     Int           @default(0)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  price         Decimal      @db.Decimal(10, 2)
+  currency      String       @default("NGN")
+  billingCycle  BillingCycle @default(MONTHLY)
+  durationValue Int
+  durationType  DurationType @default(MONTHS)
+  classCredits  Int?
+  features      String[]
+  isActive      Boolean      @default(true)
+  isFeatured    Boolean      @default(false)
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  gym           Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  memberships   Membership[]
 
-  // Relations
-  gym         Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  memberships Membership[]
-
-  @@unique([gymId, name]) // Plan name unique per gym
+  @@unique([gymId, name])
   @@index([gymId])
   @@map("membership_plans")
 }
@@ -201,15 +162,246 @@ model Membership {
   autoRenew Boolean          @default(false)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-
-  // Relations
-  gym      Gym            @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan     MembershipPlan @relation(fields: [planId], references: [id])
-  payments Payment[]
+  gym       Gym              @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  plan      MembershipPlan   @relation(fields: [planId], references: [id])
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments  Payment[]
 
   @@index([gymId])
   @@map("memberships")
+}
+
+model GymClass {
+  id          String          @id @default(cuid())
+  gymId       String
+  name        String
+  description String?
+  duration    Int
+  capacity    Int
+  category    ClassCategory
+  imageUrl    String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  schedules   ClassSchedule[]
+  gym         Gym             @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@unique([gymId, name])
+  @@index([gymId])
+  @@map("gym_classes")
+}
+
+model ClassSchedule {
+  id          String         @id @default(cuid())
+  gymId       String
+  classId     String
+  trainerId   String
+  dayOfWeek   DayOfWeek
+  startTime   String
+  endTime     String
+  maxCapacity Int
+  location    String?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  bookings    ClassBooking[]
+  gymClass    GymClass       @relation(fields: [classId], references: [id], onDelete: Cascade)
+  gym         Gym            @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  trainer     Trainer        @relation(fields: [trainerId], references: [id])
+
+  @@index([gymId])
+  @@map("class_schedules")
+}
+
+model ClassBooking {
+  id         String        @id @default(cuid())
+  gymId      String
+  userId     String
+  scheduleId String
+  date       DateTime
+  status     BookingStatus @default(CONFIRMED)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  gym        Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  schedule   ClassSchedule @relation(fields: [scheduleId], references: [id])
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scheduleId, date])
+  @@index([gymId])
+  @@map("class_bookings")
+}
+
+model Trainer {
+  id              String            @id @default(cuid())
+  gymId           String
+  firstName       String
+  lastName        String
+  email           String
+  phone           String?
+  bio             String?
+  specialties     String[]
+  imageUrl        String?
+  certifications  String[]
+  yearsExperience Int?
+  isActive        Boolean           @default(true)
+  sortOrder       Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  schedules       ClassSchedule[]
+  gym             Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  sessions        TrainingSession[]
+
+  @@unique([gymId, email])
+  @@index([gymId])
+  @@map("trainers")
+}
+
+model TrainingSession {
+  id        String        @id @default(cuid())
+  gymId     String
+  userId    String
+  trainerId String
+  date      DateTime
+  duration  Int
+  notes     String?
+  status    SessionStatus @default(SCHEDULED)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  gym       Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  trainer   Trainer       @relation(fields: [trainerId], references: [id])
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("training_sessions")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  gymId           String
+  userId          String
+  membershipId    String?
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("NGN")
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   String?
+  paymentProvider String?
+  providerRef     String?       @unique
+  description     String?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  gym             Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  membership      Membership?   @relation(fields: [membershipId], references: [id])
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("payments")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  gymId     String
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+  gym       Gym              @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("notifications")
+}
+
+model ContactInquiry {
+  id        String        @id @default(cuid())
+  gymId     String
+  name      String
+  email     String
+  phone     String?
+  interest  String?
+  message   String
+  status    InquiryStatus @default(NEW)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  gym       Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("contact_inquiries")
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  gymId      String
+  name       String
+  role       String?
+  content    String
+  rating     Int?     @default(5)
+  imageUrl   String?
+  isActive   Boolean  @default(true)
+  isFeatured Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  gym        Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("testimonials")
+}
+
+model Announcement {
+  id        String           @id @default(cuid())
+  gymId     String
+  title     String
+  content   String
+  type      AnnouncementType @default(INFO)
+  isActive  Boolean          @default(true)
+  isPinned  Boolean          @default(false)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  gym       Gym              @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("announcements")
+}
+
+model Equipment {
+  id              String          @id @default(cuid())
+  gymId           String
+  name            String
+  category        String
+  brand           String?
+  model           String?
+  quantity        Int             @default(1)
+  location        String?
+  status          EquipmentStatus @default(AVAILABLE)
+  purchaseDate    DateTime?
+  lastMaintenance DateTime?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  gym             Gym             @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@map("equipment")
+}
+
+enum UserRole {
+  MEMBER
+  TRAINER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 enum MembershipStatus {
@@ -229,74 +421,6 @@ enum DurationType {
   DAYS
   MONTHS
   YEARS
-}
-
-// ==================== CLASSES & SCHEDULING ====================
-
-model GymClass {
-  id          String        @id @default(cuid())
-  gymId       String
-  name        String
-  description String?
-  duration    Int           // in minutes
-  capacity    Int
-  category    ClassCategory
-  imageUrl    String?
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  // Relations
-  gym       Gym             @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  schedules ClassSchedule[]
-
-  @@unique([gymId, name]) // Class name unique per gym
-  @@index([gymId])
-  @@map("gym_classes")
-}
-
-model ClassSchedule {
-  id          String    @id @default(cuid())
-  gymId       String
-  classId     String
-  trainerId   String
-  dayOfWeek   DayOfWeek
-  startTime   String    // HH:mm format
-  endTime     String    // HH:mm format
-  maxCapacity Int
-  location    String?   // e.g., "Studio A", "Main Floor"
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Relations
-  gym      Gym            @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  gymClass GymClass       @relation(fields: [classId], references: [id], onDelete: Cascade)
-  trainer  Trainer        @relation(fields: [trainerId], references: [id])
-  bookings ClassBooking[]
-
-  @@index([gymId])
-  @@map("class_schedules")
-}
-
-model ClassBooking {
-  id         String        @id @default(cuid())
-  gymId      String
-  userId     String
-  scheduleId String
-  date       DateTime      // Specific date of the booking
-  status     BookingStatus @default(CONFIRMED)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  // Relations
-  gym      Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  schedule ClassSchedule @relation(fields: [scheduleId], references: [id])
-
-  @@unique([userId, scheduleId, date])
-  @@index([gymId])
-  @@map("class_bookings")
 }
 
 enum ClassCategory {
@@ -329,56 +453,6 @@ enum BookingStatus {
   NO_SHOW
 }
 
-// ==================== TRAINERS ====================
-
-model Trainer {
-  id          String   @id @default(cuid())
-  gymId       String
-  firstName   String
-  lastName    String
-  email       String
-  phone       String?
-  bio         String?  @db.Text
-  specialties String[]
-  imageUrl    String?
-  certifications String[]
-  yearsExperience Int?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  gym       Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  schedules ClassSchedule[]
-  sessions  TrainingSession[]
-
-  @@unique([gymId, email]) // Email unique per gym
-  @@index([gymId])
-  @@map("trainers")
-}
-
-model TrainingSession {
-  id        String        @id @default(cuid())
-  gymId     String
-  userId    String
-  trainerId String
-  date      DateTime
-  duration  Int           // in minutes
-  notes     String?       @db.Text
-  status    SessionStatus @default(SCHEDULED)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  // Relations
-  gym     Gym     @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trainer Trainer @relation(fields: [trainerId], references: [id])
-
-  @@index([gymId])
-  @@map("training_sessions")
-}
-
 enum SessionStatus {
   SCHEDULED
   COMPLETED
@@ -386,59 +460,11 @@ enum SessionStatus {
   NO_SHOW
 }
 
-// ==================== PAYMENTS ====================
-
-model Payment {
-  id              String        @id @default(cuid())
-  gymId           String
-  userId          String
-  membershipId    String?
-  amount          Decimal       @db.Decimal(10, 2)
-  currency        String        @default("NGN")
-  status          PaymentStatus @default(PENDING)
-  paymentMethod   String?
-  paymentProvider String?       // e.g., "paystack", "flutterwave", "stripe"
-  providerRef     String?       @unique // Provider's reference ID
-  description     String?
-  metadata        Json?         // Additional payment data
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  // Relations
-  gym        Gym         @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  membership Membership? @relation(fields: [membershipId], references: [id])
-
-  @@index([gymId])
-  @@map("payments")
-}
-
 enum PaymentStatus {
   PENDING
   COMPLETED
   FAILED
   REFUNDED
-}
-
-// ==================== NOTIFICATIONS ====================
-
-model Notification {
-  id        String           @id @default(cuid())
-  gymId     String
-  userId    String
-  title     String
-  message   String
-  type      NotificationType
-  isRead    Boolean          @default(false)
-  link      String?          // Optional link to navigate to
-  createdAt DateTime         @default(now())
-
-  // Relations
-  gym  Gym  @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([gymId])
-  @@map("notifications")
 }
 
 enum NotificationType {
@@ -449,78 +475,11 @@ enum NotificationType {
   PROMO
 }
 
-// ==================== CONTACT & INQUIRIES ====================
-
-model ContactInquiry {
-  id        String        @id @default(cuid())
-  gymId     String
-  name      String
-  email     String
-  phone     String?
-  interest  String?
-  message   String        @db.Text
-  status    InquiryStatus @default(NEW)
-  notes     String?       @db.Text // Internal notes
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  // Relations
-  gym Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([gymId])
-  @@map("contact_inquiries")
-}
-
 enum InquiryStatus {
   NEW
   CONTACTED
   RESOLVED
   CLOSED
-}
-
-// ==================== TESTIMONIALS ====================
-
-model Testimonial {
-  id        String   @id @default(cuid())
-  gymId     String
-  name      String
-  role      String?  // e.g., "Premium Member", "VIP Member"
-  content   String   @db.Text
-  rating    Int?     @default(5) // 1-5 stars
-  imageUrl  String?
-  isActive  Boolean  @default(true)
-  isFeatured Boolean @default(false)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  gym Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([gymId])
-  @@map("testimonials")
-}
-
-// ==================== ANNOUNCEMENTS ====================
-
-model Announcement {
-  id          String   @id @default(cuid())
-  gymId       String
-  title       String
-  content     String   @db.Text
-  type        AnnouncementType @default(INFO)
-  isActive    Boolean  @default(true)
-  isPinned    Boolean  @default(false)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  gym Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([gymId])
-  @@map("announcements")
 }
 
 enum AnnouncementType {
@@ -529,31 +488,6 @@ enum AnnouncementType {
   PROMO
   EVENT
   MAINTENANCE
-}
-
-// ==================== EQUIPMENT ====================
-
-model Equipment {
-  id          String   @id @default(cuid())
-  gymId       String
-  name        String
-  category    String   // e.g., "Cardio", "Strength", "Free Weights"
-  brand       String?
-  model       String?
-  quantity    Int      @default(1)
-  location    String?  // e.g., "Main Floor", "Studio A"
-  status      EquipmentStatus @default(AVAILABLE)
-  purchaseDate DateTime?
-  lastMaintenance DateTime?
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  gym Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([gymId])
-  @@map("equipment")
 }
 
 enum EquipmentStatus {
