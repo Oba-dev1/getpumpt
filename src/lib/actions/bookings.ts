@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
+import { requireGymAdminAuth, requireGymOwnerOrAdmin } from '@/lib/auth-helpers'
 
 export async function getBookings(
   gymId: string,
@@ -17,6 +18,8 @@ export async function getBookings(
     limit?: number
   }
 ) {
+  await requireGymAdminAuth(gymId)
+
   const page = options?.page ?? 1
   const limit = options?.limit ?? 20
   const skip = (page - 1) * limit
@@ -85,6 +88,8 @@ export async function getBookings(
 }
 
 export async function getBookingById(gymId: string, bookingId: string) {
+  await requireGymAdminAuth(gymId)
+
   const booking = await prisma.classBooking.findUnique({
     where: { id: bookingId, gymId },
     include: {
@@ -123,6 +128,8 @@ export async function updateBookingStatus(
   bookingId: string,
   status: 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
 ) {
+  await requireGymAdminAuth(gymId)
+
   const booking = await prisma.classBooking.findUnique({
     where: { id: bookingId, gymId },
   })
@@ -148,6 +155,8 @@ export async function createBooking(input: {
   date: Date
   status?: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
 }) {
+  await requireGymOwnerOrAdmin(input.gymId, input.userId)
+
   const today = new Date()
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   const bookingDate = new Date(
@@ -162,7 +171,7 @@ export async function createBooking(input: {
 
   const schedule = await prisma.classSchedule.findUnique({
     where: { id: input.scheduleId, gymId: input.gymId },
-    select: { dayOfWeek: true, startTime: true, endTime: true },
+    select: { dayOfWeek: true, startTime: true, endTime: true, maxCapacity: true },
   })
 
   if (!schedule) {
@@ -178,6 +187,19 @@ export async function createBooking(input: {
   const parseTime = (value: string) => {
     const [hours, minutes] = value.split(':').map(Number)
     return hours * 60 + minutes
+  }
+
+  const activeBookings = await prisma.classBooking.count({
+    where: {
+      gymId: input.gymId,
+      scheduleId: input.scheduleId,
+      date: bookingDate,
+      status: { not: 'CANCELLED' },
+    },
+  })
+
+  if (activeBookings >= schedule.maxCapacity) {
+    throw new Error('This class is fully booked for the selected date')
   }
 
   const newStart = parseTime(schedule.startTime)

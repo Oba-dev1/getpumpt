@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireGymAdminAuth } from '@/lib/auth-helpers'
 
 interface CreatePlanInput {
   gymId: string
@@ -33,6 +34,8 @@ interface UpdatePlanInput {
 }
 
 export async function getMembershipPlans(gymId: string, includeInactive = false) {
+  await requireGymAdminAuth(gymId)
+
   const plans = await prisma.membershipPlan.findMany({
     where: {
       gymId,
@@ -66,6 +69,8 @@ export async function getMembershipPlans(gymId: string, includeInactive = false)
 }
 
 export async function getPlanById(gymId: string, planId: string) {
+  await requireGymAdminAuth(gymId)
+
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId, gymId },
     select: {
@@ -105,6 +110,8 @@ export async function getPlanById(gymId: string, planId: string) {
 }
 
 export async function createMembershipPlan(input: CreatePlanInput) {
+  await requireGymAdminAuth(input.gymId)
+
   const maxSortOrder = await prisma.membershipPlan.aggregate({
     where: { gymId: input.gymId },
     _max: { sortOrder: true },
@@ -148,6 +155,8 @@ export async function updateMembershipPlan(
   planId: string,
   input: UpdatePlanInput
 ) {
+  await requireGymAdminAuth(gymId)
+
   const plan = await prisma.membershipPlan.update({
     where: { id: planId, gymId },
     data: input,
@@ -186,6 +195,8 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
 }
 
 export async function togglePlanStatus(gymId: string, planId: string) {
+  await requireGymAdminAuth(gymId)
+
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId, gymId },
   })

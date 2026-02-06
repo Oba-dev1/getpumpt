@@ -1,89 +1,81 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { requireGymAdminAuth } from '@/lib/auth-helpers'
 
 export async function getDashboardStats(gymId: string) {
+  await requireGymAdminAuth(gymId)
+
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-  const [
-    totalMembers,
-    newMembersThisMonth,
-    monthlyRevenue,
-    todayBookings,
-    expiringMemberships,
-    expiringMembershipList,
-    recentPayments,
-    membersByPlan,
-  ] = await Promise.all([
-    prisma.user.count({
-      where: { gymId, role: 'MEMBER', status: 'ACTIVE' },
-    }),
+  const totalMembers = await prisma.user.count({
+    where: { gymId, role: 'MEMBER', status: 'ACTIVE' },
+  })
 
-    prisma.user.count({
-      where: {
-        gymId,
-        role: 'MEMBER',
-        createdAt: { gte: startOfMonth },
-      },
-    }),
+  const newMembersThisMonth = await prisma.user.count({
+    where: {
+      gymId,
+      role: 'MEMBER',
+      createdAt: { gte: startOfMonth },
+    },
+  })
 
-    prisma.payment.aggregate({
-      where: {
-        gymId,
-        status: 'COMPLETED',
-        createdAt: { gte: startOfMonth },
-      },
-      _sum: { amount: true },
-    }),
+  const monthlyRevenue = await prisma.payment.aggregate({
+    where: {
+      gymId,
+      status: 'COMPLETED',
+      createdAt: { gte: startOfMonth },
+    },
+    _sum: { amount: true },
+  })
 
-    prisma.classBooking.count({
-      where: {
-        gymId,
-        date: { gte: startOfDay },
-        status: 'CONFIRMED',
-      },
-    }),
+  const todayBookings = await prisma.classBooking.count({
+    where: {
+      gymId,
+      date: { gte: startOfDay },
+      status: 'CONFIRMED',
+    },
+  })
 
-    prisma.membership.count({
-      where: {
-        gymId,
-        status: 'ACTIVE',
-        endDate: { gte: now, lte: sevenDaysFromNow },
-      },
-    }),
+  const expiringMemberships = await prisma.membership.count({
+    where: {
+      gymId,
+      status: 'ACTIVE',
+      endDate: { gte: now, lte: sevenDaysFromNow },
+    },
+  })
 
-    prisma.membership.findMany({
-      where: {
-        gymId,
-        status: 'ACTIVE',
-        endDate: { gte: now, lte: sevenDaysFromNow },
-      },
-      include: {
-        user: { select: { firstName: true, lastName: true, email: true } },
-        plan: { select: { name: true } },
-      },
-      orderBy: { endDate: 'asc' },
-      take: 5,
-    }),
+  const expiringMembershipList = await prisma.membership.findMany({
+    where: {
+      gymId,
+      status: 'ACTIVE',
+      endDate: { gte: now, lte: sevenDaysFromNow },
+    },
+    include: {
+      user: { select: { firstName: true, lastName: true, email: true } },
+      plan: { select: { name: true } },
+    },
+    orderBy: { endDate: 'asc' },
+    take: 5,
+  })
 
-    prisma.payment.findMany({
-      where: { gymId },
-      include: {
-        user: { select: { firstName: true, lastName: true, email: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    }),
+  const recentPayments = await prisma.payment.findMany({
+    where: { gymId },
+    include: {
+      user: { select: { firstName: true, lastName: true, email: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  })
 
-    prisma.membership.groupBy({
-      by: ['planId'],
-      where: { gymId, status: 'ACTIVE' },
-      _count: { id: true },
-    }),
-  ])
+  const membersByPlan = await prisma.membership.groupBy({
+    by: ['planId'],
+    where: { gymId, status: 'ACTIVE' },
+    _count: { id: true },
+  })
 
   const planDetails = await prisma.membershipPlan.findMany({
     where: { gymId },

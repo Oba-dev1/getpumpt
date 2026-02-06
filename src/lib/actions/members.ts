@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
+import { requireGymAdminAuth, requireGymOwnerOrAdmin } from '@/lib/auth-helpers'
 
 function calculateEndDate(startDate: Date, durationValue: number, durationType: 'DAYS' | 'MONTHS' | 'YEARS'): Date {
   const end = new Date(startDate)
