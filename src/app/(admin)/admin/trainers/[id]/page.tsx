@@ -97,14 +97,14 @@ export default function TrainerDetailPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="trainer-title">
+    <main className="space-y-4" aria-labelledby="trainer-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Button variant="ghost" onClick={() => router.push('/admin/trainers')}>
             <ArrowLeft className="h-4 w-4" />
             Back to trainers
           </Button>
-          <h1 id="trainer-title" className="mt-4 text-3xl font-semibold text-gray-900">
+          <h1 id="trainer-title" className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
             Trainer Details
           </h1>
         </div>
@@ -133,7 +133,7 @@ export default function TrainerDetailPage() {
         <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
           <CardTitle className="text-lg text-gray-900">Profile</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 pt-6">
+        <CardContent className="space-y-4 pt-4">
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
@@ -190,7 +190,7 @@ export default function TrainerDetailPage() {
           <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
             <CardTitle className="text-lg text-gray-900">Specialties and certifications</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-6">
+          <CardContent className="space-y-4 pt-4">
             <div className="flex flex-wrap gap-2">
               {trainer.specialties.length > 0 ? (
                 trainer.specialties.map((specialty: string) => (
@@ -221,7 +221,7 @@ export default function TrainerDetailPage() {
           <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
             <CardTitle className="text-lg text-gray-900">Upcoming schedules</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-6">
+          <CardContent className="space-y-4 pt-4">
             {trainer.schedulesPreview.length === 0 ? (
               <p className="text-sm text-gray-500">No schedules assigned.</p>
             ) : (

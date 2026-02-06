@@ -22,14 +22,19 @@ export function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <Card className={cn('', className)}>
+    <Card
+      className={cn(
+        'border-slate-200/80 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80',
+        className
+      )}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
+            <p className="text-sm font-medium text-slate-600">{title}</p>
+            <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
             {description && (
-              <p className="text-xs text-gray-600">{description}</p>
+              <p className="text-xs text-slate-600">{description}</p>
             )}
             {trend && (
               <p
@@ -43,7 +48,7 @@ export function StatsCard({
             )}
           </div>
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/15 to-blue-600/15 text-cyan-700"
             aria-hidden="true"
           >
             {icon}

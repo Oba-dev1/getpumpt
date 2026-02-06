@@ -170,10 +170,10 @@ export default function BookingsPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="bookings-title">
+    <main className="space-y-4" aria-labelledby="bookings-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 id="bookings-title" className="text-3xl font-semibold text-gray-900">
+          <h1 id="bookings-title" className="text-2xl font-semibold tracking-tight text-gray-900">
             Bookings
           </h1>
           <p className="mt-1 text-sm text-gray-600" aria-live="polite">
@@ -186,9 +186,9 @@ export default function BookingsPage() {
         </Button>
       </div>
 
-      <Card className="border-gray-200">
-        <CardHeader className="flex flex-col gap-4 rounded-t-xl border-b border-gray-200 bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-lg text-gray-900">Filters</CardTitle>
+      <Card className="border-gray-200 bg-slate-950/90">
+        <CardHeader className="flex flex-col gap-3 rounded-t-xl border-b border-gray-200 bg-slate-900/90 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base text-gray-900">Filters</CardTitle>
           {(search || status !== 'all' || classId !== 'all' || trainerId !== 'all' || dateFrom || dateTo) && (
             <Button variant="link" className="h-auto px-0 text-sm" onClick={handleClearFilters}>
               <X className="h-4 w-4" />
@@ -196,7 +196,7 @@ export default function BookingsPage() {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <CardContent className="flex flex-col gap-3 pt-4 lg:flex-row lg:items-center lg:justify-between">
           <SearchInput
             placeholder="Search by member, class, or trainer..."
             ariaLabel="Search bookings by member, class, or trainer"
@@ -207,9 +207,9 @@ export default function BookingsPage() {
             className="w-full lg:w-96"
             defaultValue={search}
           />
-          <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto">
+          <div className="flex w-full flex-wrap items-center gap-2.5 lg:w-auto">
             <Select value={status} onValueChange={(value) => setStatus(value as BookingStatus)}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-44">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -221,7 +221,7 @@ export default function BookingsPage() {
               </SelectContent>
             </Select>
             <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-44">
                 <SelectValue placeholder="Class" />
               </SelectTrigger>
               <SelectContent>
@@ -234,7 +234,7 @@ export default function BookingsPage() {
               </SelectContent>
             </Select>
             <Select value={trainerId} onValueChange={setTrainerId}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-44">
                 <SelectValue placeholder="Trainer" />
               </SelectTrigger>
               <SelectContent>
@@ -257,7 +257,7 @@ export default function BookingsPage() {
                     setDateFrom(event.target.value)
                     setCurrentPage(1)
                   }}
-                  className="w-full sm:w-40"
+                  className="w-full sm:w-36"
                 />
               </div>
               <div className="flex w-full items-center gap-2 sm:w-auto">
@@ -270,7 +270,7 @@ export default function BookingsPage() {
                     setDateTo(event.target.value)
                     setCurrentPage(1)
                   }}
-                  className="w-full sm:w-40"
+                  className="w-full sm:w-36"
                 />
               </div>
             </div>
@@ -282,7 +282,7 @@ export default function BookingsPage() {
         <h2 id="bookings-table" className="sr-only">
           Bookings list
         </h2>
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-lg border border-gray-200 bg-slate-950/90">
           {loading ? (
             <div className="p-6 space-y-4">
               {[...Array(6)].map((_, i) => (
@@ -359,7 +359,7 @@ export default function BookingsPage() {
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               aria-label={`Open actions for ${booking.memberName}`}
                             >
                               <MoreVertical className="h-4 w-4" />

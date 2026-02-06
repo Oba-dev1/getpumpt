@@ -81,6 +81,12 @@ export const membershipPlanSchema = z.object({
   sortOrder: z.number().int().default(0),
 });
 
+export const assignMembershipSchema = z.object({
+  planId: z.string().min(1, 'Plan is required'),
+  startDate: z.string().or(z.date()),
+  autoRenew: z.boolean().default(false),
+});
+
 // ==================== CLASS SCHEMAS ====================
 
 export const gymClassSchema = z.object({
@@ -187,6 +193,58 @@ export const gymSocialSchema = z.object({
   tiktok: z.string().url().optional().or(z.literal('')),
 });
 
+// ==================== MEMBER PORTAL SCHEMAS ====================
+
+export const notificationPreferenceSchema = z.object({
+  bookingConfirmation: z.boolean().default(true),
+  bookingReminder: z.boolean().default(true),
+  membershipExpiry: z.boolean().default(true),
+  paymentReceipts: z.boolean().default(true),
+  promotions: z.boolean().default(false),
+  announcements: z.boolean().default(true),
+});
+
+export const cancelBookingSchema = z.object({
+  bookingId: z.string().min(1, 'Booking ID is required'),
+  reason: z.string().optional(),
+});
+
+export const membershipRenewalSchema = z.object({
+  planId: z.string().min(1, 'Plan ID is required'),
+  autoRenew: z.boolean().optional(),
+});
+
+export const toggleAutoRenewSchema = z.object({
+  autoRenew: z.boolean(),
+});
+
+export const cancelMembershipSchema = z.object({
+  reason: z.string().min(10, 'Please provide a reason (minimum 10 characters)'),
+});
+
+export const updateEmailSchema = z.object({
+  newEmail: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required for email change'),
+});
+
+export const avatarUploadSchema = z.object({
+  file: z.instanceof(File).refine(
+    (file) => file.size <= 2 * 1024 * 1024,
+    'File size must be less than 2MB'
+  ).refine(
+    (file) => ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type),
+    'Only JPG, JPEG, and PNG formats are supported'
+  ),
+});
+
+export const membershipPaymentSchema = z.object({
+  membershipId: z.string().min(1, 'Membership ID is required'),
+});
+
+export const notificationIdSchema = z.object({
+  notificationId: z.string().min(1, 'Notification ID is required'),
+});
+
 // ==================== TYPE EXPORTS ====================
 
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -196,6 +254,7 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type MembershipPlanInput = z.infer<typeof membershipPlanSchema>;
+export type AssignMembershipInput = z.infer<typeof assignMembershipSchema>;
 export type GymClassInput = z.infer<typeof gymClassSchema>;
 export type ClassScheduleInput = z.infer<typeof classScheduleSchema>;
 export type ClassBookingInput = z.infer<typeof classBookingSchema>;
@@ -204,3 +263,12 @@ export type ContactInquiryInput = z.infer<typeof contactInquirySchema>;
 export type GymSettingsInput = z.infer<typeof gymSettingsSchema>;
 export type GymBrandingInput = z.infer<typeof gymBrandingSchema>;
 export type GymSocialInput = z.infer<typeof gymSocialSchema>;
+export type NotificationPreferenceInput = z.infer<typeof notificationPreferenceSchema>;
+export type CancelBookingInput = z.infer<typeof cancelBookingSchema>;
+export type MembershipRenewalInput = z.infer<typeof membershipRenewalSchema>;
+export type ToggleAutoRenewInput = z.infer<typeof toggleAutoRenewSchema>;
+export type CancelMembershipInput = z.infer<typeof cancelMembershipSchema>;
+export type UpdateEmailInput = z.infer<typeof updateEmailSchema>;
+export type AvatarUploadInput = z.infer<typeof avatarUploadSchema>;
+export type MembershipPaymentInput = z.infer<typeof membershipPaymentSchema>;
+export type NotificationIdInput = z.infer<typeof notificationIdSchema>;

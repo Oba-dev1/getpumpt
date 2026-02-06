@@ -76,6 +76,124 @@ body {
   min-height: 100vh;
 }
 
+.admin-shell {
+  --ring-color: #0891B2;
+}
+
+.admin-shell :focus-visible {
+  outline: 2px solid var(--ring-color);
+  outline-offset: 2px;
+}
+
+/* Admin-wide compact dark styling for cohesive product feel */
+.admin-shell #admin-main-content .text-gray-900 {
+  color: #f8fafc !important;
+}
+
+.admin-shell #admin-main-content .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+.admin-shell #admin-main-content .text-gray-600,
+.admin-shell #admin-main-content .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.admin-shell #admin-main-content .bg-white,
+.admin-shell #admin-main-content .bg-gray-50,
+.admin-shell #admin-main-content .bg-gray-100,
+.admin-shell #admin-main-content .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
+.admin-shell #admin-main-content .border-gray-100,
+.admin-shell #admin-main-content .border-gray-200,
+.admin-shell #admin-main-content .border-gray-300,
+.admin-shell #admin-main-content .border-slate-200 {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+.admin-shell #admin-main-content .hover\:bg-gray-100\/50:hover,
+.admin-shell #admin-main-content .hover\:bg-gray-100:hover,
+.admin-shell #admin-main-content .hover\:bg-slate-100:hover {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+.admin-shell #admin-main-content .rounded-xl.border.bg-card {
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  background: linear-gradient(180deg, #0f172a, #020617) !important;
+  color: #e2e8f0 !important;
+}
+
+.admin-shell #admin-main-content .space-y-6 > * + * {
+  margin-top: 1rem !important;
+}
+
+.admin-shell #admin-main-content .p-6 {
+  padding: 1.15rem !important;
+}
+
+.member-shell {
+  --ring-color: #0891B2;
+  --member-page-x: 1rem;
+  --member-page-y: 1rem;
+  --member-section-gap: 1.25rem;
+  --member-card-radius: 16px;
+  --member-card-border: rgba(148, 163, 184, 0.2);
+  --member-card-bg: linear-gradient(180deg, #0f172a, #020617);
+  --member-card-shadow: 0 20px 40px rgba(2, 6, 23, 0.5);
+  --member-card-padding: 1.25rem;
+  --member-card-padding-tight: 1rem;
+}
+
+.member-shell :focus-visible {
+  outline: 2px solid var(--ring-color);
+  outline-offset: 2px;
+}
+
+.member-shell .member-container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--member-page-y) var(--member-page-x);
+}
+
+@media (min-width: 640px) {
+  .member-shell .member-container {
+    --member-page-x: 1.5rem;
+    --member-page-y: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .member-shell .member-container {
+    --member-page-x: 2rem;
+    --member-page-y: 1.5rem;
+  }
+}
+
+.member-shell .member-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--member-section-gap);
+}
+
+.member-shell .member-card {
+  border: 1px solid var(--member-card-border);
+  background: var(--member-card-bg);
+  border-radius: var(--member-card-radius);
+  box-shadow: var(--member-card-shadow);
+}
+
+.member-shell .member-card-header {
+  padding: var(--member-card-padding-tight);
+}
+
+.member-shell .member-card-content {
+  padding: var(--member-card-padding);
+}
+
 /* Ensure images are responsive */
 img {
   max-width: 100%;
@@ -183,4 +301,15 @@ img {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #6366F1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

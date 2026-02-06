@@ -27,7 +27,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: 'credentials',
@@ -126,7 +125,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, isNewUser }) {
       if (isNewUser) {
         // Send welcome email to new users
-        console.log(`New user signed up: ${user.email}`);
+        // TODO: Implement welcome email via Resend
       }
     },
   },

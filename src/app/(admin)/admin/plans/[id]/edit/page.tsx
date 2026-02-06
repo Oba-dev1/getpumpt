@@ -142,7 +142,7 @@ export default function EditPlanPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
         <div className="grid gap-6 lg:grid-cols-2">
           <Skeleton className="h-96" />
@@ -153,7 +153,7 @@ export default function EditPlanPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -163,7 +163,7 @@ export default function EditPlanPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-semibold text-gray-800">Edit Plan</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-800">Edit Plan</h1>
           <p className="mt-1 text-sm text-gray-500">
             Update membership plan details
           </p>
@@ -315,7 +315,7 @@ export default function EditPlanPage() {
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Features</CardTitle>

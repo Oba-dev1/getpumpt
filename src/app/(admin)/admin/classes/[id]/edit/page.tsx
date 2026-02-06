@@ -144,14 +144,14 @@ export default function EditClassPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="edit-class-title">
+    <main className="space-y-4" aria-labelledby="edit-class-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Button variant="ghost" onClick={() => router.push('/admin/classes')}>
             <ArrowLeft className="h-4 w-4" />
             Back to classes
           </Button>
-          <h1 id="edit-class-title" className="mt-4 text-3xl font-semibold text-gray-900">
+          <h1 id="edit-class-title" className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
             Edit Class
           </h1>
         </div>
@@ -161,7 +161,7 @@ export default function EditClassPage() {
         <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
           <CardTitle className="text-lg text-gray-900">Class details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 pt-6">
+        <CardContent className="space-y-4 pt-4">
           {loading ? (
             <div className="space-y-4">
               {[...Array(6)].map((_, i) => (
@@ -169,7 +169,7 @@ export default function EditClassPage() {
               ))}
             </div>
           ) : (
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Class name</Label>

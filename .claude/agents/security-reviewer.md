@@ -543,3 +543,210 @@ After security review:
 ---
 
 **Remember**: Security is not optional, especially for platforms handling real money. One vulnerability can cost users real financial losses. Be thorough, be paranoid, be proactive.
+
+---
+
+## Pending Security Tasks - FitGym Project
+
+**Last Review:** 2026-01-30
+**Security Score:** 59/100 (MODERATE - Action Required)
+**Reviewed By:** security-reviewer agent
+
+### CRITICAL Issues (Fix Immediately)
+
+- [x] **Update Next.js to 16.1.6** (Current: 16.1.6) ✅ COMPLETED
+  - **Severity:** CRITICAL
+  - **CVEs:** GHSA-9g9p-9gw9-jx7f, GHSA-5f7q-jpqc-wp7h, GHSA-h25m-26qc-wcjf
+  - **Impact:** Denial of Service (DoS) vulnerabilities
+  - **Fix:** Run `npm install next@16.1.6`
+  - **Verification:** Run `npm list next` and `npm audit`
+  - **Status:** Completed on 2026-02-02 - npm audit shows 0 vulnerabilities
+  - **References:**
+    - https://github.com/advisories/GHSA-9g9p-9gw9-jx7f
+    - https://github.com/advisories/GHSA-5f7q-jpqc-wp7h
+    - https://github.com/advisories/GHSA-h25m-26qc-wcjf
+
+### HIGH Priority Issues (Fix Before Production)
+
+- [ ] **Add Input Validation to Server Actions**
+  - **Severity:** HIGH
+  - **Files Affected:**
+    - `src/lib/actions/members.ts`
+    - `src/lib/actions/dashboard.ts`
+    - All server actions accepting user input
+  - **Issue:** Server actions process user input without explicit Zod validation
+  - **Impact:** Potential injection attacks, data corruption, unauthorized operations
+  - **Fix:**
+    ```typescript
+    // Add Zod schema validation before processing
+    import { memberSchema } from '@/lib/validations'
+
+    export async function createMember(input: unknown) {
+      const validated = memberSchema.parse(input) // Throws on invalid input
+      // ... rest of implementation
+    }
+    ```
+  - **Required Schemas:**
+    - Member create/update schemas
+    - Membership plan schemas
+    - Class booking schemas
+    - Payment initialization schemas
+    - Profile update schemas
+  - **Location:** Add to `src/lib/validations.ts`
+
+- [ ] **Implement Rate Limiting**
+  - **Severity:** HIGH
+  - **Endpoints to Protect:**
+    - `/api/auth/*` - Authentication endpoints (10 requests/15min per IP)
+    - `/api/webhooks/paystack` - Payment webhooks (100 requests/min per IP)
+    - All API routes accepting POST/PUT/DELETE (60 requests/min per user)
+    - Server actions (20 requests/min per user for mutations)
+  - **Impact:** Brute force attacks, API abuse, DoS attacks
+  - **Fix Options:**
+    1. **Next.js Middleware + Upstash Redis:**
+       ```typescript
+       // src/middleware.ts
+       import { Ratelimit } from '@upstash/ratelimit'
+       import { Redis } from '@upstash/redis'
+
+       const ratelimit = new Ratelimit({
+         redis: Redis.fromEnv(),
+         limiter: Ratelimit.slidingWindow(10, '15 m'),
+       })
+
+       export async function middleware(req: NextRequest) {
+         const ip = req.ip ?? '127.0.0.1'
+         const { success } = await ratelimit.limit(ip)
+
+         if (!success) {
+           return new NextResponse('Too Many Requests', { status: 429 })
+         }
+       }
+       ```
+    2. **next-rate-limit package** (simpler, in-memory)
+    3. **Vercel Edge Config** (for Vercel deployments)
+  - **Environment Variables Required:**
+    - `UPSTASH_REDIS_REST_URL`
+    - `UPSTASH_REDIS_REST_TOKEN`
+
+### MEDIUM Priority Issues (Fix When Possible)
+
+- [ ] **Add Explicit CSRF Token Verification**
+  - **Severity:** MEDIUM
+  - **Current State:** NextAuth.js provides CSRF protection, but not explicitly verified in server actions
+  - **Files Affected:** All server actions in `src/lib/actions/*`
+  - **Impact:** Cross-Site Request Forgery attacks
+  - **Fix:** Add CSRF token header verification in server actions:
+    ```typescript
+    import { headers } from 'next/headers'
+
+    export async function serverAction() {
+      const headersList = headers()
+      const csrfToken = headersList.get('x-csrf-token')
+
+      // Verify CSRF token matches session
+      const session = await auth()
+      if (!csrfToken || csrfToken !== session?.csrfToken) {
+        throw new Error('Invalid CSRF token')
+      }
+    }
+    ```
+  - **Note:** Verify NextAuth.js v5 CSRF token availability first
+
+- [ ] **Configure Content Security Policy Headers**
+  - **Severity:** MEDIUM
+  - **Current State:** No CSP headers configured
+  - **Impact:** XSS attacks, clickjacking, data injection
+  - **Fix:** Add security headers to `next.config.js`:
+    ```javascript
+    module.exports = {
+      async headers() {
+        return [
+          {
+            source: '/:path*',
+            headers: [
+              {
+                key: 'Content-Security-Policy',
+                value: [
+                  "default-src 'self'",
+                  "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-eval
+                  "style-src 'self' 'unsafe-inline'",
+                  "img-src 'self' data: https:",
+                  "font-src 'self'",
+                  "connect-src 'self' https://api.paystack.co https://*.supabase.co",
+                  "frame-ancestors 'none'",
+                ].join('; ')
+              },
+              {
+                key: 'X-Frame-Options',
+                value: 'DENY'
+              },
+              {
+                key: 'X-Content-Type-Options',
+                value: 'nosniff'
+              },
+              {
+                key: 'Referrer-Policy',
+                value: 'origin-when-cross-origin'
+              },
+              {
+                key: 'Permissions-Policy',
+                value: 'camera=(), microphone=(), geolocation=()'
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+  - **Testing:** Use https://securityheaders.com/ to verify headers
+
+### Verification Checklist
+
+After completing above tasks:
+
+- [ ] Run `npm audit` - No high/critical vulnerabilities
+- [ ] Run `npm list next` - Verify Next.js 16.1.6+
+- [ ] Test rate limiting - Verify 429 responses on exceeded limits
+- [ ] Test input validation - Verify invalid inputs are rejected with 400 errors
+- [ ] Check security headers - Use https://securityheaders.com/
+- [ ] Run E2E tests - Verify all flows still work after changes
+- [ ] Review `.env.local` - No secrets committed to git
+- [ ] Check git history - No exposed credentials (use trufflehog if needed)
+
+### Post-Remediation Testing
+
+```bash
+# 1. Update Next.js and verify build
+npm install next@16.1.6
+npm run build
+npm run start
+
+# 2. Run security audit
+npm audit --audit-level=high
+
+# 3. Test rate limiting (if implemented)
+# Send 100 requests to an endpoint and verify 429 after limit
+
+# 4. Test input validation
+# Send malformed data to server actions, expect 400 errors
+
+# 5. Verify security headers
+curl -I http://localhost:3000 | grep -E "Content-Security-Policy|X-Frame-Options"
+```
+
+### Notes
+
+- **Multi-Tenancy:** All queries correctly filter by `gymId` - No issues found
+- **Authentication:** NextAuth.js v5 properly configured with bcrypt password hashing (10 rounds)
+- **SQL Injection:** Using Prisma ORM with parameterized queries - Protected
+- **Secrets Management:** All secrets in environment variables - No hardcoded credentials found
+- **Password Security:** Passwords properly hashed with bcrypt, never logged
+- **Session Security:** Using JWT with httpOnly cookies
+
+### Resources
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [Next.js Security Best Practices](https://nextjs.org/docs/pages/building-your-application/configuring/content-security-policy)
+- [NextAuth.js Security](https://next-auth.js.org/configuration/options#security)
+- [Upstash Rate Limiting](https://upstash.com/docs/redis/features/ratelimiting)

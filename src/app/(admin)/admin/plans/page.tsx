@@ -115,10 +115,10 @@ export default function PlansPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="plans-title">
+    <main className="space-y-4" aria-labelledby="plans-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 id="plans-title" className="text-3xl font-semibold text-gray-900">
+          <h1 id="plans-title" className="text-2xl font-semibold tracking-tight text-gray-900">
             Membership Plans
           </h1>
           <p className="mt-1 text-sm text-gray-600">
@@ -132,13 +132,13 @@ export default function PlansPage() {
       </div>
 
       {loading ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-live="polite">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-80" />
           ))}
         </div>
       ) : errorMessage ? (
-        <Card className="p-12">
+        <Card className="border-gray-200 bg-slate-950/90 p-10">
           <div className="flex flex-col items-center gap-3 text-center">
             <p className="text-sm text-gray-600">{errorMessage}</p>
             <Button variant="outline" onClick={fetchPlans}>
@@ -148,7 +148,7 @@ export default function PlansPage() {
           </div>
         </Card>
       ) : plans.length === 0 ? (
-        <Card className="p-12">
+        <Card className="border-gray-200 bg-slate-950/90 p-10">
           <div className="text-center">
             <p className="text-gray-600">No membership plans yet</p>
             <Button
@@ -162,7 +162,7 @@ export default function PlansPage() {
         </Card>
       ) : (
         <section
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
           aria-label="Membership plans"
         >
           {plans.map((plan) => (
@@ -170,8 +170,8 @@ export default function PlansPage() {
               key={plan.id}
               className={
                 plan.isFeatured
-                  ? 'relative border-2 border-indigo-500'
-                  : 'relative'
+                  ? 'relative border-2 border-cyan-500 bg-slate-950/90'
+                  : 'relative border-gray-200 bg-slate-950/90'
               }
             >
               {plan.isFeatured && (
@@ -183,10 +183,10 @@ export default function PlansPage() {
                 </div>
               )}
 
-              <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
+              <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-900/90 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-2">
-                    <CardTitle className="text-2xl text-gray-900">{plan.name}</CardTitle>
+                    <CardTitle className="text-xl text-gray-900">{plan.name}</CardTitle>
                     {plan.description && (
                       <CardDescription className="text-sm text-gray-600">
                         {plan.description}
@@ -197,7 +197,7 @@ export default function PlansPage() {
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         aria-label={`Open actions for ${plan.name}`}
                       >
                         <MoreVertical className="h-4 w-4" />
@@ -230,7 +230,7 @@ export default function PlansPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-5">
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900">

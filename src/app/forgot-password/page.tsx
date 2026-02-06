@@ -15,8 +15,7 @@ export default function ForgotPasswordPage() {
     setError('');
     setSuccess('');
 
-    // TODO: Implement password reset logic
-    console.log('Requesting password reset for', email);
+    // TODO: Implement password reset logic via API
 
     // For now, show a success message
     setSuccess('If an account with that email exists, we have sent you a link to reset your password.');

@@ -100,7 +100,7 @@ export default function NewMemberPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -109,7 +109,7 @@ export default function NewMemberPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-semibold text-gray-800">Add New Member</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-800">Add New Member</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -215,7 +215,7 @@ export default function NewMemberPage() {
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Emergency Contact</CardTitle>

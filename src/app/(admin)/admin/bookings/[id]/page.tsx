@@ -94,14 +94,14 @@ export default function BookingDetailPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="booking-title">
+    <main className="space-y-4" aria-labelledby="booking-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Button variant="ghost" onClick={() => router.push('/admin/bookings')}>
             <ArrowLeft className="h-4 w-4" />
             Back to bookings
           </Button>
-          <h1 id="booking-title" className="mt-4 text-3xl font-semibold text-gray-900">
+          <h1 id="booking-title" className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
             Booking Details
           </h1>
         </div>
@@ -148,7 +148,7 @@ export default function BookingDetailPage() {
         <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
           <CardTitle className="text-lg text-gray-900">Overview</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 pt-6">
+        <CardContent className="space-y-4 pt-4">
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
@@ -194,7 +194,7 @@ export default function BookingDetailPage() {
           <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
             <CardTitle className="text-lg text-gray-900">Session details</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-6 pt-6 md:grid-cols-2">
+          <CardContent className="grid gap-6 pt-4 md:grid-cols-2">
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-sm text-gray-700">
                 <Calendar className="h-4 w-4 text-gray-400" aria-hidden="true" />

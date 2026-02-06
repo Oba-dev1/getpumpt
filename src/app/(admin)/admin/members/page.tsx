@@ -156,10 +156,10 @@ export default function MembersPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="members-title">
+    <main className="space-y-4" aria-labelledby="members-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 id="members-title" className="text-3xl font-semibold text-gray-900">
+          <h1 id="members-title" className="text-2xl font-semibold tracking-tight text-gray-900">
             Members
           </h1>
           <p className="mt-1 text-sm text-gray-600" aria-live="polite">
@@ -172,9 +172,9 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      <Card className="border-gray-200">
-        <CardHeader className="flex flex-col gap-4 rounded-t-xl border-b border-gray-200 bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-lg text-gray-900">Filters</CardTitle>
+      <Card className="border-gray-200 bg-slate-950/90">
+        <CardHeader className="flex flex-col gap-3 rounded-t-xl border-b border-gray-200 bg-slate-900/90 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base text-gray-900">Filters</CardTitle>
           {(search || status !== 'all' || sort !== 'joined_desc') && (
             <Button variant="link" className="h-auto px-0 text-sm" onClick={handleClearFilters}>
               <X className="h-4 w-4" />
@@ -182,7 +182,7 @@ export default function MembersPage() {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="flex flex-col gap-3 pt-4 lg:flex-row lg:items-center lg:justify-between">
           <SearchInput
             placeholder="Search by name or email..."
             onSearch={handleSearch}
@@ -190,12 +190,12 @@ export default function MembersPage() {
             ariaLabel="Search members by name or email"
             defaultValue={search}
           />
-          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+          <div className="flex w-full flex-wrap items-center gap-2.5 lg:w-auto">
             <label htmlFor="member-status" className="sr-only">
               Filter members by status
             </label>
             <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger id="member-status" className="w-full sm:w-48">
+              <SelectTrigger id="member-status" className="w-full sm:w-44">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -209,7 +209,7 @@ export default function MembersPage() {
               Sort members
             </label>
             <Select value={sort} onValueChange={handleSortChange}>
-              <SelectTrigger id="member-sort" className="w-full sm:w-48">
+              <SelectTrigger id="member-sort" className="w-full sm:w-44">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -229,7 +229,7 @@ export default function MembersPage() {
         <h2 id="members-table" className="sr-only">
           Members list
         </h2>
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-lg border border-gray-200 bg-slate-950/90">
           {loading ? (
             <div className="p-6 space-y-4">
               {[...Array(6)].map((_, i) => (
@@ -315,7 +315,7 @@ export default function MembersPage() {
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               aria-label={`Open actions for ${member.firstName} ${member.lastName}`}
                             >
                               <MoreVertical className="h-4 w-4" />

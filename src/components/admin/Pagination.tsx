@@ -22,8 +22,8 @@ export function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems ?? 0)
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="text-sm text-gray-500">
+    <div className="flex flex-col items-start justify-between gap-3 px-2 py-4 sm:flex-row sm:items-center">
+      <div className="text-sm text-slate-600">
         {totalItems != null && (
           <span>
             Showing {startItem} to {endItem} of {totalItems} results
@@ -36,11 +36,13 @@ export function Pagination({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
+          aria-label="Go to previous page"
+          className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
         >
           <ChevronLeft className="h-4 w-4" />
           Previous
         </Button>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-slate-700">
           Page {currentPage} of {totalPages}
         </span>
         <Button
@@ -48,6 +50,8 @@ export function Pagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
+          aria-label="Go to next page"
+          className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
         >
           Next
           <ChevronRight className="h-4 w-4" />

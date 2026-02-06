@@ -16,7 +16,7 @@ export default function SignupPage() {
     setError('');
 
     // TODO: Implement sign-up logic
-    console.log('Signing up with', { name, email, password });
+    // Removed console.log to prevent password leakage
 
     // For now, redirect to login page
     router.push('/login');

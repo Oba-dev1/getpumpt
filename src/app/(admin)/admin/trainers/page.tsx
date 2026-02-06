@@ -170,10 +170,10 @@ export default function TrainersPage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="trainers-title">
+    <main className="space-y-4" aria-labelledby="trainers-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 id="trainers-title" className="text-3xl font-semibold text-gray-900">
+          <h1 id="trainers-title" className="text-2xl font-semibold tracking-tight text-gray-900">
             Trainers
           </h1>
           <p className="mt-1 text-sm text-gray-600" aria-live="polite">
@@ -186,9 +186,9 @@ export default function TrainersPage() {
         </Button>
       </div>
 
-      <Card className="border-gray-200">
-        <CardHeader className="flex flex-col gap-4 rounded-t-xl border-b border-gray-200 bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-lg text-gray-900">Filters</CardTitle>
+      <Card className="border-gray-200 bg-slate-950/90">
+        <CardHeader className="flex flex-col gap-3 rounded-t-xl border-b border-gray-200 bg-slate-900/90 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base text-gray-900">Filters</CardTitle>
           {(search || status !== 'all' || sort !== 'created_desc') && (
             <Button variant="link" className="h-auto px-0 text-sm" onClick={handleClearFilters}>
               <X className="h-4 w-4" />
@@ -196,7 +196,7 @@ export default function TrainersPage() {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <SearchInput
             placeholder="Search by name or email..."
             ariaLabel="Search trainers by name or email"
@@ -207,9 +207,9 @@ export default function TrainersPage() {
             className="w-full sm:w-96"
             defaultValue={search}
           />
-          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+          <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto">
             <Select value={status} onValueChange={(value) => setStatus(value as TrainerStatus)}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-44">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -219,7 +219,7 @@ export default function TrainersPage() {
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={(value) => setSort(value as SortOption)}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-44">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -237,7 +237,7 @@ export default function TrainersPage() {
         <h2 id="trainers-table" className="sr-only">
           Trainers list
         </h2>
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-lg border border-gray-200 bg-slate-950/90">
           {loading ? (
             <div className="p-6 space-y-4">
               {[...Array(6)].map((_, i) => (
@@ -340,7 +340,7 @@ export default function TrainersPage() {
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               aria-label={`Open actions for ${trainer.firstName} ${trainer.lastName}`}
                             >
                               <MoreVertical className="h-4 w-4" />

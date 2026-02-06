@@ -142,14 +142,14 @@ export default function NewSchedulePage() {
   }
 
   return (
-    <main className="space-y-6" aria-labelledby="new-schedule-title">
+    <main className="space-y-4" aria-labelledby="new-schedule-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Button variant="ghost" onClick={() => router.push('/admin/schedules')}>
             <ArrowLeft className="h-4 w-4" />
             Back to schedules
           </Button>
-          <h1 id="new-schedule-title" className="mt-4 text-3xl font-semibold text-gray-900">
+          <h1 id="new-schedule-title" className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
             Create Schedule
           </h1>
           <p className="mt-1 text-sm text-gray-600">
@@ -162,7 +162,7 @@ export default function NewSchedulePage() {
         <CardHeader className="rounded-t-xl border-b border-gray-200 bg-slate-50">
           <CardTitle className="text-lg text-gray-900">Schedule details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 pt-6">
+        <CardContent className="space-y-4 pt-4">
           {loadingOptions ? (
             <div className="space-y-4">
               {[...Array(6)].map((_, i) => (
@@ -170,7 +170,7 @@ export default function NewSchedulePage() {
               ))}
             </div>
           ) : (
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="classId">Class</Label>

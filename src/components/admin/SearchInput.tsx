@@ -46,7 +46,7 @@ export function SearchInput({
         value={value}
         onChange={handleChange}
         aria-label={ariaLabel ?? placeholder}
-        className="pl-10"
+        className="h-10 border-slate-300/90 bg-white/80 pl-10 text-slate-900 placeholder:text-slate-500 focus-visible:ring-cyan-600"
       />
     </div>
   )

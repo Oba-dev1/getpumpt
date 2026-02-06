@@ -83,7 +83,7 @@ export default function MemberDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
         <div className="grid gap-6 lg:grid-cols-3">
           <Skeleton className="h-96" />
@@ -100,7 +100,7 @@ export default function MemberDetailPage() {
   const initials = `${member.firstName[0]}${member.lastName[0]}`.toUpperCase()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
@@ -110,7 +110,7 @@ export default function MemberDetailPage() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-semibold text-gray-800">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-800">
             Member Profile
           </h1>
         </div>
@@ -137,7 +137,7 @@ export default function MemberDetailPage() {
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             <div className="flex flex-col items-center">
               <Avatar className="h-24 w-24">
                 <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
@@ -231,7 +231,7 @@ export default function MemberDetailPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-4 lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Current Membership</CardTitle>
