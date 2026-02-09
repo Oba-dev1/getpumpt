@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -251,9 +252,8 @@ export default function NewMemberPage() {
                   <Label htmlFor="password">
                     Password <span className="text-red-500">*</span>
                   </Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     {...register('password')}
                     placeholder="Min. 8 characters"
                   />

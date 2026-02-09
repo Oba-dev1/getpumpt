@@ -39,10 +39,18 @@ model Gym {
   features         Json?
   aboutContent     Json?
   settings         Json?
-  isActive         Boolean           @default(true)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  announcements    Announcement[]
+  galleryImages    String[]          @default([])
+  videoUrl         String?
+  heroImageUrl     String?
+  aboutImageUrl    String?
+  isActive               Boolean           @default(true)
+  onboardingCompletedAt  DateTime?
+  onboardingStep         Int               @default(0)
+  onboardingSkippedSteps Int[]             @default([])
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  announcements          Announcement[]
+  checkIns         CheckIn[]
   classBookings    ClassBooking[]
   classSchedules   ClassSchedule[]
   contactInquiries ContactInquiry[]
@@ -81,6 +89,8 @@ model User {
   payments         Payment[]
   authSessions     Session[]
   trainingSessions TrainingSession[]
+  checkIns         CheckIn[]         @relation("MemberCheckIns")
+  staffCheckIns    CheckIn[]         @relation("StaffCheckIns")
   gym              Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
 
   @@unique([gymId, email])
@@ -391,9 +401,26 @@ model Equipment {
   @@map("equipment")
 }
 
+model CheckIn {
+  id          String   @id @default(cuid())
+  gymId       String
+  userId      String
+  checkedInBy String
+  notes       String?
+  createdAt   DateTime @default(now())
+  gym         Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  user        User     @relation("MemberCheckIns", fields: [userId], references: [id], onDelete: Cascade)
+  staff       User     @relation("StaffCheckIns", fields: [checkedInBy], references: [id])
+
+  @@index([gymId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("check_ins")
+}
+
 enum UserRole {
   MEMBER
-  TRAINER
+  STAFF
   ADMIN
   SUPER_ADMIN
 }
@@ -405,6 +432,7 @@ enum UserStatus {
 }
 
 enum MembershipStatus {
+  PENDING
   ACTIVE
   EXPIRED
   CANCELLED

@@ -223,6 +223,50 @@ export const emailTemplates = {
       </html>
     `,
   }),
+  staffCreatedMemberWelcome: (data: {
+    name: string;
+    gymName: string;
+    email: string;
+    password: string;
+    loginUrl: string;
+  }) => ({
+    subject: `Welcome to ${data.gymName} - Your Account Details`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h1 style="color: #18181b; font-size: 24px; margin: 0 0 16px;">Welcome to ${data.gymName}!</h1>
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                Hi ${data.name},
+              </p>
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                Your account has been created. Here are your login details:
+              </p>
+              <div style="background: #f4f4f5; border-radius: 8px; padding: 20px; margin: 0 0 24px;">
+                <p style="color: #52525b; font-size: 14px; margin: 0 0 8px;"><strong>Email:</strong> ${data.email}</p>
+                <p style="color: #52525b; font-size: 14px; margin: 0;"><strong>Password:</strong> ${data.password}</p>
+              </div>
+              <p style="color: #dc2626; font-size: 14px; margin: 0 0 24px;">
+                For security, we recommend changing your password after your first login.
+              </p>
+              <a href="${data.loginUrl}" style="display: inline-block; background: #6366F1; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
+                Log In to Your Account
+              </a>
+              <p style="color: #a1a1aa; font-size: 14px; margin: 32px 0 0;">
+                If you didn't request this account, please contact the gym directly.
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
 };
 
 // Helper functions to send specific emails
@@ -257,5 +301,13 @@ export async function sendPaymentReminderEmail(
   data: Parameters<typeof emailTemplates.paymentReminder>[0]
 ) {
   const { subject, html } = emailTemplates.paymentReminder(data);
+  return sendEmail({ to, subject, html });
+}
+
+export async function sendStaffCreatedMemberWelcomeEmail(
+  to: string,
+  data: Parameters<typeof emailTemplates.staffCreatedMemberWelcome>[0]
+) {
+  const { subject, html } = emailTemplates.staffCreatedMemberWelcome(data);
   return sendEmail({ to, subject, html });
 }

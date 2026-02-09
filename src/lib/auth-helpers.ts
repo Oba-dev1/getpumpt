@@ -6,6 +6,7 @@
  */
 
 import { auth } from '@/lib/auth'
+import { hasPermission, type Permission } from '@/lib/permissions'
 
 export interface AuthUser {
   id: string
@@ -44,7 +45,7 @@ export async function requireAuth(): Promise<AuthUser> {
 export async function requireAdminAuth(): Promise<AuthUser> {
   const user = await requireAuth()
 
-  if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+  if (!['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
     throw new Error('Unauthorized: Admin access required')
   }
 
@@ -103,7 +104,7 @@ export async function requireGymAdminAuth(gymId: string): Promise<AuthUser> {
 export async function requireOwnerOrAdmin(userId: string): Promise<AuthUser> {
   const user = await requireAuth()
 
-  if (user.id !== userId && !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+  if (user.id !== userId && !['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
     throw new Error('Unauthorized: Can only access your own resources or require admin access')
   }
 
@@ -122,9 +123,58 @@ export async function requireGymOwnerOrAdmin(gymId: string, userId: string): Pro
   const user = await requireAuth()
   verifyGymAccess(user, gymId)
 
-  if (user.id !== userId && !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+  if (user.id !== userId && !['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
     throw new Error('Unauthorized: Can only access your own resources or require admin access')
   }
 
+  return user
+}
+
+/**
+ * Require staff-or-higher authentication
+ * STAFF, ADMIN, and SUPER_ADMIN pass this check
+ *
+ * @returns Authenticated staff user session
+ * @throws Error if not authenticated or not staff/admin
+ */
+export async function requireStaffAuth(): Promise<AuthUser> {
+  const user = await requireAuth()
+
+  if (!['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    throw new Error('Unauthorized: Staff access required')
+  }
+
+  return user
+}
+
+/**
+ * Require gym staff access - staff, admin, or super admin for the gym
+ *
+ * @param gymId - Gym ID to verify staff access to
+ * @returns Authenticated staff user session
+ * @throws Error if not authenticated, not staff/admin, or no gym access
+ */
+export async function requireGymStaffAuth(gymId: string): Promise<AuthUser> {
+  const user = await requireStaffAuth()
+  verifyGymAccess(user, gymId)
+  return user
+}
+
+/**
+ * Require specific permission for a gym action
+ *
+ * @param gymId - Gym ID to verify access to
+ * @param permission - Required permission
+ * @returns Authenticated user session
+ * @throws Error if not authenticated, no gym access, or missing permission
+ */
+export async function requireGymPermission(
+  gymId: string,
+  permission: Permission
+): Promise<AuthUser> {
+  const user = await requireGymStaffAuth(gymId)
+  if (!hasPermission(user.role, permission)) {
+    throw new Error(`Unauthorized: Missing permission '${permission}'`)
+  }
   return user
 }

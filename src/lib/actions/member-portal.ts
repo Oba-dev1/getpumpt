@@ -54,8 +54,8 @@ export async function updateMemberProfile(
   })
 
   if (!parsed.success) {
-    const error = parsed.error.errors[0]
-    return { status: 'error', message: error?.message || 'Invalid input' }
+    const error = parsed.error.issues[0]
+    return { status: 'error' as const, message: error?.message || 'Invalid input' }
   }
 
   await prisma.user.update({
@@ -69,7 +69,7 @@ export async function updateMemberProfile(
 
   revalidatePath('/member/profile')
   revalidatePath('/member')
-  return { status: 'success', message: 'Profile updated.' }
+  return { status: 'success' as const, message: 'Profile updated.' }
 }
 
 export async function getMemberMembership() {
@@ -98,8 +98,8 @@ export async function startMembershipPayment(
   })
 
   if (!parsed.success) {
-    const error = parsed.error.errors[0]
-    return { status: 'error', message: error?.message || 'Invalid input' }
+    const error = parsed.error.issues[0]
+    return { status: 'error' as const, message: error?.message || 'Invalid input' }
   }
 
   try {
@@ -112,10 +112,10 @@ export async function startMembershipPayment(
     )
     redirect(payment.authorizationUrl)
   } catch (error: any) {
-    return { status: 'error', message: error?.message || 'Unable to start payment.' }
+    return { status: 'error' as const, message: error?.message || 'Unable to start payment.' }
   }
 
-  return { status: 'success', message: 'Redirecting to payment...' }
+  return { status: 'success' as const, message: 'Redirecting to payment...' }
 }
 
 export async function getMemberPayments() {
@@ -175,8 +175,8 @@ export async function cancelMemberBooking(
   })
 
   if (!parsed.success) {
-    const error = parsed.error.errors[0]
-    return { status: 'error', message: error?.message || 'Invalid input' }
+    const error = parsed.error.issues[0]
+    return { status: 'error' as const, message: error?.message || 'Invalid input' }
   }
 
   const booking = await prisma.classBooking.findUnique({
@@ -184,17 +184,17 @@ export async function cancelMemberBooking(
   })
 
   if (!booking || booking.userId !== user.id) {
-    return { status: 'error', message: 'Booking not found.' }
+    return { status: 'error' as const, message: 'Booking not found.' }
   }
 
   if (booking.status !== 'CONFIRMED') {
-    return { status: 'error', message: 'Only confirmed bookings can be cancelled.' }
+    return { status: 'error' as const, message: 'Only confirmed bookings can be cancelled.' }
   }
 
   const today = new Date()
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   if (booking.date < startOfToday) {
-    return { status: 'error', message: 'Past bookings cannot be cancelled.' }
+    return { status: 'error' as const, message: 'Past bookings cannot be cancelled.' }
   }
 
   await prisma.classBooking.update({
@@ -204,7 +204,7 @@ export async function cancelMemberBooking(
 
   revalidatePath('/member/bookings')
   revalidatePath('/member')
-  return { status: 'success', message: 'Booking cancelled.' }
+  return { status: 'success' as const, message: 'Booking cancelled.' }
 }
 
 export async function getMemberClasses() {
@@ -352,8 +352,8 @@ export async function markMemberNotificationReadAction(
   })
 
   if (!parsed.success) {
-    const error = parsed.error.errors[0]
-    return { status: 'error', message: error?.message || 'Invalid input' }
+    const error = parsed.error.issues[0]
+    return { status: 'error' as const, message: error?.message || 'Invalid input' }
   }
 
   const notification = await prisma.notification.findUnique({
@@ -361,7 +361,7 @@ export async function markMemberNotificationReadAction(
   })
 
   if (!notification || notification.userId !== user.id) {
-    return { status: 'error', message: 'Notification not found.' }
+    return { status: 'error' as const, message: 'Notification not found.' }
   }
 
   await prisma.notification.update({
@@ -370,7 +370,7 @@ export async function markMemberNotificationReadAction(
   })
 
   revalidatePath('/member/notifications')
-  return { status: 'success', message: 'Marked as read.' }
+  return { status: 'success' as const, message: 'Marked as read.' }
 }
 
 export async function markAllMemberNotificationsReadAction(
@@ -385,7 +385,7 @@ export async function markAllMemberNotificationsReadAction(
   })
 
   revalidatePath('/member/notifications')
-  return { status: 'success', message: 'All notifications marked as read.' }
+  return { status: 'success' as const, message: 'All notifications marked as read.' }
 }
 
 export async function createMemberBooking(
@@ -400,8 +400,8 @@ export async function createMemberBooking(
   })
 
   if (!parsed.success) {
-    const error = parsed.error.errors[0]
-    return { status: 'error', message: error?.message || 'Invalid input' }
+    const error = parsed.error.issues[0]
+    return { status: 'error' as const, message: error?.message || 'Invalid input' }
   }
 
   const schedule = await prisma.classSchedule.findUnique({
@@ -410,7 +410,7 @@ export async function createMemberBooking(
   })
 
   if (!schedule || schedule.gymId !== user.gymId) {
-    return { status: 'error', message: 'Invalid class schedule.' }
+    return { status: 'error' as const, message: 'Invalid class schedule.' }
   }
 
   const bookingDate = typeof parsed.data.date === 'string'
@@ -425,10 +425,10 @@ export async function createMemberBooking(
       date: bookingDate,
     })
   } catch (error: any) {
-    return { status: 'error', message: error?.message || 'Unable to create booking.' }
+    return { status: 'error' as const, message: error?.message || 'Unable to create booking.' }
   }
 
   revalidatePath('/member/bookings')
   revalidatePath('/member')
-  return { status: 'success', message: 'Booking created.' }
+  return { status: 'success' as const, message: 'Booking created.' }
 }

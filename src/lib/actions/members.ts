@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
-import { requireGymAdminAuth, requireGymOwnerOrAdmin } from '@/lib/auth-helpers'
+import { requireGymAdminAuth, requireGymOwnerOrAdmin, requireGymPermission } from '@/lib/auth-helpers'
+import { sendStaffCreatedMemberWelcomeEmail } from '@/lib/email'
 
 function calculateEndDate(startDate: Date, durationValue: number, durationType: 'DAYS' | 'MONTHS' | 'YEARS'): Date {
   const end = new Date(startDate)
@@ -154,7 +155,10 @@ export async function getMemberById(gymId: string, memberId: string) {
 }
 
 export async function createMember(input: CreateMemberInput) {
-  const hashedPassword = await bcrypt.hash(input.password, 10)
+  await requireGymPermission(input.gymId, 'members:create')
+
+  const plaintextPassword = input.password
+  const hashedPassword = await bcrypt.hash(plaintextPassword, 10)
 
   const member = await prisma.user.create({
     data: {
@@ -189,6 +193,27 @@ export async function createMember(input: CreateMemberInput) {
         },
       })
     }
+  }
+
+  // Send welcome email with login credentials (fire-and-forget)
+  try {
+    const gym = await prisma.gym.findUnique({
+      where: { id: input.gymId },
+      select: { name: true, slug: true },
+    })
+
+    if (gym) {
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/gym/${gym.slug}/login`
+      await sendStaffCreatedMemberWelcomeEmail(input.email, {
+        name: `${input.firstName} ${input.lastName}`,
+        gymName: gym.name,
+        email: input.email,
+        password: plaintextPassword,
+        loginUrl,
+      })
+    }
+  } catch {
+    // Email failure should not block member creation
   }
 
   revalidatePath('/admin/members')

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Menu, Search } from 'lucide-react'
+import { Bell, ExternalLink, Menu, Search } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -124,6 +124,19 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 <p className="text-xs text-slate-500">{session?.user?.email || 'admin@fitstudio.com'}</p>
               </div>
               <DropdownMenuSeparator />
+              {session?.user?.gymSlug && (
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`/gym/${session.user.gymSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Website
+                  </a>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => router.push('/admin/settings')}>
                 Settings
               </DropdownMenuItem>

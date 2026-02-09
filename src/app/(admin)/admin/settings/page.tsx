@@ -88,6 +88,8 @@ export default function SettingsPage() {
       setLoading(true)
       try {
         const settings = await getGymSettings(session.user.gymId)
+        const hero = settings.heroContent as Record<string, string> | null
+        const about = settings.aboutContent as Record<string, string> | null
         reset({
           name: settings.name,
           logo: settings.logo,
@@ -101,11 +103,11 @@ export default function SettingsPage() {
           phone: settings.phone,
           email: settings.email,
           website: settings.website,
-          heroTitle: settings.heroContent?.title ?? '',
-          heroSubtitle: settings.heroContent?.subtitle ?? '',
-          heroCtaLabel: settings.heroContent?.ctaLabel ?? '',
-          aboutHeadline: settings.aboutContent?.headline ?? '',
-          aboutBody: settings.aboutContent?.body ?? '',
+          heroTitle: hero?.title ?? '',
+          heroSubtitle: hero?.subtitle ?? '',
+          heroCtaLabel: hero?.ctaLabel ?? '',
+          aboutHeadline: about?.headline ?? '',
+          aboutBody: about?.body ?? '',
           featuresList: (settings.features ?? []).join(', '),
           metaTitle: settings.metaTitle ?? '',
           metaDescription: settings.metaDescription ?? '',

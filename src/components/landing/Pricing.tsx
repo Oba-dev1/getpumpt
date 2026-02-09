@@ -1,15 +1,18 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import type { MembershipPlan } from '@/types/gym';
 import { Switch } from '@/components/ui/switch'; // Assuming you have a switch component
+import { useGym } from '@/contexts/GymContext';
 
 interface PricingProps {
   plans: MembershipPlan[];
 }
 
 export default function Pricing({ plans = [] }: PricingProps) {
+  const { gym } = useGym();
   const [isYearly, setIsYearly] = useState(false);
 
   // Format currency
@@ -99,15 +102,16 @@ export default function Pricing({ plans = [] }: PricingProps) {
                 </ul>
               </div>
 
-              <button
-                className={`w-full mt-auto py-3 md:py-4 font-semibold text-sm md:text-[0.9rem] uppercase tracking-widest transition-all duration-300 rounded-md ${
+              <Link
+                href={`/gym/${gym?.slug}/register`}
+                className={`w-full mt-auto py-3 md:py-4 font-semibold text-sm md:text-[0.9rem] uppercase tracking-widest transition-all duration-300 rounded-md flex items-center justify-center ${
                   plan.isFeatured
                     ? 'bg-[rgb(var(--gym-primary))] text-white border-2 border-[rgb(var(--gym-primary))] hover:brightness-110'
                     : 'bg-transparent border-2 border-[rgb(var(--gym-primary))] text-[rgb(var(--gym-primary))] hover:bg-[rgb(var(--gym-primary))] hover:text-white'
                 }`}
               >
                 Get Started
-              </button>
+              </Link>
             </div>
           ))}
         </div>

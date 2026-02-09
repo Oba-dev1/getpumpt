@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Create FitGym (first tenant)
+  // Create FitStudio (first tenant)
   const fitgym = await prisma.gym.upsert({
-    where: { slug: 'fitgym' },
+    where: { slug: 'fitstudio' },
     update: {},
     create: {
       name: 'FitStudio',
@@ -89,6 +89,15 @@ async function main() {
           description: 'Work out on your schedule. Premium members enjoy round-the-clock access to all facilities.',
         },
       ],
+      aboutContent: {
+        title: 'More Than Just a Gym',
+        description: 'Since 2024, FitStudio has been Abuja\'s premier fitness destination. We combine world-class facilities with expert guidance and a supportive community to help you achieve your goals. Whether you\'re a beginner or a seasoned athlete, we have everything you need to succeed.',
+        stats: [
+          { value: '2+', label: 'Years Experience' },
+          { value: '98%', label: 'Member Satisfaction' },
+          { value: '24/7', label: 'Access' },
+        ],
+      },
       settings: {
         timezone: 'Africa/Lagos',
         currency: 'NGN',
@@ -99,6 +108,17 @@ async function main() {
         requireEmailVerification: true,
         maxBookingsPerDay: 3,
       },
+      heroImageUrl: 'https://res.cloudinary.com/dws3lnn4d/image/upload/v1767215000/woman-training-weightlifting-gym_rlaviu.jpg',
+      aboutImageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200',
+      videoUrl: null,
+      galleryImages: [
+        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800',
+        'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=800',
+        'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=800',
+        'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800',
+        'https://images.unsplash.com/photo-1558611848-73f7eb4001a1?q=80&w=800',
+        'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=800',
+      ],
     },
   });
 
@@ -141,6 +161,25 @@ async function main() {
   });
 
   console.log(`✅ Created test member: ${memberUser.email} (password: member123)`);
+
+  // Create a staff user (front desk)
+  const staffPassword = await bcrypt.hash('staff123', 10);
+  const staffUser = await prisma.user.upsert({
+    where: { gymId_email: { gymId: fitgym.id, email: 'staff@fitstudio.ng' } },
+    update: {},
+    create: {
+      gymId: fitgym.id,
+      email: 'staff@fitstudio.ng',
+      passwordHash: staffPassword,
+      firstName: 'Front Desk',
+      lastName: 'Staff',
+      role: 'STAFF',
+      status: 'ACTIVE',
+      phone: '+234 800 000 0003',
+    },
+  });
+
+  console.log(`✅ Created staff user: ${staffUser.email} (password: staff123)`);
 
   // Create membership plans for FitGym
   const basicPlan = await prisma.membershipPlan.upsert({

@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -40,10 +41,15 @@ export default async function MembershipPage() {
             <CardHeader className="member-card-header">
               <CardTitle className="text-base text-white">No Active Membership</CardTitle>
             </CardHeader>
-            <CardContent className="member-card-content">
+            <CardContent className="member-card-content space-y-3">
               <p className="text-sm text-slate-300">
-                You do not have an active membership plan yet. Contact the front desk to get started.
+                You don&apos;t have an active membership yet. Browse our available plans and choose the one that fits your goals.
               </p>
+              <Link href="/member/plans">
+                <Button variant="gym" className="w-full sm:w-auto">
+                  Browse Membership Plans
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (
@@ -108,6 +114,11 @@ export default async function MembershipPage() {
                       Membership Active
                     </Button>
                   )}
+                  <Link href="/member/plans">
+                    <Button variant="outline" className="h-9 px-4 text-sm">
+                      Browse Other Plans
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </section>

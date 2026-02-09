@@ -83,8 +83,8 @@ export const membershipPlanSchema = z.object({
 
 export const assignMembershipSchema = z.object({
   planId: z.string().min(1, 'Plan is required'),
-  startDate: z.string().or(z.date()),
-  autoRenew: z.boolean().default(false),
+  startDate: z.string().min(1, 'Start date is required'),
+  autoRenew: z.boolean(),
 });
 
 // ==================== CLASS SCHEMAS ====================
@@ -241,8 +241,36 @@ export const membershipPaymentSchema = z.object({
   membershipId: z.string().min(1, 'Membership ID is required'),
 });
 
+export const planSubscriptionSchema = z.object({
+  planId: z.string().min(1, 'Plan selection is required'),
+});
+
 export const notificationIdSchema = z.object({
   notificationId: z.string().min(1, 'Notification ID is required'),
+});
+
+// ==================== STAFF SCHEMAS ====================
+
+export const createStaffSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  phone: z.string().optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  role: z.enum(['STAFF', 'ADMIN'], {
+    message: 'Role must be either Staff or Admin',
+  }),
+});
+
+export const updateStaffRoleSchema = z.object({
+  role: z.enum(['STAFF', 'ADMIN'], {
+    message: 'Role must be either Staff or Admin',
+  }),
 });
 
 // ==================== TYPE EXPORTS ====================
@@ -271,4 +299,16 @@ export type CancelMembershipInput = z.infer<typeof cancelMembershipSchema>;
 export type UpdateEmailInput = z.infer<typeof updateEmailSchema>;
 export type AvatarUploadInput = z.infer<typeof avatarUploadSchema>;
 export type MembershipPaymentInput = z.infer<typeof membershipPaymentSchema>;
+export type PlanSubscriptionInput = z.infer<typeof planSubscriptionSchema>;
 export type NotificationIdInput = z.infer<typeof notificationIdSchema>;
+export type CreateStaffInput = z.infer<typeof createStaffSchema>;
+export type UpdateStaffRoleInput = z.infer<typeof updateStaffRoleSchema>;
+
+// ==================== CHECK-IN SCHEMAS ====================
+
+export const checkInSchema = z.object({
+  userId: z.string().min(1, 'Member ID is required'),
+  notes: z.string().optional(),
+});
+
+export type CheckInInput = z.infer<typeof checkInSchema>;

@@ -5,8 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { useGym } from '@/contexts/GymContext';
 
 export default function Navbar() {
+  const { gym } = useGym();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -38,13 +40,18 @@ export default function Navbar() {
         <nav className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Image
-              src="/FitStudio.png"
-                      alt="FitStudio"              width={80}
-              height={40}
-              className="h-8 md:h-10 w-auto"
-              priority
-            />
+            {gym?.logo ? (
+              <Image
+                src={gym.logo}
+                alt={gym.name}
+                width={80}
+                height={40}
+                className="h-8 md:h-10 w-auto"
+                priority
+              />
+            ) : (
+              <span className="text-2xl font-bold text-white">{gym?.name}</span>
+            )}
           </Link>
 
           {/* Desktop Navigation - Centered */}
@@ -61,13 +68,21 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* CTA Button */}
-          <Link
-            href="#pricing"
-            className="hidden lg:inline-flex items-center justify-center bg-[#6366F1] hover:bg-[#4F46E5] text-white px-10 py-4 text-base font-semibold uppercase tracking-wider transition-all duration-200 rounded-md"
-          >
-            Join Now
-          </Link>
+          {/* CTA Buttons Group */}
+          <div className="hidden lg:flex items-center gap-4">
+            <Link
+              href={`/gym/${gym?.slug}/login`}
+              className="text-gray-400 hover:text-white px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-200"
+            >
+              Member Login
+            </Link>
+            <Link
+              href="#pricing"
+              className="inline-flex items-center justify-center bg-[rgb(var(--gym-primary))] hover:brightness-110 text-white px-10 py-4 text-base font-semibold uppercase tracking-wider transition-all duration-200 rounded-md"
+            >
+              Join Now
+            </Link>
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -95,8 +110,15 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
+              href={`/gym/${gym?.slug}/login`}
+              className="text-gray-300 text-xl font-semibold uppercase tracking-wider"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Member Login
+            </Link>
+            <Link
               href="#pricing"
-              className="mt-6 bg-[#6366F1] text-white px-10 py-4 text-sm font-semibold uppercase tracking-wider rounded"
+              className="mt-6 bg-[rgb(var(--gym-primary))] text-white px-10 py-4 text-sm font-semibold uppercase tracking-wider rounded"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Join Now

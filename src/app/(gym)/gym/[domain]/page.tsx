@@ -5,10 +5,13 @@ import { getGym, getGymMembershipPlans, getGymTrainers, getGymClassSchedules, ge
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
+import About from '@/components/landing/About';
 import Pricing from '@/components/landing/Pricing';
+import Gallery from '@/components/landing/Gallery';
 import Schedule from '@/components/landing/Schedule';
 import Trainers from '@/components/landing/Trainers';
 import Testimonials from '@/components/landing/Testimonials';
+import FAQ from '@/components/landing/FAQ';
 import CTA from '@/components/landing/CTA';
 import Contact from '@/components/landing/Contact';
 import Footer from '@/components/landing/Footer';
@@ -39,10 +42,17 @@ export default async function GymLandingPage({ params }: GymPageProps) {
       <main>
         <Hero heroContent={gym.heroContent} />
         <Features features={gym.features} />
+        <About
+          aboutContent={gym.aboutContent}
+          aboutImageUrl={gym.aboutImageUrl}
+          gymName={gym.name}
+        />
         <Pricing plans={membershipPlans} />
+        <Gallery images={gym.galleryImages} gymName={gym.name} />
         <Schedule schedules={schedules} />
         <Trainers trainers={trainers} />
         <Testimonials testimonials={testimonials} />
+        <FAQ />
         <CTA />
         <Contact />
       </main>

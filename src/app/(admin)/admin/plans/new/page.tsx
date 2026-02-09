@@ -80,11 +80,14 @@ export default function NewPlanPage() {
   }
 
   const onSubmit = async (data: PlanFormData) => {
-    if (!session?.user?.gymId) return
+    if (!session?.user?.gymId) {
+      toast.error('Session expired. Please log in again.')
+      return
+    }
 
     setLoading(true)
     try {
-      await createMembershipPlan({
+      const result = await createMembershipPlan({
         ...data,
         gymId: session.user.gymId,
         price: parseFloat(data.price),
@@ -93,10 +96,16 @@ export default function NewPlanPage() {
         features: features.length > 0 ? features : undefined,
       })
 
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
       toast.success('Plan created successfully')
       router.push('/admin/plans')
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create plan')
+      const errorMessage = error?.message || 'Failed to create plan. Please try again.'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

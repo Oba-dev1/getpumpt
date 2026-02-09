@@ -63,6 +63,11 @@ export async function getGymSettings(gymId: string) {
       phone: true,
       email: true,
       website: true,
+      heroContent: true,
+      aboutContent: true,
+      features: true,
+      metaTitle: true,
+      metaDescription: true,
       settings: true,
     },
   })
@@ -114,32 +119,35 @@ export async function updateGymSettings(
 ) {
   const data = gymSettingsSchema.parse(input)
 
-  await prisma.gym.update({
+  const gym = await prisma.gym.update({
     where: { id: gymId },
     data: {
       name: data.name,
-      logo: data.logo || null,
-      favicon: data.favicon || null,
-      primaryColor: data.primaryColor || null,
-      secondaryColor: data.secondaryColor || null,
-      address: data.address || null,
-      city: data.city || null,
-      state: data.state || null,
-      country: data.country || null,
-      phone: data.phone || null,
-      email: data.email || null,
-      website: data.website || null,
+      logo: data.logo || undefined,
+      favicon: data.favicon || undefined,
+      primaryColor: data.primaryColor || undefined,
+      secondaryColor: data.secondaryColor || undefined,
+      address: data.address || undefined,
+      city: data.city || undefined,
+      state: data.state || undefined,
+      country: data.country || undefined,
+      phone: data.phone || undefined,
+      email: data.email || undefined,
+      website: data.website || undefined,
       heroContent: data.heroContent ?? {},
       aboutContent: data.aboutContent ?? {},
       features: data.features ?? [],
-      metaTitle: data.metaTitle || null,
-      metaDescription: data.metaDescription || null,
+      metaTitle: data.metaTitle || undefined,
+      metaDescription: data.metaDescription || undefined,
       settings: {
         ...data.settings,
         emailTemplates: data.emailTemplates ?? {},
       },
     },
+    select: { slug: true },
   })
 
   revalidatePath('/admin/settings')
+  revalidatePath(`/gym/${gym.slug}`)
+  revalidatePath('/member')
 }

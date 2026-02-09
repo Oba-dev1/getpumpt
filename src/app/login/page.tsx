@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
+import { PasswordInput } from '@/components/ui/password-input';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ export default function LoginPage() {
         // Redirect based on role
         if (session?.user?.role === 'MEMBER') {
           router.push('/member');
-        } else if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN') {
+        } else if (['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(session?.user?.role)) {
           router.push('/admin');
         } else {
           router.push('/');
@@ -53,12 +54,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="mb-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-md">
+          <p className="text-indigo-400 text-sm text-center">
+            <strong>Gym Members:</strong> Please log in at your gym's website (e.g., fitgym.gymflowpro.com)
+          </p>
+        </div>
+
         <div className="text-center mb-8">
             <Link href="/" className="text-3xl font-bold text-white">
               GymFlow<span className="text-indigo-500">Pro</span>
             </Link>
-            <h2 className="mt-4 text-2xl font-semibold text-white">Welcome Back</h2>
-            <p className="text-gray-400">Sign in to continue to your dashboard.</p>
+            <h2 className="mt-4 text-2xl font-semibold text-white">Gym Owner Login</h2>
+            <p className="text-gray-400">Sign in to manage your gym.</p>
         </div>
 
         {error && <p className="mb-4 text-center text-red-500 bg-red-500/10 p-3 rounded-md">{error}</p>}
@@ -82,9 +89,8 @@ export default function LoginPage() {
             <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="password">
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -127,12 +133,14 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
-        <p className="text-center text-gray-500 text-sm">
-          Don't have an account?{' '}
-          <Link href="/signup" className="font-semibold text-indigo-500 hover:text-indigo-400">
-            Sign up
-          </Link>
-        </p>
+        <div className="text-center">
+          <p className="text-gray-500 text-sm">
+            Don't have an account?{' '}
+            <Link href="/signup" className="font-semibold text-indigo-500 hover:text-indigo-400">
+              Register your gym
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

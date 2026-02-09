@@ -31,9 +31,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "FIT STUDIO | Transform Your Body, Elevate Your Life",
-  description: "Join FIT STUDIO's premier fitness destination. State-of-the-art equipment, world-class trainers, and a community that pushes you to achieve your best.",
-  keywords: ["gym", "fitness", "Lagos", "Nigeria", "personal training", "workout", "health"],
+  title: "GymFlow Pro | Run Your Gym Like a Pro",
+  description: "Complete gym management platform for memberships, payments, class scheduling, and analytics. Beautiful branded websites included. Everything you need to grow your fitness business.",
+  keywords: ["gym management", "fitness software", "gym software", "membership management", "class scheduling", "gym analytics", "SaaS"],
 };
 
 export default function RootLayout({

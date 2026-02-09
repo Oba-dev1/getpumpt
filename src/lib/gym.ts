@@ -42,6 +42,10 @@ export const getGymBySlug = cache(async (slug: string): Promise<Gym | null> => {
       features: gym.features as Gym['features'],
       aboutContent: gym.aboutContent as Gym['aboutContent'],
       settings: gym.settings as Gym['settings'],
+      galleryImages: gym.galleryImages,
+      videoUrl: gym.videoUrl,
+      heroImageUrl: gym.heroImageUrl,
+      aboutImageUrl: gym.aboutImageUrl,
       isActive: gym.isActive,
     };
   } catch (error) {
@@ -90,6 +94,10 @@ export const getGymByDomain = cache(async (domain: string): Promise<Gym | null> 
       features: gym.features as Gym['features'],
       aboutContent: gym.aboutContent as Gym['aboutContent'],
       settings: gym.settings as Gym['settings'],
+      galleryImages: gym.galleryImages,
+      videoUrl: gym.videoUrl,
+      heroImageUrl: gym.heroImageUrl,
+      aboutImageUrl: gym.aboutImageUrl,
       isActive: gym.isActive,
     };
   } catch (error) {
@@ -149,6 +157,10 @@ export async function getAllGyms(): Promise<Gym[]> {
       features: gym.features as Gym['features'],
       aboutContent: gym.aboutContent as Gym['aboutContent'],
       settings: gym.settings as Gym['settings'],
+      galleryImages: gym.galleryImages,
+      videoUrl: gym.videoUrl,
+      heroImageUrl: gym.heroImageUrl,
+      aboutImageUrl: gym.aboutImageUrl,
       isActive: gym.isActive,
     }));
   } catch (error) {

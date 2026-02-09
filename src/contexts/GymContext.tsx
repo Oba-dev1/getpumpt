@@ -34,6 +34,10 @@ export interface Gym {
   features: FeatureItem[] | null;
   aboutContent: AboutContent | null;
   settings: GymSettings | null;
+  galleryImages: string[];
+  videoUrl: string | null;
+  heroImageUrl: string | null;
+  aboutImageUrl: string | null;
   isActive: boolean;
 }
 
@@ -47,6 +51,8 @@ export interface HeroContent {
   backgroundImage?: string;
   badge?: string;
   stats?: Array<{ value: string; label: string }>;
+  videoUrl?: string;
+  showVideo?: boolean;
 }
 
 export interface FeatureItem {

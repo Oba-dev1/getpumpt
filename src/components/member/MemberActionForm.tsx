@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
-import { useFormState } from 'react-dom'
+import React, { useEffect, useActionState } from 'react'
 import { toast } from 'sonner'
 import { useMemberActionBanner } from '@/components/member/MemberActionContext'
 
@@ -23,7 +22,7 @@ export function MemberActionForm({
   className,
   children,
 }: MemberActionFormProps) {
-  const [state, formAction] = useFormState(action, initialState)
+  const [state, formAction] = useActionState(action, initialState)
   const banner = useMemberActionBanner()
 
   useEffect(() => {

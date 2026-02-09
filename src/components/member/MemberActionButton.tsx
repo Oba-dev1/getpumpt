@@ -12,6 +12,7 @@ interface MemberActionButtonProps {
   size?: React.ComponentProps<typeof Button>['size']
   type?: 'submit' | 'button'
   pendingText?: string
+  disabled?: boolean
 }
 
 export function MemberActionButton({
@@ -21,6 +22,7 @@ export function MemberActionButton({
   size,
   type = 'submit',
   pendingText = 'Working...',
+  disabled = false,
 }: MemberActionButtonProps) {
   const { pending } = useFormStatus()
 
@@ -29,7 +31,7 @@ export function MemberActionButton({
       variant={variant}
       size={size}
       type={type}
-      disabled={pending}
+      disabled={pending || disabled}
       className={cn('relative', className)}
     >
       {pending ? (

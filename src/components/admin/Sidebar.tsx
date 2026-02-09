@@ -4,24 +4,30 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
     faTachometerAlt, faUsers, faIdCard, faCalendarAlt, faDumbbell,
-    faClipboardList, faUserTie, faWallet, faCog, faTimes, faBell
+    faClipboardList, faUserTie, faWallet, faCog, faTimes, faBell,
+    faExternalLinkAlt, faUsersGear, faUserCheck,
+    type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
+import { useSession } from 'next-auth/react';
+import { ADMIN_NAV_ITEMS, hasPermission } from '@/lib/permissions';
 
-const navLinks = [
-    { href: '/admin', label: 'Dashboard', icon: faTachometerAlt },
-    { href: '/admin/members', label: 'Members', icon: faUsers },
-    { href: '/admin/membership-plans', label: 'Membership Plans', icon: faIdCard },
-    { href: '/admin/plans', label: 'Plans', icon: faIdCard },
-    { href: '/admin/classes', label: 'Classes', icon: faDumbbell },
-    { href: '/admin/schedules', label: 'Schedules', icon: faCalendarAlt },
-    { href: '/admin/bookings', label: 'Bookings', icon: faClipboardList },
-    { href: '/admin/trainers', label: 'Trainers', icon: faUserTie },
-    { href: '/admin/payments', label: 'Payments', icon: faWallet },
-    { href: '/admin/notifications', label: 'Notifications', icon: faBell },
-    { href: '/admin/settings', label: 'Settings', icon: faCog },
-];
+const ICON_MAP: Record<string, IconDefinition> = {
+    dashboard: faTachometerAlt,
+    members: faUsers,
+    checkin: faUserCheck,
+    staff: faUsersGear,
+    plans: faIdCard,
+    plans2: faIdCard,
+    classes: faDumbbell,
+    schedules: faCalendarAlt,
+    bookings: faClipboardList,
+    trainers: faUserTie,
+    payments: faWallet,
+    notifications: faBell,
+    settings: faCog,
+};
 
 interface SidebarProps {
     isMobileOpen: boolean
@@ -30,6 +36,14 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
+    const { data: session } = useSession();
+    const gymSlug = session?.user?.gymSlug;
+    const userRole = session?.user?.role ?? '';
+
+    const visibleNavItems = ADMIN_NAV_ITEMS.filter(
+        (item) => hasPermission(userRole, item.requiredPermission)
+    );
+
     const isRouteActive = (href: string) => {
         if (href === '/admin') {
             return pathname === '/admin'
@@ -79,13 +93,14 @@ export default function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
 
                 <nav className="flex-1 overflow-y-auto px-2.5 py-4" aria-label="Main">
                     <ul className="space-y-1">
-                        {navLinks.map((link) => {
-                            const isActive = isRouteActive(link.href)
+                        {visibleNavItems.map((item) => {
+                            const isActive = isRouteActive(item.href)
+                            const icon = ICON_MAP[item.iconKey]
 
                             return (
-                                <li key={link.href}>
+                                <li key={item.href}>
                                     <Link
-                                        href={link.href}
+                                        href={item.href}
                                         onClick={onClose}
                                         aria-current={isActive ? 'page' : undefined}
                                         className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${isActive
@@ -93,13 +108,29 @@ export default function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
                                             : 'text-slate-200 hover:bg-white/8 hover:text-white'
                                             }`}
                                     >
-                                        <FontAwesomeIcon icon={link.icon} className={`${isActive ? 'text-cyan-300' : 'text-slate-300 group-hover:text-cyan-200'}`} />
-                                        <span>{link.label}</span>
+                                        {icon && (
+                                            <FontAwesomeIcon icon={icon} className={`${isActive ? 'text-cyan-300' : 'text-slate-300 group-hover:text-cyan-200'}`} />
+                                        )}
+                                        <span>{item.label}</span>
                                     </Link>
                                 </li>
                             )
                         })}
                     </ul>
+
+                    {gymSlug && (
+                        <div className="mt-6 border-t border-white/10 pt-4">
+                            <a
+                                href={`/gym/${gymSlug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/10 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                            >
+                                <FontAwesomeIcon icon={faExternalLinkAlt} className="text-cyan-400 group-hover:text-cyan-300" />
+                                <span>View Website</span>
+                            </a>
+                        </div>
+                    )}
                 </nav>
             </aside>
         </>

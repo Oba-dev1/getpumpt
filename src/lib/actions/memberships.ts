@@ -45,7 +45,17 @@ export async function assignMembershipToPlan(
 
   const startDate = new Date(validated.startDate)
   const endDate = new Date(startDate)
-  endDate.setDate(endDate.getDate() + plan.duration)
+  switch (plan.durationType) {
+    case 'DAYS':
+      endDate.setDate(endDate.getDate() + plan.durationValue)
+      break
+    case 'MONTHS':
+      endDate.setMonth(endDate.getMonth() + plan.durationValue)
+      break
+    case 'YEARS':
+      endDate.setFullYear(endDate.getFullYear() + plan.durationValue)
+      break
+  }
 
   const membership = await prisma.membership.create({
     data: {
@@ -129,7 +139,17 @@ export async function renewMembership(
 
   const startDate = new Date()
   const endDate = new Date(startDate)
-  endDate.setDate(endDate.getDate() + membership.plan.duration)
+  switch (membership.plan.durationType) {
+    case 'DAYS':
+      endDate.setDate(endDate.getDate() + membership.plan.durationValue)
+      break
+    case 'MONTHS':
+      endDate.setMonth(endDate.getMonth() + membership.plan.durationValue)
+      break
+    case 'YEARS':
+      endDate.setFullYear(endDate.getFullYear() + membership.plan.durationValue)
+      break
+  }
 
   const updated = await prisma.membership.update({
     where: { id: membershipId, gymId },

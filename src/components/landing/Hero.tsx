@@ -1,14 +1,17 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import type { HeroContent } from '@/types/gym';
+import { useGym, type HeroContent } from '@/contexts/GymContext';
 
 interface HeroProps {
   heroContent: HeroContent | null;
 }
 
 export default function Hero({ heroContent }: HeroProps) {
+  const { gym } = useGym();
   if (!heroContent) {
     // Render a default or fallback hero if no content is provided
     return (
@@ -28,12 +31,35 @@ export default function Hero({ heroContent }: HeroProps) {
     secondaryCtaLink,
     backgroundImage,
     stats,
+    videoUrl,
+    showVideo,
   } = heroContent;
+
+  const heroImageUrl = gym?.heroImageUrl || backgroundImage;
+  const heroVideoUrl = gym?.videoUrl || videoUrl;
+  const shouldShowVideo = showVideo && heroVideoUrl;
 
   return (
     <section className="relative min-h-screen flex items-center pt-40 pb-20 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] to-[#1A1A1A]" />
+
+      {/* Video Background (if enabled) */}
+      {shouldShowVideo && (
+        <div className="absolute inset-0 overflow-hidden">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-30"
+          >
+            <source src={heroVideoUrl} type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+      )}
+
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(var(--gym-primary-rgb),0.15)_0%,transparent_50%),radial-gradient(ellipse_at_80%_20%,rgba(var(--gym-primary-rgb),0.1)_0%,transparent_50%)]" />
 
       {/* Grid pattern */}
@@ -104,10 +130,10 @@ export default function Hero({ heroContent }: HeroProps) {
               <div className="absolute -inset-8 bg-[rgba(var(--gym-primary-rgb),0.2)] blur-3xl rounded-full" />
 
               {/* Image container */}
-              {backgroundImage && (
+              {heroImageUrl && (
                 <div className="relative w-full aspect-[3/4] rounded-2xl border border-white/10 overflow-hidden">
                     <Image
-                    src={backgroundImage}
+                    src={heroImageUrl}
                     alt={title || 'Gym promotional image'}
                     fill
                     className="object-cover"

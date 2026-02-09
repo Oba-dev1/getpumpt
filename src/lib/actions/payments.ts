@@ -264,13 +264,23 @@ export async function verifyMembershipPayment(gymId: string, reference: string) 
   const verification = await verifyPayment(reference)
 
   if (verification.data.status !== 'success') {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: 'FAILED',
-        description: `${payment.description} · ${verification.data.gateway_response}`,
-      },
-    })
+    await prisma.$transaction([
+      prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: 'FAILED',
+          description: `${payment.description} · ${verification.data.gateway_response}`,
+        },
+      }),
+      ...(payment.membership
+        ? [
+            prisma.membership.update({
+              where: { id: payment.membershipId! },
+              data: { status: 'EXPIRED' },
+            }),
+          ]
+        : []),
+    ])
 
     throw new Error('Payment verification failed')
   }
@@ -315,10 +325,12 @@ export async function handlePaystackWebhook(
     reference: string
     status: string
     amount: number
+    gateway_response?: string
     metadata: any
   }
 ) {
-  if (event !== 'charge.success') {
+  const HANDLED_EVENTS = ['charge.success', 'charge.failed']
+  if (!HANDLED_EVENTS.includes(event)) {
     return { message: 'Event ignored' }
   }
 
@@ -337,7 +349,7 @@ export async function handlePaystackWebhook(
     throw new Error('Payment not found')
   }
 
-  if (payment.status === 'COMPLETED') {
+  if (payment.status === 'COMPLETED' || payment.status === 'FAILED') {
     return { message: 'Payment already processed' }
   }
 
@@ -346,6 +358,36 @@ export async function handlePaystackWebhook(
     throw new Error('Payment reference mismatch')
   }
 
+  if (event === 'charge.failed') {
+    await prisma.$transaction([
+      prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: 'FAILED',
+          description: `${payment.description} · ${data.gateway_response || 'Payment failed'}`,
+        },
+      }),
+      ...(payment.membership
+        ? [
+            prisma.membership.update({
+              where: { id: payment.membershipId! },
+              data: { status: 'EXPIRED' },
+            }),
+          ]
+        : []),
+    ])
+
+    revalidatePath('/admin/payments')
+    revalidatePath(`/admin/payments/${paymentId}`)
+    revalidatePath('/admin/dashboard')
+
+    return {
+      message: 'Payment failure recorded',
+      paymentId: payment.id,
+    }
+  }
+
+  // charge.success handling
   // Verify amount matches (convert from kobo to naira for comparison)
   const expectedAmountInKobo = Math.round(Number(payment.amount) * 100)
   if (data.amount !== expectedAmountInKobo) {

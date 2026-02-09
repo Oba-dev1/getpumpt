@@ -1,5 +1,6 @@
 'use server'
 
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireGymAdminAuth } from '@/lib/auth-helpers'
@@ -109,45 +110,88 @@ export async function getPlanById(gymId: string, planId: string) {
   }
 }
 
-export async function createMembershipPlan(input: CreatePlanInput) {
-  await requireGymAdminAuth(input.gymId)
+export async function createMembershipPlan(
+  input: CreatePlanInput
+): Promise<{ id?: string; error?: string }> {
+  try {
+    await requireGymAdminAuth(input.gymId)
 
-  const maxSortOrder = await prisma.membershipPlan.aggregate({
-    where: { gymId: input.gymId },
-    _max: { sortOrder: true },
-  })
+    if (!input.gymId) {
+      return { error: 'Gym ID is required' }
+    }
 
-  const plan = await prisma.membershipPlan.create({
-    data: {
-      gymId: input.gymId,
-      name: input.name,
-      description: input.description,
-      price: input.price,
-      currency: input.currency ?? 'NGN',
-      billingCycle: input.billingCycle,
-      durationValue: input.durationValue,
-      durationType: input.durationType,
-      classCredits: input.classCredits,
-      features: input.features ?? [],
-      isActive: input.isActive ?? true,
-      isFeatured: input.isFeatured ?? false,
-      sortOrder: (maxSortOrder._max.sortOrder ?? 0) + 1,
-    },
-  })
+    if (!input.name || input.name.trim().length < 2) {
+      return { error: 'Plan name must be at least 2 characters' }
+    }
 
-  if (input.isFeatured) {
-    await prisma.membershipPlan.updateMany({
-      where: {
-        gymId: input.gymId,
-        id: { not: plan.id },
-        isFeatured: true,
-      },
-      data: { isFeatured: false },
+    if (Number.isNaN(input.price) || input.price <= 0) {
+      return { error: 'Price must be a valid positive number' }
+    }
+
+    if (Number.isNaN(input.durationValue) || input.durationValue <= 0) {
+      return { error: 'Duration must be a valid positive number' }
+    }
+
+    const maxSortOrder = await prisma.membershipPlan.aggregate({
+      where: { gymId: input.gymId },
+      _max: { sortOrder: true },
     })
-  }
 
-  revalidatePath('/admin/plans')
-  return { id: plan.id }
+    const plan = await prisma.membershipPlan.create({
+      data: {
+        gymId: input.gymId,
+        name: input.name,
+        description: input.description,
+        price: input.price,
+        currency: input.currency ?? 'NGN',
+        billingCycle: input.billingCycle,
+        durationValue: input.durationValue,
+        durationType: input.durationType,
+        classCredits: input.classCredits,
+        features: input.features ?? [],
+        isActive: input.isActive ?? true,
+        isFeatured: input.isFeatured ?? false,
+        sortOrder: (maxSortOrder._max.sortOrder ?? 0) + 1,
+      },
+    })
+
+    if (input.isFeatured) {
+      await prisma.membershipPlan.updateMany({
+        where: {
+          gymId: input.gymId,
+          id: { not: plan.id },
+          isFeatured: true,
+        },
+        data: { isFeatured: false },
+      })
+    }
+
+    const gym = await prisma.gym.findUnique({
+      where: { id: input.gymId },
+      select: { slug: true },
+    })
+
+    revalidatePath('/admin/plans')
+    if (gym) {
+      revalidatePath(`/gym/${gym.slug}`)
+    }
+    revalidatePath('/member')
+    return { id: plan.id }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return { error: 'A plan with this name already exists' }
+      }
+      if (error.code === 'P2003') {
+        return { error: 'Invalid gym ID' }
+      }
+      return { error: `Database error: ${error.code}` }
+    }
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'An unexpected error occurred. Please try again.' }
+  }
 }
 
 export async function updateMembershipPlan(
@@ -173,8 +217,17 @@ export async function updateMembershipPlan(
     })
   }
 
+  const gym = await prisma.gym.findUnique({
+    where: { id: gymId },
+    select: { slug: true },
+  })
+
   revalidatePath('/admin/plans')
   revalidatePath(`/admin/plans/${planId}`)
+  if (gym) {
+    revalidatePath(`/gym/${gym.slug}`)
+  }
+  revalidatePath('/member')
   return { id: plan.id }
 }
 
@@ -187,11 +240,20 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
     throw new Error('Cannot delete plan with active subscribers')
   }
 
+  const gym = await prisma.gym.findUnique({
+    where: { id: gymId },
+    select: { slug: true },
+  })
+
   await prisma.membershipPlan.delete({
     where: { id: planId, gymId },
   })
 
   revalidatePath('/admin/plans')
+  if (gym) {
+    revalidatePath(`/gym/${gym.slug}`)
+  }
+  revalidatePath('/member')
 }
 
 export async function togglePlanStatus(gymId: string, planId: string) {
@@ -205,11 +267,21 @@ export async function togglePlanStatus(gymId: string, planId: string) {
     throw new Error('Plan not found')
   }
 
-  const updated = await prisma.membershipPlan.update({
-    where: { id: planId },
-    data: { isActive: !plan.isActive },
-  })
+  const [updated, gym] = await Promise.all([
+    prisma.membershipPlan.update({
+      where: { id: planId },
+      data: { isActive: !plan.isActive },
+    }),
+    prisma.gym.findUnique({
+      where: { id: gymId },
+      select: { slug: true },
+    }),
+  ])
 
   revalidatePath('/admin/plans')
+  if (gym) {
+    revalidatePath(`/gym/${gym.slug}`)
+  }
+  revalidatePath('/member')
   return { id: updated.id, isActive: updated.isActive }
 }
