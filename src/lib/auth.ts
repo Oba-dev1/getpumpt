@@ -1,10 +1,10 @@
 import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import Credentials from 'next-auth/providers/credentials';
-import Google from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import prisma from './prisma';
 import { z } from 'zod';
+import authConfig from './auth.config';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -13,21 +13,16 @@ const loginSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
   },
-  pages: {
-    signIn: '/login',
-    signOut: '/logout',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
-  },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    // Re-declare providers here with full implementations (authorize for Credentials)
+    ...authConfig.providers.filter(
+      (p) => (p as any).type !== 'credentials'
+    ),
     Credentials({
       name: 'credentials',
       credentials: {
@@ -44,7 +39,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password, gymId } = parsed.data;
 
-        // Find user by email and optionally gymId
         const user = await prisma.user.findFirst({
           where: gymId
             ? { email, gymId }
@@ -87,44 +81,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.gymId = user.gymId;
-        token.gymSlug = user.gymSlug;
-      }
-
-      // Handle session update
-      if (trigger === 'update' && session) {
-        token = { ...token, ...session };
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.gymId = token.gymId as string;
-        session.user.gymSlug = token.gymSlug as string;
-      }
-      return session;
-    },
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
-      // Allow OAuth sign-in
       if (account?.provider !== 'credentials') {
         return true;
       }
-
-      // For credentials, user is already validated in authorize
       return true;
     },
   },
   events: {
     async signIn({ user, isNewUser }) {
       if (isNewUser) {
-        // Send welcome email to new users
         // TODO: Implement welcome email via Resend
       }
     },

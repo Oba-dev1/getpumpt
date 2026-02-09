@@ -1,24 +1,13 @@
-import { auth } from '@/lib/auth';
+import NextAuth from 'next-auth';
 import { NextResponse } from 'next/server';
+import authConfig from '@/lib/auth.config';
 
-export default auth(async (req) => {
+const { auth } = NextAuth(authConfig);
+
+export default auth((req) => {
   const url = req.nextUrl.clone();
   const hostname = req.headers.get('host') || '';
   const pathname = url.pathname;
-  const user = req.auth?.user;
-  const userRole = user?.role;
-
-  // Onboarding routes require authentication (DB checks handled in layouts)
-  if (pathname.startsWith('/onboarding')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-  }
-
-  // Authentication check for admin routes
-  if (pathname.startsWith('/admin') && !['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(userRole as string)) {
-    return NextResponse.redirect(new URL('/api/auth/signin', req.url));
-  }
 
   // Remove port for local development
   const hostnameWithoutPort = hostname.split(':')[0];
@@ -54,7 +43,6 @@ export default auth(async (req) => {
                          !hostname.includes('vercel.app');
 
   if (isCustomDomain) {
-    // For custom domains, rewrite to gym routes
     const response = NextResponse.rewrite(new URL(`/gym/${hostnameWithoutPort}${pathname}`, req.url));
     response.headers.set('x-gym-domain', hostnameWithoutPort);
     response.headers.set('x-gym-type', 'custom-domain');
