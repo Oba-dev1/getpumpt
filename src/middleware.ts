@@ -56,26 +56,14 @@ export default auth((req) => {
   const parts = hostnameWithoutPort.split('.');
   let gymSlug: string | null = null;
 
-  // Production subdomain detection
-  if (parts.length >= 3 && !RESERVED_SUBDOMAINS.includes(parts[0])) {
+  // Production subdomain detection (only on root domain, e.g., fitstudio.getpumpt.com)
+  if (hostname.includes(ROOT_DOMAIN) && parts.length >= 3 && !RESERVED_SUBDOMAINS.includes(parts[0])) {
     gymSlug = parts[0];
   }
 
   // Development subdomain simulation
   if (!gymSlug && (hostname.includes('localhost') || hostname.includes('127.0.0.1'))) {
     gymSlug = url.searchParams.get('gym') || req.headers.get('x-gym-slug');
-  }
-
-  // Vercel preview deployments
-  if (!gymSlug && hostname.includes('.vercel.app')) {
-    const vercelParts = hostnameWithoutPort.split('.');
-    if (vercelParts.length >= 3) {
-      const subdomain = vercelParts[0];
-      const slugMatch = subdomain.match(/-([a-z0-9-]+)$/);
-      if (slugMatch) {
-        gymSlug = slugMatch[1];
-      }
-    }
   }
 
   // If we have a gym slug, rewrite to the gym routes
