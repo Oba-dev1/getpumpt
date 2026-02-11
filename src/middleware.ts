@@ -37,8 +37,11 @@ export default auth((req) => {
     'register',
   ];
 
-  // Check if this is a custom domain (e.g., fitgym.ng)
-  const isCustomDomain = !hostname.includes('gymflowpro.com') &&
+  // Root domain from env (defaults to getpumpt.com)
+  const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'getpumpt.com';
+
+  // Check if this is a custom domain (e.g., fitstudio.ng)
+  const isCustomDomain = !hostname.includes(ROOT_DOMAIN) &&
                          !hostname.includes('localhost') &&
                          !hostname.includes('vercel.app');
 
@@ -49,7 +52,7 @@ export default auth((req) => {
     return response;
   }
 
-  // Check if this is a subdomain (e.g., fitgym.gymflowpro.com)
+  // Check if this is a subdomain (e.g., fitstudio.getpumpt.com)
   const parts = hostnameWithoutPort.split('.');
   let gymSlug: string | null = null;
 

@@ -268,7 +268,7 @@ async function main() {
     {
       firstName: 'Chidi',
       lastName: 'Okonkwo',
-      email: 'chidi@fitgym.ng',
+      email: 'chidi@fitstudio.ng',
       bio: 'Certified personal trainer with 8+ years of experience specializing in strength training and body transformation.',
       specialties: ['Strength Training', 'Body Building', 'Weight Loss'],
       certifications: ['NASM-CPT', 'CrossFit L2'],
@@ -279,7 +279,7 @@ async function main() {
     {
       firstName: 'Amara',
       lastName: 'Eze',
-      email: 'amara@fitgym.ng',
+      email: 'amara@fitstudio.ng',
       bio: 'Yoga and Pilates instructor passionate about helping clients achieve mind-body balance.',
       specialties: ['Yoga', 'Pilates', 'Flexibility'],
       certifications: ['RYT-500', 'Pilates Certified'],
@@ -290,7 +290,7 @@ async function main() {
     {
       firstName: 'Emeka',
       lastName: 'Nwachukwu',
-      email: 'emeka@fitgym.ng',
+      email: 'emeka@fitstudio.ng',
       bio: 'HIIT and cardio specialist dedicated to pushing you beyond your limits.',
       specialties: ['HIIT', 'Cardio', 'Endurance'],
       certifications: ['ACE-CPT', 'Spinning Certified'],
@@ -301,7 +301,7 @@ async function main() {
     {
       firstName: 'Ngozi',
       lastName: 'Adeyemi',
-      email: 'ngozi@fitgym.ng',
+      email: 'ngozi@fitstudio.ng',
       bio: 'Boxing and self-defense coach empowering clients through combat fitness.',
       specialties: ['Boxing', 'Kickboxing', 'Self-Defense'],
       certifications: ['USA Boxing Coach', 'First Aid Certified'],

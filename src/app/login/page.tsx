@@ -56,7 +56,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-md">
           <p className="text-indigo-400 text-sm text-center">
-            <strong>Gym Members:</strong> Please log in at your gym's website (e.g., fitgym.gymflowpro.com)
+            <strong>Gym Members:</strong> Please log in at your gym&apos;s website (e.g., yourgym.getpumpt.com)
           </p>
         </div>
 

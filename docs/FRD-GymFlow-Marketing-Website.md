@@ -1,5 +1,5 @@
 # Functional Requirements Document (FRD)
-# GymFlow Pro - Marketing Website
+# Pumpt - Marketing Website
 
 **Version:** 1.0
 **Date:** January 2026
@@ -9,9 +9,9 @@
 
 ## 1. Executive Summary
 
-The GymFlow Pro Marketing Website is the public-facing SaaS landing page designed to convert gym owners into paying customers. This website showcases the platform's features, pricing, and value proposition, enabling potential customers to sign up for trials or subscriptions.
+The Pumpt Marketing Website is the public-facing SaaS landing page designed to convert gym owners into paying customers. This website showcases the platform's features, pricing, and value proposition, enabling potential customers to sign up for trials or subscriptions.
 
-**Primary URL:** `www.gymflowpro.com` / `gymflowpro.com`
+**Primary URL:** `www.getpumpt.com` / `getpumpt.com`
 
 **Target Audience:**
 - Gym owners looking for management software
@@ -31,7 +31,7 @@ The GymFlow Pro Marketing Website is the public-facing SaaS landing page designe
 ### 2.1 Sitemap
 
 ```
-gymflowpro.com/
+getpumpt.com/
 ├── / (Home)
 ├── /features
 │   ├── /features/member-management
@@ -130,10 +130,10 @@ gymflowpro.com/
 | Step 3 | Invite members and start managing | High |
 | Visual | Timeline or numbered steps with illustrations | High |
 
-##### Benefits / Why GymFlow Pro
+##### Benefits / Why Pumpt
 | Element | Description | Priority |
 |---------|-------------|----------|
-| Section Title | "Why gym owners love GymFlow Pro" | High |
+| Section Title | "Why gym owners love Pumpt" | High |
 | Benefit 1 | Save 10+ hours per week on admin | High |
 | Benefit 2 | Increase member retention by 25% | High |
 | Benefit 3 | Boost revenue with automated billing | High |
@@ -168,7 +168,7 @@ gymflowpro.com/
 | Element | Description | Priority |
 |---------|-------------|----------|
 | Headline | "Ready to transform your gym?" | High |
-| Subheadline | "Join 500+ gyms already using GymFlow Pro" | High |
+| Subheadline | "Join 500+ gyms already using Pumpt" | High |
 | CTA Button | "Start Your Free Trial" → /signup | High |
 | Secondary Text | "No credit card required • 14-day free trial" | High |
 | Background | Gradient or gym imagery | Medium |
@@ -176,11 +176,11 @@ gymflowpro.com/
 ##### Footer
 | Element | Description | Priority |
 |---------|-------------|----------|
-| Logo | GymFlow Pro logo | High |
+| Logo | Pumpt logo | High |
 | Navigation | Product, Company, Resources, Legal columns | High |
 | Social Links | Twitter, LinkedIn, Instagram, Facebook | Medium |
 | Newsletter | Email signup form | Low |
-| Copyright | © 2026 GymFlow Pro. All rights reserved. | High |
+| Copyright | © 2026 Pumpt. All rights reserved. | High |
 | Payment Icons | Paystack, Visa, Mastercard logos | Low |
 
 #### 3.1.2 Business Rules
@@ -278,7 +278,7 @@ Each category links to a detailed sub-page.
 ##### CTA Section
 | Element | Description |
 |---------|-------------|
-| Headline | "See GymFlow Pro in action" |
+| Headline | "See Pumpt in action" |
 | CTA | "Start Free Trial" / "Request Demo" |
 
 ---
@@ -361,7 +361,7 @@ Each feature category has a dedicated page with:
 - Advanced analytics
 - Priority email support
 - Custom domain
-- Remove GymFlow branding
+- Remove Pumpt branding
 - API access (limited)
 
 **Enterprise - ₦75,000/month**
@@ -417,7 +417,7 @@ Full comparison of all features across plans with ✓ / ✗ / "Limited"
 
 | Section | Description |
 |---------|-------------|
-| Hero | "About GymFlow Pro" + mission statement |
+| Hero | "About Pumpt" + mission statement |
 | Our Story | Company origin story (2-3 paragraphs) |
 | Mission | What we're building and why |
 | Values | 3-4 core company values with icons |
@@ -428,7 +428,7 @@ Full comparison of all features across plans with ✓ / ✗ / "Limited"
 #### 3.5.2 Suggested Content
 
 **Mission Statement:**
-"We believe every gym owner deserves powerful, affordable software to run their business. GymFlow Pro was built by fitness enthusiasts who understand the unique challenges of managing a gym."
+"We believe every gym owner deserves powerful, affordable software to run their business. Pumpt was built by fitness enthusiasts who understand the unique challenges of managing a gym."
 
 **Values:**
 1. **Simplicity** - Easy to use, no training required
@@ -467,7 +467,7 @@ Full comparison of all features across plans with ✓ / ✗ / "Limited"
 ##### Contact Information
 | Element | Description |
 |---------|-------------|
-| Email | hello@gymflowpro.com |
+| Email | hello@getpumpt.com |
 | Phone | +234 XXX XXX XXXX |
 | Address | Lagos, Nigeria (if applicable) |
 | Hours | Mon-Fri 9am-6pm WAT |
@@ -500,7 +500,7 @@ Embedded Google Map if physical office exists
 **Option A: Video Demo**
 | Element | Description |
 |---------|-------------|
-| Hero | "See GymFlow Pro in Action" |
+| Hero | "See Pumpt in Action" |
 | Video Player | 3-5 minute product walkthrough video |
 | Chapters | Clickable timestamps for different features |
 | CTA | "Ready to try it? Start Free Trial" |
@@ -508,7 +508,7 @@ Embedded Google Map if physical office exists
 **Option B: Interactive Demo**
 | Element | Description |
 |---------|-------------|
-| Hero | "Try GymFlow Pro Now" |
+| Hero | "Try Pumpt Now" |
 | Demo Environment | Sandboxed demo with sample data |
 | Guided Tour | Tooltips highlighting key features |
 | CTA | "Create your own gym" |
@@ -536,7 +536,7 @@ Embedded Google Map if physical office exists
 
 | Element | Description |
 |---------|-------------|
-| Logo | GymFlow Pro logo |
+| Logo | Pumpt logo |
 | Headline | "Welcome back" |
 | Email Field | Email input |
 | Password Field | Password input with show/hide |
@@ -628,7 +628,7 @@ Embedded Google Map if physical office exists
 
 | Element | Description |
 |---------|-------------|
-| Logo | GymFlow Pro logo |
+| Logo | Pumpt logo |
 | Headline | "Reset your password" |
 | Description | "Enter your email and we'll send a reset link" |
 | Email Field | Email input |
@@ -803,11 +803,11 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, san
 
 | Page | Title | Description |
 |------|-------|-------------|
-| Home | GymFlow Pro - Gym Management Software | The complete gym management platform. Manage members, schedule classes, process payments, and grow your fitness business. |
-| Features | Features - GymFlow Pro | Powerful features for modern gyms. Member management, class scheduling, payments, and more. |
-| Pricing | Pricing - GymFlow Pro | Simple, transparent pricing. Start free, upgrade as you grow. Plans from ₦15,000/month. |
-| About | About Us - GymFlow Pro | Learn about GymFlow Pro's mission to help gym owners succeed. |
-| Contact | Contact Us - GymFlow Pro | Get in touch with the GymFlow Pro team. We're here to help. |
+| Home | Pumpt - Gym Management Software | The complete gym management platform. Manage members, schedule classes, process payments, and grow your fitness business. |
+| Features | Features - Pumpt | Powerful features for modern gyms. Member management, class scheduling, payments, and more. |
+| Pricing | Pricing - Pumpt | Simple, transparent pricing. Start free, upgrade as you grow. Plans from ₦15,000/month. |
+| About | About Us - Pumpt | Learn about Pumpt's mission to help gym owners succeed. |
+| Contact | Contact Us - Pumpt | Get in touch with the Pumpt team. We're here to help. |
 
 ### 5.2 Technical SEO
 
@@ -959,7 +959,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, san
 
 ### 11.2 Assets Needed
 
-- [ ] GymFlow Pro logo (SVG, PNG)
+- [ ] Pumpt logo (SVG, PNG)
 - [ ] Favicon (multiple sizes)
 - [ ] Hero image/illustration
 - [ ] Feature icons (12-18)

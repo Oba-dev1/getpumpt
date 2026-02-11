@@ -1,5 +1,5 @@
 # Functional Requirements Document (FRD)
-# GymFlow Pro - Gym Admin Portal
+# Pumpt - Gym Admin Portal
 
 **Version:** 1.0
 **Date:** January 2026
@@ -9,12 +9,12 @@
 
 ## 1. Executive Summary
 
-The Gym Admin Portal is a comprehensive web-based dashboard for gym owners and administrators to manage all aspects of their individual gym operations within the GymFlow Pro multi-tenant platform. This document outlines the functional requirements, business rules, and specifications for each module.
+The Gym Admin Portal is a comprehensive web-based dashboard for gym owners and administrators to manage all aspects of their individual gym operations within the Pumpt multi-tenant platform. This document outlines the functional requirements, business rules, and specifications for each module.
 
-**Portal URL:** `admin.fitgym.gymflowpro.com` or `fitgym.gymflowpro.com/admin`
+**Portal URL:** `admin.fitgym.getpumpt.com` or `fitgym.getpumpt.com/admin`
 
 **Related Documents:**
-- [FRD-Platform-Admin-Portal.md](./FRD-Platform-Admin-Portal.md) - GymFlow Pro platform management
+- [FRD-Platform-Admin-Portal.md](./FRD-Platform-Admin-Portal.md) - Pumpt platform management
 - [FRD-Member-Portal.md](./FRD-Member-Portal.md) - Gym member self-service
 
 ---

@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'GymFlow Pro <noreply@gymflowpro.com>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'Pumpt <noreply@getpumpt.com>';
 
 interface SendEmailOptions {
   to: string | string[];

@@ -14,7 +14,8 @@ export default function WelcomePage() {
   const [copied, setCopied] = useState(false)
 
   const gymSlug = session?.user?.gymSlug || ''
-  const subdomain = `${gymSlug}.gymflowpro.com`
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'getpumpt.com'
+  const subdomain = `${gymSlug}.${rootDomain}`
 
   const handleCopy = async () => {
     try {

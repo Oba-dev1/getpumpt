@@ -60,7 +60,7 @@ The Admin Portal is the command center for gym operations, providing a unified i
 
 **URL Structure:**
 - Development: `http://localhost:3000/admin`
-- Production: `https://fitstudio.ng/admin` or `https://fitstudio.gymflowpro.com/admin`
+- Production: `https://fitstudio.ng/admin` or `https://fitstudio.getpumpt.com/admin`
 
 **Authentication:**
 - Email and password-based login
@@ -99,7 +99,7 @@ SUPER_ADMIN (Platform Level)
 - Manage subscription billing
 
 **Access:**
-- `admin.gymflowpro.com` (Platform admin portal)
+- `admin.getpumpt.com` (Platform admin portal)
 
 ### ADMIN (Current Implementation)
 

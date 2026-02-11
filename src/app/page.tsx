@@ -1,6 +1,6 @@
-// Root page - GymFlow Pro SaaS Marketing Site
-// Individual gym sites are accessed via /gym/[domain] route (e.g., /gym/fitgym)
-// or subdomains in production (e.g., fitgym.gymflowpro.com)
+// Root page - Pumpt SaaS Marketing Site
+// Individual gym sites are accessed via /gym/[domain] route (e.g., /gym/fitstudio)
+// or subdomains in production (e.g., fitstudio.getpumpt.com)
 
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
