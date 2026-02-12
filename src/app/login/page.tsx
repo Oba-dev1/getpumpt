@@ -28,7 +28,12 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password. Please try again.');
+        const errorMap: Record<string, string> = {
+          CredentialsSignin: 'Invalid email or password. Please try again.',
+          Configuration: 'Server configuration error. Please contact support.',
+          AccessDenied: 'Access denied. Your account may be inactive.',
+        };
+        setError(errorMap[result.error] || `Login failed: ${result.error}`);
         setLoading(false);
       } else if (result?.ok) {
         // Fetch session to get user role
