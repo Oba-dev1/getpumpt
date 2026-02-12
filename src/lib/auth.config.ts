@@ -4,25 +4,32 @@ import Credentials from 'next-auth/providers/credentials';
 
 // Edge-compatible auth config (no Prisma, bcrypt, or heavy deps)
 // Used by middleware only. Full auth with adapter is in auth.ts.
+const providers = [
+  // Only register Google provider when credentials are available
+  ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ? [
+        Google({
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        }),
+      ]
+    : []),
+  // Credentials provider needs authorize() for full auth,
+  // but for middleware we only need the JWT/session callbacks.
+  // Auth.js will skip authorize in middleware context.
+  Credentials({
+    name: 'credentials',
+    credentials: {
+      email: { label: 'Email', type: 'email' },
+      password: { label: 'Password', type: 'password' },
+      gymId: { label: 'Gym ID', type: 'text' },
+    },
+  }),
+];
+
 export default {
   trustHost: true,
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    // Credentials provider needs authorize() for full auth,
-    // but for middleware we only need the JWT/session callbacks.
-    // Auth.js will skip authorize in middleware context.
-    Credentials({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-        gymId: { label: 'Gym ID', type: 'text' },
-      },
-    }),
-  ],
+  providers,
   pages: {
     signIn: '/login',
     signOut: '/logout',
