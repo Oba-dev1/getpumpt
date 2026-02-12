@@ -35,13 +35,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: result.message,
     })
-  } catch (error: any) {
-    console.error('Paystack webhook error:', error)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal server error'
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Internal server error',
+        error: message,
       },
       { status: 500 }
     )

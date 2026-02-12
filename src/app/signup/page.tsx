@@ -64,10 +64,10 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
             <Link href="/" className="text-3xl font-bold text-white">
-              GymFlow<span className="text-indigo-500">Pro</span>
+              Get<span className="text-indigo-500">Pumpt</span>
             </Link>
             <h2 className="mt-4 text-2xl font-semibold text-white">Create an Account</h2>
-            <p className="text-gray-400">Join GymFlowPro and start your fitness journey.</p>
+            <p className="text-gray-400">Join GetPumpt and start your fitness journey.</p>
         </div>
 
         {error && <p className="mb-4 text-center text-red-500 bg-red-500/10 p-3 rounded-md">{error}</p>}

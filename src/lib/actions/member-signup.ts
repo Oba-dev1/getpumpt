@@ -1,8 +1,10 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { signupRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter'
 
 const memberSignupSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
@@ -22,6 +24,10 @@ export type MemberSignupInput = z.infer<typeof memberSignupSchema>
 
 export async function signupMember(input: MemberSignupInput) {
   try {
+    const headersList = await headers()
+    const clientIp = getClientIp(headersList)
+    checkRateLimit(signupRateLimiter, clientIp)
+
     const validated = memberSignupSchema.parse(input)
 
     const existingUser = await prisma.user.findFirst({
@@ -110,6 +116,13 @@ export async function signupMember(input: MemberSignupInput) {
       return {
         success: false,
         error: error.issues[0].message,
+      }
+    }
+
+    if (error instanceof Error && error.message.includes('Rate limit')) {
+      return {
+        success: false,
+        error: 'Too many signup attempts. Please try again later.',
       }
     }
 

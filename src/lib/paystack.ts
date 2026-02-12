@@ -120,7 +120,7 @@ export async function verifyPayment(
   }
 
   const response = await fetch(
-    `${PAYSTACK_API_BASE}/transaction/verify/${reference}`,
+    `${PAYSTACK_API_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
     {
       method: 'GET',
       headers: {

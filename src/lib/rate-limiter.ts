@@ -93,6 +93,18 @@ export const authRateLimiter = new RateLimiter({
   maxRequests: 5,
 })
 
+// Signup rate limiter: 3 signups per 15 minutes per IP
+export const signupRateLimiter = new RateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 3,
+})
+
+// Password reset rate limiter: 3 requests per 15 minutes per IP
+export const passwordResetRateLimiter = new RateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 3,
+})
+
 // API rate limiter: 100 requests per minute per user
 export const apiRateLimiter = new RateLimiter({
   windowMs: 60 * 1000,

@@ -2,23 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { requestPasswordReset } from '@/lib/actions/forgot-password';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setLoading(true);
 
-    // TODO: Implement password reset logic via API
+    try {
+      const result = await requestPasswordReset({ email });
 
-    // For now, show a success message
-    setSuccess('If an account with that email exists, we have sent you a link to reset your password.');
+      if (result.success) {
+        setSuccess(result.message || 'If an account with that email exists, we have sent you a link to reset your password.');
+      } else {
+        setError(result.error || 'Something went wrong. Please try again.');
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,7 +36,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
             <Link href="/" className="text-3xl font-bold text-white">
-              GymFlow<span className="text-indigo-500">Pro</span>
+              Get<span className="text-indigo-500">Pumpt</span>
             </Link>
             <h2 className="mt-4 text-2xl font-semibold text-white">Forgot Password</h2>
             <p className="text-gray-400">Enter your email to reset your password.</p>
@@ -53,9 +63,10 @@ export default function ForgotPasswordPage() {
           <div className="mb-4">
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition-colors duration-300"
+              disabled={loading}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send Reset Link
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
           </div>
         </form>

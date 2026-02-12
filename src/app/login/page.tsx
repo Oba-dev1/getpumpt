@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
         <div className="text-center mb-8">
             <Link href="/" className="text-3xl font-bold text-white">
-              GymFlow<span className="text-indigo-500">Pro</span>
+              Get<span className="text-indigo-500">Pumpt</span>
             </Link>
             <h2 className="mt-4 text-2xl font-semibold text-white">Gym Owner Login</h2>
             <p className="text-gray-400">Sign in to manage your gym.</p>

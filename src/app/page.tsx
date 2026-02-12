@@ -27,7 +27,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-white">
-              GymFlow<span className="text-[#6366F1]">Pro</span>
+              Get<span className="text-[#6366F1]">Pumpt</span>
             </Link>
             <div className="hidden md:flex items-center gap-8">
               <Link href="#features" className="text-gray-400 hover:text-white transition-colors">
@@ -513,7 +513,7 @@ export default function Home() {
             Ready to Transform Your Gym Business?
           </h2>
           <p className="text-white/80 text-lg mb-8">
-            Join hundreds of gym owners who are growing their business with GymFlow Pro.
+            Join hundreds of gym owners who are growing their business with GetPumpt.
           </p>
           <Link
             href="/signup"
@@ -530,10 +530,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-2xl font-bold text-white">
-              GymFlow<span className="text-[#6366F1]">Pro</span>
+              Get<span className="text-[#6366F1]">Pumpt</span>
             </div>
             <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} GymFlow Pro. All rights reserved.
+              © {new Date().getFullYear()} GetPumpt. All rights reserved.
             </p>
           </div>
         </div>

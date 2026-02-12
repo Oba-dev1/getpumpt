@@ -42,7 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findFirst({
           where: gymId
             ? { email, gymId }
-            : { email },
+            : { email, role: { in: ['ADMIN', 'STAFF', 'SUPER_ADMIN'] } },
           include: {
             gym: {
               select: {

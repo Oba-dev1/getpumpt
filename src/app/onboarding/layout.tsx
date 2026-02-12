@@ -29,7 +29,7 @@ export default async function OnboardingLayout({
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/onboarding/welcome" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary" />
-            <span className="text-xl font-bold">GymFlowPro</span>
+            <span className="text-xl font-bold">GetPumpt</span>
           </Link>
 
           <form
