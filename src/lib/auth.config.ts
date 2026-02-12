@@ -5,6 +5,7 @@ import Credentials from 'next-auth/providers/credentials';
 // Edge-compatible auth config (no Prisma, bcrypt, or heavy deps)
 // Used by middleware only. Full auth with adapter is in auth.ts.
 export default {
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
