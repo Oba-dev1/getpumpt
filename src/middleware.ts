@@ -46,8 +46,10 @@ export default auth((req) => {
                          !hostname.includes('vercel.app');
 
   if (isCustomDomain) {
-    const response = NextResponse.rewrite(new URL(`/gym/${hostnameWithoutPort}${pathname}`, req.url));
-    response.headers.set('x-gym-domain', hostnameWithoutPort);
+    // Strip www. prefix so custom domain lookup matches (e.g., www.fitstudio.ng -> fitstudio.ng)
+    const cleanDomain = hostnameWithoutPort.replace(/^www\./, '');
+    const response = NextResponse.rewrite(new URL(`/gym/${cleanDomain}${pathname}`, req.url));
+    response.headers.set('x-gym-domain', cleanDomain);
     response.headers.set('x-gym-type', 'custom-domain');
     return response;
   }
