@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
+import { requireGymPermission } from '@/lib/auth-helpers'
 
 export async function getTrainers(
   gymId: string,
@@ -15,6 +16,8 @@ export async function getTrainers(
     limit?: number
   }
 ) {
+  await requireGymPermission(gymId, 'trainers:view')
+
   const page = options?.page ?? 1
   const limit = options?.limit ?? 20
   const skip = (page - 1) * limit
@@ -73,6 +76,8 @@ export async function getTrainers(
 }
 
 export async function getTrainerById(gymId: string, trainerId: string) {
+  await requireGymPermission(gymId, 'trainers:view')
+
   const trainer = await prisma.trainer.findUnique({
     where: { id: trainerId, gymId },
     include: {
@@ -127,6 +132,8 @@ export async function createTrainer(input: {
   imageUrl?: string
   isActive?: boolean
 }) {
+  await requireGymPermission(input.gymId, 'trainers:manage')
+
   const trainer = await prisma.trainer.create({
     data: {
       gymId: input.gymId,
@@ -163,6 +170,8 @@ export async function updateTrainer(
     isActive?: boolean
   }
 ) {
+  await requireGymPermission(gymId, 'trainers:manage')
+
   const updated = await prisma.trainer.update({
     where: { id: trainerId, gymId },
     data: {
@@ -185,6 +194,8 @@ export async function updateTrainer(
 }
 
 export async function deleteTrainer(gymId: string, trainerId: string) {
+  await requireGymPermission(gymId, 'trainers:manage')
+
   const schedulesCount = await prisma.classSchedule.count({
     where: { gymId, trainerId },
   })
@@ -201,6 +212,8 @@ export async function deleteTrainer(gymId: string, trainerId: string) {
 }
 
 export async function toggleTrainerStatus(gymId: string, trainerId: string) {
+  await requireGymPermission(gymId, 'trainers:manage')
+
   const trainer = await prisma.trainer.findUnique({
     where: { id: trainerId, gymId },
   })

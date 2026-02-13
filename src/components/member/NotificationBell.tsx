@@ -8,21 +8,20 @@ import { getMemberUnreadCount } from '@/lib/actions/notifications';
 import { cn } from '@/lib/utils';
 
 interface NotificationBellProps {
-  userId: string;
   className?: string;
 }
 
-export function NotificationBell({ userId, className }: NotificationBellProps) {
+export function NotificationBell({ className }: NotificationBellProps) {
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const count = await getMemberUnreadCount(userId);
+        const count = await getMemberUnreadCount();
         setUnreadCount(count);
       } catch (error) {
-        console.error('Failed to fetch unread count:', error);
+        // Silently handle auth errors - bell just shows no count
       }
     };
 
@@ -31,7 +30,7 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
     const interval = setInterval(fetchUnreadCount, 30000);
 
     return () => clearInterval(interval);
-  }, [userId]);
+  }, []);
 
   return (
     <Button

@@ -39,6 +39,7 @@ export default {
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
+        token.sub = user.id;
         token.id = user.id;
         token.role = user.role;
         token.gymId = user.gymId;

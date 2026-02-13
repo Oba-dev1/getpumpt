@@ -42,14 +42,15 @@ export async function requestPasswordReset(input: { email: string }) {
       where: { email: validated.email },
     })
 
-    // Generate a cryptographically secure token
+    // Generate a cryptographically secure token and store only its hash
     const token = crypto.randomBytes(32).toString('hex')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
     const expires = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000)
 
     await prisma.passwordResetToken.create({
       data: {
         email: validated.email,
-        token,
+        token: tokenHash,
         expires,
       },
     })

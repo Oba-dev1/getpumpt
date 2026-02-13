@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
@@ -67,12 +67,14 @@ export default function GymRegisterPage() {
     }
   };
 
+  const inputClasses = 'w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-white backdrop-blur-sm transition-all duration-300 focus:border-[rgb(var(--gym-primary))] focus:outline-none focus:ring-1 focus:ring-[rgba(var(--gym-primary-rgb),0.3)]';
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#0A0A0A] p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           {gym.logo ? (
-            <Link href="/" className="inline-block mb-4">
+            <Link href="/" className="mb-4 inline-block">
               <Image src={gym.logo} alt={gym.name} width={120} height={120} className="mx-auto" />
             </Link>
           ) : (
@@ -80,16 +82,20 @@ export default function GymRegisterPage() {
               {gym.name}
             </Link>
           )}
-          <h2 className="mt-4 text-2xl font-semibold text-white">Join {gym.name}</h2>
-          <p className="text-gray-400">Create your member account and start your fitness journey.</p>
+          <h2 className="mt-4 text-2xl font-bold text-white">Join {gym.name}</h2>
+          <p className="mt-1 text-slate-400">Create your member account and start your fitness journey.</p>
         </div>
 
-        {error && <p className="mb-4 text-center text-red-500 bg-red-500/10 p-3 rounded-md">{error}</p>}
+        {error && (
+          <p className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-400">
+            {error}
+          </p>
+        )}
 
-        <form onSubmit={handleSubmit} className="bg-[#141414] border border-white/10 shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4">
-          <div className="grid grid-cols-2 gap-4 mb-4">
+        <form onSubmit={handleSubmit} className="mb-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 backdrop-blur-sm md:p-8">
+          <div className="mb-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="firstName">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="firstName">
                 First Name
               </label>
               <input
@@ -98,12 +104,12 @@ export default function GymRegisterPage() {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                className="w-full bg-[#0A0A0A] border border-white/10 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[var(--gym-primary)]"
+                className={inputClasses}
                 placeholder="John"
               />
             </div>
             <div>
-              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="lastName">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="lastName">
                 Last Name
               </label>
               <input
@@ -112,14 +118,14 @@ export default function GymRegisterPage() {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                className="w-full bg-[#0A0A0A] border border-white/10 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[var(--gym-primary)]"
+                className={inputClasses}
                 placeholder="Doe"
               />
             </div>
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="email">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="email">
               Email Address
             </label>
             <input
@@ -128,13 +134,13 @@ export default function GymRegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-[#0A0A0A] border border-white/10 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[var(--gym-primary)]"
+              className={inputClasses}
               placeholder="you@example.com"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="phone">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="phone">
               Phone Number (Optional)
             </label>
             <input
@@ -142,13 +148,13 @@ export default function GymRegisterPage() {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-white/10 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[var(--gym-primary)]"
+              className={inputClasses}
               placeholder="+234 123 456 7890"
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="password">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="password">
               Password
             </label>
             <PasswordInput
@@ -156,7 +162,7 @@ export default function GymRegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-[#0A0A0A] border border-white/10 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[var(--gym-primary)]"
+              className={inputClasses}
               placeholder="Min 8 chars, 1 uppercase, 1 number"
             />
           </div>
@@ -165,23 +171,23 @@ export default function GymRegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: 'var(--gym-primary)',
-              }}
+              className="w-full rounded-xl bg-[rgb(var(--gym-primary))] py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating Your Account...' : 'Create Account'}
             </button>
           </div>
 
-          <div className="text-center text-xs text-gray-500 mb-4">
+          <div className="text-center text-xs text-slate-500">
             By creating an account, you agree to our Terms of Service and Privacy Policy
           </div>
         </form>
 
-        <p className="text-center text-gray-500 text-sm">
+        <p className="text-center text-sm text-slate-500">
           Already have an account?{' '}
-          <Link href={`/gym/${gym.slug}/login`} className="font-semibold hover:underline" style={{ color: 'var(--gym-primary)' }}>
+          <Link
+            href={`/gym/${gym.slug}/login`}
+            className="font-semibold text-[rgb(var(--gym-primary))] transition-colors duration-300 hover:brightness-125"
+          >
             Sign in
           </Link>
         </p>

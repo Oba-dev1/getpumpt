@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     const session = await auth()
 
     if (!session?.user) {
@@ -11,6 +15,10 @@ export async function GET() {
         { error: 'Not authenticated' },
         { status: 401 }
       )
+    }
+
+    if (session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const user = await prisma.user.findUnique({

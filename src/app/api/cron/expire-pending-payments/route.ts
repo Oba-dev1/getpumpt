@@ -4,9 +4,14 @@ import { prisma } from '@/lib/prisma'
 const PENDING_TIMEOUT_MINUTES = 30
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Cron secret is not configured' }, { status: 500 })
+  }
 
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const authHeader = request.headers.get('authorization')?.trim()
+
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

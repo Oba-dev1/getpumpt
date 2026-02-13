@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 
 const resetPasswordSchema = z.object({
@@ -13,8 +14,10 @@ export async function resetPassword(input: { token: string; password: string }) 
   try {
     const validated = resetPasswordSchema.parse(input)
 
+    const tokenHash = crypto.createHash('sha256').update(validated.token).digest('hex')
+
     const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token: validated.token },
+      where: { token: tokenHash },
     })
 
     if (!resetToken) {

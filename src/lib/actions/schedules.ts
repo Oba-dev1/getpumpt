@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
+import { requireGymPermission } from '@/lib/auth-helpers'
 
 export async function getGymSchedules(
   gymId: string,
@@ -15,6 +16,8 @@ export async function getGymSchedules(
     limit?: number
   }
 ) {
+  await requireGymPermission(gymId, 'schedules:view')
+
   const page = options?.page ?? 1
   const limit = options?.limit ?? 20
   const skip = (page - 1) * limit
@@ -65,6 +68,8 @@ export async function getGymSchedules(
 }
 
 export async function getScheduleFormOptions(gymId: string) {
+  await requireGymPermission(gymId, 'schedules:view')
+
   const [classes, trainers] = await Promise.all([
     prisma.gymClass.findMany({
       where: { gymId, isActive: true },
@@ -91,6 +96,8 @@ export async function getScheduleOptionsByClass(
   gymId: string,
   classId?: string
 ) {
+  await requireGymPermission(gymId, 'schedules:view')
+
   const schedules = await prisma.classSchedule.findMany({
     where: {
       gymId,
@@ -112,6 +119,8 @@ export async function getScheduleOptionsByClass(
 }
 
 export async function getGymScheduleById(gymId: string, scheduleId: string) {
+  await requireGymPermission(gymId, 'schedules:view')
+
   const schedule = await prisma.classSchedule.findUnique({
     where: { id: scheduleId, gymId },
     include: {
@@ -156,6 +165,8 @@ export async function createGymSchedule(input: {
   location?: string
   isActive?: boolean
 }) {
+  await requireGymPermission(input.gymId, 'schedules:manage')
+
   const schedule = await prisma.classSchedule.create({
     data: {
       gymId: input.gymId,
@@ -188,6 +199,8 @@ export async function updateGymSchedule(
     isActive?: boolean
   }
 ) {
+  await requireGymPermission(gymId, 'schedules:manage')
+
   const updated = await prisma.classSchedule.update({
     where: { id: scheduleId, gymId },
     data: {
@@ -208,6 +221,8 @@ export async function updateGymSchedule(
 }
 
 export async function deleteGymSchedule(gymId: string, scheduleId: string) {
+  await requireGymPermission(gymId, 'schedules:manage')
+
   const bookingsCount = await prisma.classBooking.count({
     where: { gymId, scheduleId },
   })
@@ -224,6 +239,8 @@ export async function deleteGymSchedule(gymId: string, scheduleId: string) {
 }
 
 export async function toggleGymScheduleStatus(gymId: string, scheduleId: string) {
+  await requireGymPermission(gymId, 'schedules:manage')
+
   const schedule = await prisma.classSchedule.findUnique({
     where: { id: scheduleId, gymId },
   })
