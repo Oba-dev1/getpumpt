@@ -50,7 +50,7 @@ export async function signupGymOwner(input: SignupInput) {
   try {
     const headersList = await headers()
     const clientIp = getClientIp(headersList)
-    checkRateLimit(signupRateLimiter, clientIp)
+    await checkRateLimit(signupRateLimiter, clientIp)
 
     const validated = signupSchema.parse(input)
 

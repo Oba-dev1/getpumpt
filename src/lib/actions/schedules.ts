@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import {
+  createClassScheduleSchema,
+  updateClassScheduleSchema,
+  type CreateClassScheduleInput,
+  type UpdateClassScheduleInput,
+} from '@/lib/validations'
 
 export async function getGymSchedules(
   gymId: string,
@@ -154,30 +160,21 @@ export async function getGymScheduleById(gymId: string, scheduleId: string) {
   }
 }
 
-export async function createGymSchedule(input: {
-  gymId: string
-  classId: string
-  trainerId: string
-  dayOfWeek: string
-  startTime: string
-  endTime: string
-  maxCapacity: number
-  location?: string
-  isActive?: boolean
-}) {
-  await requireGymPermission(input.gymId, 'schedules:manage')
+export async function createGymSchedule(input: CreateClassScheduleInput) {
+  const validated = createClassScheduleSchema.parse(input)
+  await requireGymPermission(validated.gymId, 'schedules:manage')
 
   const schedule = await prisma.classSchedule.create({
     data: {
-      gymId: input.gymId,
-      classId: input.classId,
-      trainerId: input.trainerId,
-      dayOfWeek: input.dayOfWeek as any,
-      startTime: input.startTime,
-      endTime: input.endTime,
-      maxCapacity: input.maxCapacity,
-      location: input.location,
-      isActive: input.isActive ?? true,
+      gymId: validated.gymId,
+      classId: validated.classId,
+      trainerId: validated.trainerId,
+      dayOfWeek: validated.dayOfWeek,
+      startTime: validated.startTime,
+      endTime: validated.endTime,
+      maxCapacity: validated.maxCapacity,
+      location: validated.location,
+      isActive: validated.isActive,
     },
   })
 
@@ -188,31 +185,14 @@ export async function createGymSchedule(input: {
 export async function updateGymSchedule(
   gymId: string,
   scheduleId: string,
-  input: {
-    classId?: string
-    trainerId?: string
-    dayOfWeek?: string
-    startTime?: string
-    endTime?: string
-    maxCapacity?: number
-    location?: string
-    isActive?: boolean
-  }
+  input: UpdateClassScheduleInput
 ) {
+  const validated = updateClassScheduleSchema.parse(input)
   await requireGymPermission(gymId, 'schedules:manage')
 
   const updated = await prisma.classSchedule.update({
     where: { id: scheduleId, gymId },
-    data: {
-      classId: input.classId,
-      trainerId: input.trainerId,
-      dayOfWeek: input.dayOfWeek as any,
-      startTime: input.startTime,
-      endTime: input.endTime,
-      maxCapacity: input.maxCapacity,
-      location: input.location,
-      isActive: input.isActive,
-    },
+    data: validated,
   })
 
   revalidatePath('/admin/schedules')

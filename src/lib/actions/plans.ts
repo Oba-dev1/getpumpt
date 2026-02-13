@@ -4,35 +4,12 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireGymAdminAuth } from '@/lib/auth-helpers'
-
-interface CreatePlanInput {
-  gymId: string
-  name: string
-  description?: string
-  price: number
-  currency?: string
-  billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-  durationValue: number
-  durationType: 'DAYS' | 'MONTHS' | 'YEARS'
-  classCredits?: number
-  features?: string[]
-  isActive?: boolean
-  isFeatured?: boolean
-}
-
-interface UpdatePlanInput {
-  name?: string
-  description?: string
-  price?: number
-  currency?: string
-  billingCycle?: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-  durationValue?: number
-  durationType?: 'DAYS' | 'MONTHS' | 'YEARS'
-  classCredits?: number
-  features?: string[]
-  isActive?: boolean
-  isFeatured?: boolean
-}
+import {
+  createPlanSchema,
+  updatePlanSchema,
+  type CreatePlanInput,
+  type UpdatePlanInput,
+} from '@/lib/validations'
 
 export async function getMembershipPlans(gymId: string, includeInactive = false) {
   await requireGymAdminAuth(gymId)
@@ -114,51 +91,36 @@ export async function createMembershipPlan(
   input: CreatePlanInput
 ): Promise<{ id?: string; error?: string }> {
   try {
-    await requireGymAdminAuth(input.gymId)
-
-    if (!input.gymId) {
-      return { error: 'Gym ID is required' }
-    }
-
-    if (!input.name || input.name.trim().length < 2) {
-      return { error: 'Plan name must be at least 2 characters' }
-    }
-
-    if (Number.isNaN(input.price) || input.price <= 0) {
-      return { error: 'Price must be a valid positive number' }
-    }
-
-    if (Number.isNaN(input.durationValue) || input.durationValue <= 0) {
-      return { error: 'Duration must be a valid positive number' }
-    }
+    const validated = createPlanSchema.parse(input)
+    await requireGymAdminAuth(validated.gymId)
 
     const maxSortOrder = await prisma.membershipPlan.aggregate({
-      where: { gymId: input.gymId },
+      where: { gymId: validated.gymId },
       _max: { sortOrder: true },
     })
 
     const plan = await prisma.membershipPlan.create({
       data: {
-        gymId: input.gymId,
-        name: input.name,
-        description: input.description,
-        price: input.price,
-        currency: input.currency ?? 'NGN',
-        billingCycle: input.billingCycle,
-        durationValue: input.durationValue,
-        durationType: input.durationType,
-        classCredits: input.classCredits,
-        features: input.features ?? [],
-        isActive: input.isActive ?? true,
-        isFeatured: input.isFeatured ?? false,
+        gymId: validated.gymId,
+        name: validated.name,
+        description: validated.description,
+        price: validated.price,
+        currency: validated.currency,
+        billingCycle: validated.billingCycle,
+        durationValue: validated.durationValue,
+        durationType: validated.durationType,
+        classCredits: validated.classCredits,
+        features: validated.features,
+        isActive: validated.isActive,
+        isFeatured: validated.isFeatured,
         sortOrder: (maxSortOrder._max.sortOrder ?? 0) + 1,
       },
     })
 
-    if (input.isFeatured) {
+    if (validated.isFeatured) {
       await prisma.membershipPlan.updateMany({
         where: {
-          gymId: input.gymId,
+          gymId: validated.gymId,
           id: { not: plan.id },
           isFeatured: true,
         },
@@ -167,7 +129,7 @@ export async function createMembershipPlan(
     }
 
     const gym = await prisma.gym.findUnique({
-      where: { id: input.gymId },
+      where: { id: validated.gymId },
       select: { slug: true },
     })
 
@@ -199,11 +161,12 @@ export async function updateMembershipPlan(
   planId: string,
   input: UpdatePlanInput
 ) {
+  const validated = updatePlanSchema.parse(input)
   await requireGymAdminAuth(gymId)
 
   const plan = await prisma.membershipPlan.update({
     where: { id: planId, gymId },
-    data: input,
+    data: validated,
   })
 
   if (input.isFeatured === true) {

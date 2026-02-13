@@ -9,6 +9,11 @@ import {
   generatePaymentReference,
 } from '@/lib/paystack'
 import { requireGymAdminAuth, requireGymOwnerOrAdmin, requireAuth, verifyGymAccess } from '@/lib/auth-helpers'
+import {
+  refundPaymentSchema,
+  initializePaymentSchema,
+  verifyPaymentSchema,
+} from '@/lib/validations'
 
 export async function getPayments(
   gymId: string,
@@ -123,6 +128,9 @@ export async function refundPayment(
   paymentId: string,
   input?: { amount?: number; reason?: string }
 ) {
+  if (input) {
+    refundPaymentSchema.parse(input)
+  }
   await requireGymAdminAuth(gymId)
 
   const payment = await prisma.payment.findUnique({
@@ -174,6 +182,7 @@ export async function initializeMembershipPayment(
   membershipId: string,
   callbackUrl: string
 ) {
+  initializePaymentSchema.parse({ gymId, userId, membershipId, callbackUrl })
   await requireGymOwnerOrAdmin(gymId, userId)
 
   // Validate callback URL is on our domain
@@ -253,6 +262,7 @@ export async function initializeMembershipPayment(
  * @returns Updated payment data
  */
 export async function verifyMembershipPayment(gymId: string, reference: string) {
+  verifyPaymentSchema.parse({ reference })
   const user = await requireAuth()
   verifyGymAccess(user, gymId)
 

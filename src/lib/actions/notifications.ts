@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireAuth, requireGymPermission } from '@/lib/auth-helpers'
+import { z } from 'zod'
+
+const notificationIdParam = z.string().min(1, 'Notification ID is required')
 
 export async function getNotifications(
   gymId: string,
@@ -65,6 +68,7 @@ export async function getNotifications(
 }
 
 export async function markNotificationRead(gymId: string, notificationId: string) {
+  notificationIdParam.parse(notificationId)
   await requireGymPermission(gymId, 'notifications:manage')
 
   const updated = await prisma.notification.update({
@@ -91,6 +95,7 @@ export async function getNotificationById(
   gymId: string,
   notificationId: string
 ) {
+  notificationIdParam.parse(notificationId)
   await requireGymPermission(gymId, 'notifications:manage')
 
   const notification = await prisma.notification.findUnique({
@@ -173,6 +178,7 @@ export async function markMemberNotificationRead(
   userId: string,
   notificationId: string
 ) {
+  notificationIdParam.parse(notificationId)
   const user = await requireAuth()
   const targetUserId = ['ADMIN', 'SUPER_ADMIN'].includes(user.role) ? userId : user.id
 

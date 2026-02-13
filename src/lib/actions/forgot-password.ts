@@ -17,7 +17,7 @@ export async function requestPasswordReset(input: { email: string }) {
   try {
     const headersList = await headers()
     const clientIp = getClientIp(headersList)
-    checkRateLimit(passwordResetRateLimiter, clientIp)
+    await checkRateLimit(passwordResetRateLimiter, clientIp)
 
     const validated = forgotPasswordSchema.parse(input)
 

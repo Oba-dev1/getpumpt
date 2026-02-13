@@ -1,9 +1,28 @@
 /**
  * Rate Limiter
  *
- * Simple in-memory rate limiter for protecting API endpoints and webhooks.
- * For production, consider using a distributed solution like Upstash Redis.
+ * Distributed rate limiting using Upstash Redis with sliding window algorithm.
+ * Falls back to in-memory rate limiting when Redis is not configured (development).
  */
+
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+// ---------------------------------------------------------------------------
+// Redis client (null when env vars are missing, e.g. local development)
+// ---------------------------------------------------------------------------
+
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null
+
+// ---------------------------------------------------------------------------
+// In-memory fallback for development
+// ---------------------------------------------------------------------------
 
 interface RateLimitConfig {
   windowMs: number
@@ -15,7 +34,7 @@ interface RateLimitEntry {
   resetAt: number
 }
 
-class RateLimiter {
+class InMemoryRateLimiter {
   private requests = new Map<string, RateLimitEntry>()
   private config: RateLimitConfig
 
@@ -24,51 +43,28 @@ class RateLimiter {
     this.startCleanup()
   }
 
-  /**
-   * Check if request is allowed
-   *
-   * @param identifier - Unique identifier (IP address, user ID, etc.)
-   * @returns Whether request is allowed
-   */
   check(identifier: string): { allowed: boolean; resetAt: number; remaining: number } {
     const now = Date.now()
     const entry = this.requests.get(identifier)
 
     if (!entry || now >= entry.resetAt) {
       const resetAt = now + this.config.windowMs
-      this.requests.set(identifier, {
-        count: 1,
-        resetAt,
-      })
-
-      return {
-        allowed: true,
-        resetAt,
-        remaining: this.config.maxRequests - 1,
-      }
+      this.requests.set(identifier, { count: 1, resetAt })
+      return { allowed: true, resetAt, remaining: this.config.maxRequests - 1 }
     }
 
     if (entry.count >= this.config.maxRequests) {
-      return {
-        allowed: false,
-        resetAt: entry.resetAt,
-        remaining: 0,
-      }
+      return { allowed: false, resetAt: entry.resetAt, remaining: 0 }
     }
 
-    entry.count++
-    this.requests.set(identifier, entry)
-
+    this.requests.set(identifier, { ...entry, count: entry.count + 1 })
     return {
       allowed: true,
       resetAt: entry.resetAt,
-      remaining: this.config.maxRequests - entry.count,
+      remaining: this.config.maxRequests - entry.count - 1,
     }
   }
 
-  /**
-   * Clean up expired entries every minute
-   */
   private startCleanup() {
     setInterval(() => {
       const now = Date.now()
@@ -77,45 +73,53 @@ class RateLimiter {
           this.requests.delete(key)
         }
       }
-    }, 60000)
+    }, 60_000)
   }
 }
 
+// ---------------------------------------------------------------------------
+// Unified rate limiter type
+// ---------------------------------------------------------------------------
+
+type RateLimiterInstance = Ratelimit | InMemoryRateLimiter
+
+function createLimiter(windowMs: number, maxRequests: number): RateLimiterInstance {
+  if (redis) {
+    const windowS = `${Math.round(windowMs / 1000)} s` as `${number} s`
+    return new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(maxRequests, windowS),
+      analytics: true,
+    })
+  }
+  return new InMemoryRateLimiter({ windowMs, maxRequests })
+}
+
+// ---------------------------------------------------------------------------
+// Pre-configured rate limiters
+// ---------------------------------------------------------------------------
+
 // Webhook rate limiter: 100 requests per minute per IP
-export const webhookRateLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
-  maxRequests: 100,
-})
+export const webhookRateLimiter = createLimiter(60 * 1000, 100)
 
 // Auth rate limiter: 5 login attempts per 15 minutes per IP
-export const authRateLimiter = new RateLimiter({
-  windowMs: 15 * 60 * 1000,
-  maxRequests: 5,
-})
+export const authRateLimiter = createLimiter(15 * 60 * 1000, 5)
 
 // Signup rate limiter: 3 signups per 15 minutes per IP
-export const signupRateLimiter = new RateLimiter({
-  windowMs: 15 * 60 * 1000,
-  maxRequests: 3,
-})
+export const signupRateLimiter = createLimiter(15 * 60 * 1000, 3)
 
 // Password reset rate limiter: 3 requests per 15 minutes per IP
-export const passwordResetRateLimiter = new RateLimiter({
-  windowMs: 15 * 60 * 1000,
-  maxRequests: 3,
-})
+export const passwordResetRateLimiter = createLimiter(15 * 60 * 1000, 3)
 
 // API rate limiter: 100 requests per minute per user
-export const apiRateLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
-  maxRequests: 100,
-})
+export const apiRateLimiter = createLimiter(60 * 1000, 100)
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 /**
  * Get client IP address from request headers
- *
- * @param headers - Request headers
- * @returns Client IP address
  */
 export function getClientIp(headers: Headers): string {
   return (
@@ -127,15 +131,26 @@ export function getClientIp(headers: Headers): string {
 }
 
 /**
- * Check rate limit and throw error if exceeded
+ * Check rate limit and throw error if exceeded.
  *
- * @param rateLimiter - Rate limiter instance
- * @param identifier - Unique identifier
- * @throws Error if rate limit exceeded
+ * This function is async because Upstash Redis checks are network calls.
+ * When using the in-memory fallback the async overhead is negligible.
  */
-export function checkRateLimit(rateLimiter: RateLimiter, identifier: string): void {
-  const result = rateLimiter.check(identifier)
+export async function checkRateLimit(
+  rateLimiter: RateLimiterInstance,
+  identifier: string
+): Promise<void> {
+  if (rateLimiter instanceof Ratelimit) {
+    const result = await rateLimiter.limit(identifier)
+    if (!result.success) {
+      const resetInSeconds = Math.ceil((result.reset - Date.now()) / 1000)
+      throw new Error(`Rate limit exceeded. Try again in ${resetInSeconds} seconds`)
+    }
+    return
+  }
 
+  // In-memory fallback
+  const result = rateLimiter.check(identifier)
   if (!result.allowed) {
     const resetInSeconds = Math.ceil((result.resetAt - Date.now()) / 1000)
     throw new Error(`Rate limit exceeded. Try again in ${resetInSeconds} seconds`)

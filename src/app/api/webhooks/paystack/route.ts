@@ -6,7 +6,7 @@ import { webhookRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limi
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request.headers)
-    checkRateLimit(webhookRateLimiter, clientIp)
+    await checkRateLimit(webhookRateLimiter, clientIp)
 
     const signature = request.headers.get('x-paystack-signature')
 

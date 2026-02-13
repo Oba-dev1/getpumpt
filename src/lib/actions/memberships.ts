@@ -2,7 +2,13 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { assignMembershipSchema, type AssignMembershipInput } from '@/lib/validations'
+import {
+  assignMembershipSchema,
+  adminCancelMembershipSchema,
+  renewMembershipSchema,
+  updateAutoRenewSchema,
+  type AssignMembershipInput,
+} from '@/lib/validations'
 import { requireGymPermission } from '@/lib/auth-helpers'
 
 export async function assignMembershipToPlan(
@@ -94,6 +100,7 @@ export async function cancelMembership(
   membershipId: string,
   reason?: string
 ) {
+  adminCancelMembershipSchema.parse({ reason })
   await requireGymPermission(gymId, 'members:edit')
 
   const membership = await prisma.membership.findUnique({
@@ -129,6 +136,7 @@ export async function renewMembership(
   membershipId: string,
   autoRenew?: boolean
 ) {
+  renewMembershipSchema.parse({ autoRenew })
   await requireGymPermission(gymId, 'members:edit')
 
   const membership = await prisma.membership.findUnique({
@@ -180,6 +188,7 @@ export async function updateMembershipAutoRenew(
   membershipId: string,
   autoRenew: boolean
 ) {
+  updateAutoRenewSchema.parse({ autoRenew })
   await requireGymPermission(gymId, 'members:edit')
 
   const membership = await prisma.membership.findUnique({

@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-helpers'
 import { initializeMembershipPayment } from '@/lib/actions/payments'
 import type { MemberActionState } from '@/components/member/MemberActionForm'
+import { planSubscriptionSchema } from '@/lib/validations'
 
 function getAppUrl() {
   return (
@@ -81,11 +82,8 @@ export async function subscribeToPlan(
   const user = await requireAuth()
   const planId = formData.get('planId') as string
 
-  if (!planId) {
-    return { status: 'error', message: 'Plan ID is required' }
-  }
-
   try {
+    const validated = planSubscriptionSchema.parse({ planId })
     const existingMembership = await prisma.membership.findUnique({
       where: { userId: user.id },
     })
@@ -98,7 +96,7 @@ export async function subscribeToPlan(
     }
 
     const plan = await prisma.membershipPlan.findUnique({
-      where: { id: planId, gymId: user.gymId },
+      where: { id: validated.planId, gymId: user.gymId },
     })
 
     if (!plan) {

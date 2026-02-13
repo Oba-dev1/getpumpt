@@ -26,7 +26,7 @@ export async function signupMember(input: MemberSignupInput) {
   try {
     const headersList = await headers()
     const clientIp = getClientIp(headersList)
-    checkRateLimit(signupRateLimiter, clientIp)
+    await checkRateLimit(signupRateLimiter, clientIp)
 
     const validated = memberSignupSchema.parse(input)
 

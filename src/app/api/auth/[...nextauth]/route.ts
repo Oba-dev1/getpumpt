@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   if (shouldRateLimit(request)) {
     try {
       const clientIp = getClientIp(request.headers)
-      checkRateLimit(authRateLimiter, clientIp)
+      await checkRateLimit(authRateLimiter, clientIp)
     } catch {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   if (shouldRateLimit(request)) {
     try {
       const clientIp = getClientIp(request.headers)
-      checkRateLimit(authRateLimiter, clientIp)
+      await checkRateLimit(authRateLimiter, clientIp)
     } catch {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },

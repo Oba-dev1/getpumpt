@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import {
+  createTrainerSchema,
+  updateTrainerSchema,
+  type CreateTrainerInput,
+  type UpdateTrainerInput,
+} from '@/lib/validations'
 
 export async function getTrainers(
   gymId: string,
@@ -119,34 +125,23 @@ export async function getTrainerById(gymId: string, trainerId: string) {
   }
 }
 
-export async function createTrainer(input: {
-  gymId: string
-  firstName: string
-  lastName: string
-  email: string
-  phone?: string
-  bio?: string
-  specialties?: string[]
-  certifications?: string[]
-  yearsExperience?: number
-  imageUrl?: string
-  isActive?: boolean
-}) {
-  await requireGymPermission(input.gymId, 'trainers:manage')
+export async function createTrainer(input: CreateTrainerInput) {
+  const validated = createTrainerSchema.parse(input)
+  await requireGymPermission(validated.gymId, 'trainers:manage')
 
   const trainer = await prisma.trainer.create({
     data: {
-      gymId: input.gymId,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
-      bio: input.bio,
-      specialties: input.specialties ?? [],
-      certifications: input.certifications ?? [],
-      yearsExperience: input.yearsExperience,
-      imageUrl: input.imageUrl,
-      isActive: input.isActive ?? true,
+      gymId: validated.gymId,
+      firstName: validated.firstName,
+      lastName: validated.lastName,
+      email: validated.email,
+      phone: validated.phone,
+      bio: validated.bio,
+      specialties: validated.specialties,
+      certifications: validated.certifications,
+      yearsExperience: validated.yearsExperience,
+      imageUrl: validated.imageUrl,
+      isActive: validated.isActive,
     },
   })
 
@@ -157,35 +152,14 @@ export async function createTrainer(input: {
 export async function updateTrainer(
   gymId: string,
   trainerId: string,
-  input: {
-    firstName?: string
-    lastName?: string
-    email?: string
-    phone?: string
-    bio?: string
-    specialties?: string[]
-    certifications?: string[]
-    yearsExperience?: number
-    imageUrl?: string
-    isActive?: boolean
-  }
+  input: UpdateTrainerInput
 ) {
+  const validated = updateTrainerSchema.parse(input)
   await requireGymPermission(gymId, 'trainers:manage')
 
   const updated = await prisma.trainer.update({
     where: { id: trainerId, gymId },
-    data: {
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
-      bio: input.bio,
-      specialties: input.specialties,
-      certifications: input.certifications,
-      yearsExperience: input.yearsExperience,
-      imageUrl: input.imageUrl,
-      isActive: input.isActive,
-    },
+    data: validated,
   })
 
   revalidatePath('/admin/trainers')

@@ -7,6 +7,12 @@ import type { Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { requireGymPermission } from '@/lib/auth-helpers'
 import { sendPasswordResetEmail } from '@/lib/email'
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  type CreateMemberInput,
+  type UpdateMemberInput,
+} from '@/lib/validations'
 
 function calculateEndDate(startDate: Date, durationValue: number, durationType: 'DAYS' | 'MONTHS' | 'YEARS'): Date {
   const end = new Date(startDate)
@@ -22,24 +28,6 @@ function calculateEndDate(startDate: Date, durationValue: number, durationType: 
       break
   }
   return end
-}
-
-interface CreateMemberInput {
-  gymId: string
-  firstName: string
-  lastName: string
-  email: string
-  phone?: string
-  password: string
-  planId?: string
-  startDate?: Date
-}
-
-interface UpdateMemberInput {
-  firstName?: string
-  lastName?: string
-  phone?: string
-  status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
 }
 
 export async function getMembers(gymId: string, options?: {
@@ -160,37 +148,38 @@ export async function getMemberById(gymId: string, memberId: string) {
 }
 
 export async function createMember(input: CreateMemberInput) {
-  await requireGymPermission(input.gymId, 'members:create')
+  const validated = createMemberSchema.parse(input)
+  await requireGymPermission(validated.gymId, 'members:create')
 
-  const hashedPassword = await bcrypt.hash(input.password, 10)
+  const hashedPassword = await bcrypt.hash(validated.password, 10)
 
   const member = await prisma.user.create({
     data: {
-      gymId: input.gymId,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
+      gymId: validated.gymId,
+      firstName: validated.firstName,
+      lastName: validated.lastName,
+      email: validated.email,
+      phone: validated.phone,
       passwordHash: hashedPassword,
       role: 'MEMBER',
       status: 'ACTIVE',
     },
   })
 
-  if (input.planId) {
+  if (validated.planId) {
     const plan = await prisma.membershipPlan.findUnique({
-      where: { id: input.planId, gymId: input.gymId },
+      where: { id: validated.planId, gymId: validated.gymId },
     })
 
     if (plan) {
-      const startDate = input.startDate ?? new Date()
+      const startDate = validated.startDate ?? new Date()
       const endDate = calculateEndDate(startDate, plan.durationValue, plan.durationType)
 
       await prisma.membership.create({
         data: {
-          gymId: input.gymId,
+          gymId: validated.gymId,
           userId: member.id,
-          planId: input.planId,
+          planId: validated.planId,
           status: 'ACTIVE',
           startDate,
           endDate,
@@ -202,13 +191,13 @@ export async function createMember(input: CreateMemberInput) {
   // Send account setup email with password reset link (fire-and-forget)
   try {
     const gym = await prisma.gym.findUnique({
-      where: { id: input.gymId },
+      where: { id: validated.gymId },
       select: { name: true, slug: true },
     })
 
     if (gym) {
       await prisma.passwordResetToken.deleteMany({
-        where: { email: input.email },
+        where: { email: validated.email },
       })
 
       const rawToken = crypto.randomBytes(32).toString('hex')
@@ -217,7 +206,7 @@ export async function createMember(input: CreateMemberInput) {
 
       await prisma.passwordResetToken.create({
         data: {
-          email: input.email,
+          email: validated.email,
           token: tokenHash,
           expires,
         },
@@ -225,8 +214,8 @@ export async function createMember(input: CreateMemberInput) {
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       const resetUrl = `${appUrl}/reset-password?token=${rawToken}`
-      await sendPasswordResetEmail(input.email, {
-        name: `${input.firstName} ${input.lastName}`,
+      await sendPasswordResetEmail(validated.email, {
+        name: `${validated.firstName} ${validated.lastName}`,
         resetUrl,
       })
     }
@@ -243,11 +232,12 @@ export async function updateMember(
   memberId: string,
   input: UpdateMemberInput
 ) {
+  const validated = updateMemberSchema.parse(input)
   await requireGymPermission(gymId, 'members:edit')
 
   const member = await prisma.user.update({
     where: { id: memberId, gymId },
-    data: input,
+    data: validated,
   })
 
   revalidatePath('/admin/members')

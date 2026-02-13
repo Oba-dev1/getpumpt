@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import {
+  createGymClassSchema,
+  updateGymClassSchema,
+  type CreateGymClassInput,
+  type UpdateGymClassInput,
+} from '@/lib/validations'
 
 export async function getGymClasses(
   gymId: string,
@@ -96,28 +102,20 @@ export async function getGymClassById(gymId: string, classId: string) {
   return gymClass
 }
 
-export async function createGymClass(input: {
-  gymId: string
-  name: string
-  description?: string
-  category: string
-  duration: number
-  capacity: number
-  imageUrl?: string
-  isActive?: boolean
-}) {
-  await requireGymPermission(input.gymId, 'classes:manage')
+export async function createGymClass(input: CreateGymClassInput) {
+  const validated = createGymClassSchema.parse(input)
+  await requireGymPermission(validated.gymId, 'classes:manage')
 
   const gymClass = await prisma.gymClass.create({
     data: {
-      gymId: input.gymId,
-      name: input.name,
-      description: input.description,
-      category: input.category as any,
-      duration: input.duration,
-      capacity: input.capacity,
-      imageUrl: input.imageUrl,
-      isActive: input.isActive ?? true,
+      gymId: validated.gymId,
+      name: validated.name,
+      description: validated.description,
+      category: validated.category,
+      duration: validated.duration,
+      capacity: validated.capacity,
+      imageUrl: validated.imageUrl,
+      isActive: validated.isActive,
     },
   })
 
@@ -128,29 +126,14 @@ export async function createGymClass(input: {
 export async function updateGymClass(
   gymId: string,
   classId: string,
-  input: {
-    name?: string
-    description?: string
-    category?: string
-    duration?: number
-    capacity?: number
-    imageUrl?: string
-    isActive?: boolean
-  }
+  input: UpdateGymClassInput
 ) {
+  const validated = updateGymClassSchema.parse(input)
   await requireGymPermission(gymId, 'classes:manage')
 
   const updated = await prisma.gymClass.update({
     where: { id: classId, gymId },
-    data: {
-      name: input.name,
-      description: input.description,
-      category: input.category as any,
-      duration: input.duration,
-      capacity: input.capacity,
-      imageUrl: input.imageUrl,
-      isActive: input.isActive,
-    },
+    data: validated,
   })
 
   revalidatePath('/admin/classes')
