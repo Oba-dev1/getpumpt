@@ -43,6 +43,13 @@ docs/LOGIN-CREDENTIALS.md
 # vercel
 .vercel
 
+# python
+__pycache__/
+*.pyc
+
+# windows artifacts
+nul
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
