@@ -54,7 +54,6 @@ export default function MemberDetailPage() {
         const result = await getMemberById(session.user.gymId, memberId)
         setMember(result)
       } catch (error) {
-        console.error('Failed to fetch member:', error)
         toast.error('Failed to load member details')
         router.push('/admin/members')
       } finally {

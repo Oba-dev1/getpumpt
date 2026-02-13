@@ -118,13 +118,22 @@ export async function getMemberNotifications(
 ) {
   const user = await requireAuth()
 
-  const targetUserId = ['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId
-    ? userId
-    : user.id
+  let targetUserId = user.id
+  if (['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId && userId !== user.id) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId, gymId: user.gymId },
+      select: { id: true },
+    })
+    if (!targetUser) {
+      throw new Error('User not found')
+    }
+    targetUserId = userId
+  }
 
   const notifications = await prisma.notification.findMany({
     where: {
       userId: targetUserId,
+      gymId: user.gymId,
       ...(unreadOnly && { isRead: false }),
     },
     orderBy: [{ isRead: 'asc' }, { createdAt: 'desc' }],
@@ -137,13 +146,22 @@ export async function getMemberNotifications(
 export async function getMemberUnreadCount(userId?: string): Promise<number> {
   const user = await requireAuth()
 
-  const targetUserId = ['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId
-    ? userId
-    : user.id
+  let targetUserId = user.id
+  if (['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId && userId !== user.id) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId, gymId: user.gymId },
+      select: { id: true },
+    })
+    if (!targetUser) {
+      throw new Error('User not found')
+    }
+    targetUserId = userId
+  }
 
   const count = await prisma.notification.count({
     where: {
       userId: targetUserId,
+      gymId: user.gymId,
       isRead: false,
     },
   })
@@ -159,7 +177,7 @@ export async function markMemberNotificationRead(
   const targetUserId = ['ADMIN', 'SUPER_ADMIN'].includes(user.role) ? userId : user.id
 
   const notification = await prisma.notification.findUnique({
-    where: { id: notificationId },
+    where: { id: notificationId, gymId: user.gymId },
   })
 
   if (!notification || notification.userId !== targetUserId) {
@@ -182,6 +200,7 @@ export async function markAllMemberNotificationsRead(userId: string) {
   await prisma.notification.updateMany({
     where: {
       userId: targetUserId,
+      gymId: user.gymId,
       isRead: false,
     },
     data: { isRead: true },

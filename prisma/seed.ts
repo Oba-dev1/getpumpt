@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -125,7 +126,8 @@ async function main() {
   console.log(`✅ Created gym: ${fitgym.name} (${fitgym.slug})`);
 
   // Create admin user for FitStudio
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminPwd = process.env.SEED_ADMIN_PASSWORD || crypto.randomBytes(16).toString('hex');
+  const adminPassword = await bcrypt.hash(adminPwd, 10);
   const adminUser = await prisma.user.upsert({
     where: { gymId_email: { gymId: fitgym.id, email: 'admin@fitstudio.ng' } },
     update: {},
@@ -141,10 +143,11 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created admin user: ${adminUser.email} (password: admin123)`);
+  console.log(`Created admin user: ${adminUser.email} (password: ${adminPwd})`);
 
   // Create a test member user
-  const memberPassword = await bcrypt.hash('member123', 10);
+  const memberPwd = process.env.SEED_MEMBER_PASSWORD || crypto.randomBytes(16).toString('hex');
+  const memberPassword = await bcrypt.hash(memberPwd, 10);
   const memberUser = await prisma.user.upsert({
     where: { gymId_email: { gymId: fitgym.id, email: 'member@test.com' } },
     update: {},
@@ -160,10 +163,11 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created test member: ${memberUser.email} (password: member123)`);
+  console.log(`Created test member: ${memberUser.email} (password: ${memberPwd})`);
 
   // Create a staff user (front desk)
-  const staffPassword = await bcrypt.hash('staff123', 10);
+  const staffPwd = process.env.SEED_STAFF_PASSWORD || crypto.randomBytes(16).toString('hex');
+  const staffPassword = await bcrypt.hash(staffPwd, 10);
   const staffUser = await prisma.user.upsert({
     where: { gymId_email: { gymId: fitgym.id, email: 'staff@fitstudio.ng' } },
     update: {},
@@ -179,7 +183,7 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created staff user: ${staffUser.email} (password: staff123)`);
+  console.log(`Created staff user: ${staffUser.email} (password: ${staffPwd})`);
 
   // Create membership plans for FitGym
   const basicPlan = await prisma.membershipPlan.upsert({

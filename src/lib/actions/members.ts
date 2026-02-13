@@ -179,7 +179,7 @@ export async function createMember(input: CreateMemberInput) {
 
   if (input.planId) {
     const plan = await prisma.membershipPlan.findUnique({
-      where: { id: input.planId },
+      where: { id: input.planId, gymId: input.gymId },
     })
 
     if (plan) {

@@ -59,7 +59,7 @@ export async function updateMemberProfile(
   }
 
   await prisma.user.update({
-    where: { id: user.id },
+    where: { id: user.id, gymId: user.gymId },
     data: {
       firstName: parsed.data.firstName,
       lastName: parsed.data.lastName,
@@ -76,7 +76,7 @@ export async function getMemberMembership() {
   const user = await requireAuth()
 
   return prisma.membership.findUnique({
-    where: { userId: user.id },
+    where: { userId: user.id, gymId: user.gymId },
     include: {
       plan: true,
       payments: {
@@ -122,7 +122,7 @@ export async function getMemberPayments() {
   const user = await requireAuth()
 
   const payments = await prisma.payment.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, gymId: user.gymId },
     orderBy: { createdAt: 'desc' },
     take: 25,
     include: {
@@ -150,7 +150,7 @@ export async function getMemberBookings() {
   const user = await requireAuth()
 
   return prisma.classBooking.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, gymId: user.gymId },
     orderBy: { date: 'desc' },
     include: {
       schedule: {
@@ -287,11 +287,11 @@ export async function getMemberDashboardData() {
 
   const [membership, upcomingBookings, recentPayments, unreadNotifications] = await Promise.all([
     prisma.membership.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.id, gymId: user.gymId },
       include: { plan: true },
     }),
     prisma.classBooking.findMany({
-      where: { userId: user.id, date: { gte: startOfToday } },
+      where: { userId: user.id, gymId: user.gymId, date: { gte: startOfToday } },
       orderBy: { date: 'asc' },
       take: 3,
       include: {
@@ -304,7 +304,7 @@ export async function getMemberDashboardData() {
       },
     }),
     prisma.payment.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, gymId: user.gymId },
       orderBy: { createdAt: 'desc' },
       take: 4,
       include: {
@@ -312,7 +312,7 @@ export async function getMemberDashboardData() {
       },
     }),
     prisma.notification.count({
-      where: { userId: user.id, isRead: false },
+      where: { userId: user.id, gymId: user.gymId, isRead: false },
     }),
   ])
 
@@ -335,7 +335,7 @@ export async function getMemberNotifications() {
   const user = await requireAuth()
 
   return prisma.notification.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, gymId: user.gymId },
     orderBy: [{ isRead: 'asc' }, { createdAt: 'desc' }],
     take: 50,
   })

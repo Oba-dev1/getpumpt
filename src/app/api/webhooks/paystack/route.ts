@@ -35,13 +35,11 @@ export async function POST(request: NextRequest) {
       success: true,
       message: result.message,
     })
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Internal server error'
-
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error: message,
+        error: 'Internal server error',
       },
       { status: 500 }
     )

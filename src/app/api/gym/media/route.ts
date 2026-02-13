@@ -75,10 +75,9 @@ export async function POST(request: NextRequest) {
       message: 'Media updated successfully',
       gym: updatedGym,
     });
-  } catch (error) {
-    console.error('Media update failed:', error);
+  } catch {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -124,18 +123,17 @@ export async function DELETE(request: NextRequest) {
 
     try {
       await deleteGymMedia(url);
-    } catch (deleteError) {
-      console.error('Failed to delete from R2, but removed from database:', deleteError);
+    } catch {
+      // R2 deletion failed but database was updated
     }
 
     return NextResponse.json({
       success: true,
       message: 'Media deleted successfully',
     });
-  } catch (error) {
-    console.error('Media deletion failed:', error);
+  } catch {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

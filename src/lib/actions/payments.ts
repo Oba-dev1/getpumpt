@@ -176,6 +176,20 @@ export async function initializeMembershipPayment(
 ) {
   await requireGymOwnerOrAdmin(gymId, userId)
 
+  // Validate callback URL is on our domain
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL
+  if (appUrl) {
+    try {
+      const parsed = new URL(callbackUrl)
+      const allowed = new URL(appUrl)
+      if (parsed.origin !== allowed.origin) {
+        throw new Error('Invalid callback URL')
+      }
+    } catch {
+      throw new Error('Invalid callback URL')
+    }
+  }
+
   const membership = await prisma.membership.findUnique({
     where: { id: membershipId, gymId },
     include: {

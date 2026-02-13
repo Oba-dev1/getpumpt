@@ -92,7 +92,6 @@ export default function EditPlanPage() {
           setFeatures(plan.features)
         }
       } catch (error) {
-        console.error('Failed to fetch plan:', error)
         toast.error('Failed to load plan')
         router.push('/admin/plans')
       } finally {

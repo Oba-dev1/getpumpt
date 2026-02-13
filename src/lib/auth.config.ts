@@ -70,6 +70,11 @@ export default {
         return Response.redirect(new URL('/login', nextUrl));
       }
 
+      // Member routes require auth
+      if (pathname.startsWith('/member') && !isLoggedIn) {
+        return Response.redirect(new URL('/login', nextUrl));
+      }
+
       // Admin routes require staff/admin roles
       if (pathname.startsWith('/admin')) {
         const role = auth?.user?.role;

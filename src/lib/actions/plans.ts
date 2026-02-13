@@ -232,8 +232,10 @@ export async function updateMembershipPlan(
 }
 
 export async function deleteMembershipPlan(gymId: string, planId: string) {
+  await requireGymAdminAuth(gymId)
+
   const activeSubscribers = await prisma.membership.count({
-    where: { planId, status: 'ACTIVE' },
+    where: { planId, gymId, status: 'ACTIVE' },
   })
 
   if (activeSubscribers > 0) {

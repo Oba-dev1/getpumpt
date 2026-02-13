@@ -24,13 +24,11 @@ export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailO
     });
 
     if (error) {
-      console.error('Failed to send email:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Email sending error:', error);
     throw error;
   }
 }

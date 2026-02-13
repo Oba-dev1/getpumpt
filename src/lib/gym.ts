@@ -49,7 +49,6 @@ export const getGymBySlug = cache(async (slug: string): Promise<Gym | null> => {
       isActive: gym.isActive,
     };
   } catch (error) {
-    console.error('Error fetching gym by slug:', error);
     return null;
   }
 });
@@ -101,7 +100,6 @@ export const getGymByDomain = cache(async (domain: string): Promise<Gym | null> 
       isActive: gym.isActive,
     };
   } catch (error) {
-    console.error('Error fetching gym by domain:', error);
     return null;
   }
 });
@@ -164,7 +162,6 @@ export async function getAllGyms(): Promise<Gym[]> {
       isActive: gym.isActive,
     }));
   } catch (error) {
-    console.error('Error fetching all gyms:', error);
     return [];
   }
 }
@@ -183,7 +180,6 @@ export async function getGymMembershipPlans(gymId: string) {
       classCredits: plan.classCredits ?? undefined,
     }));
   } catch (error) {
-    console.error('Error fetching membership plans:', error);
     return [];
   }
 }
@@ -196,7 +192,6 @@ export async function getGymTrainers(gymId: string) {
       orderBy: { sortOrder: 'asc' },
     });
   } catch (error) {
-    console.error('Error fetching trainers:', error);
     return [];
   }
 }
@@ -216,7 +211,6 @@ export async function getGymClassSchedules(gymId: string) {
       ],
     });
   } catch (error) {
-    console.error('Error fetching class schedules:', error);
     return [];
   }
 }
@@ -229,7 +223,6 @@ export async function getGymTestimonials(gymId: string) {
       orderBy: { sortOrder: 'asc' },
     });
   } catch (error) {
-    console.error('Error fetching testimonials:', error);
     return [];
   }
 }
