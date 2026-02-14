@@ -23,6 +23,7 @@ export type Permission =
   | 'payments:manage'
   | 'notifications:manage'
   | 'settings:manage'
+  | 'activity:view'
 
 const ALL_PERMISSIONS: readonly Permission[] = [
   'dashboard:view',
@@ -49,6 +50,7 @@ const ALL_PERMISSIONS: readonly Permission[] = [
   'payments:manage',
   'notifications:manage',
   'settings:manage',
+  'activity:view',
 ] as const
 
 const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {
@@ -103,5 +105,6 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { href: '/admin/trainers', label: 'Trainers', iconKey: 'trainers', requiredPermission: 'trainers:view' },
   { href: '/admin/payments', label: 'Payments', iconKey: 'payments', requiredPermission: 'payments:view' },
   { href: '/admin/notifications', label: 'Notifications', iconKey: 'notifications', requiredPermission: 'notifications:manage' },
+  { href: '/admin/activity-log', label: 'Activity Log', iconKey: 'activity', requiredPermission: 'activity:view' },
   { href: '/admin/settings', label: 'Settings', iconKey: 'settings', requiredPermission: 'settings:manage' },
 ] as const

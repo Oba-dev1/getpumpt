@@ -7,6 +7,7 @@ import type { Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { requireGymPermission } from '@/lib/auth-helpers'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { logActivity } from '@/lib/audit'
 import {
   createMemberSchema,
   updateMemberSchema,
@@ -149,7 +150,7 @@ export async function getMemberById(gymId: string, memberId: string) {
 
 export async function createMember(input: CreateMemberInput) {
   const validated = createMemberSchema.parse(input)
-  await requireGymPermission(validated.gymId, 'members:create')
+  const user = await requireGymPermission(validated.gymId, 'members:create')
 
   const hashedPassword = await bcrypt.hash(validated.password, 10)
 
@@ -187,6 +188,15 @@ export async function createMember(input: CreateMemberInput) {
       })
     }
   }
+
+  logActivity({
+    gymId: validated.gymId,
+    userId: user.id,
+    action: 'CREATE',
+    resourceType: 'MEMBER',
+    resourceId: member.id,
+    description: `Created member ${validated.firstName} ${validated.lastName}`,
+  })
 
   // Send account setup email with password reset link (fire-and-forget)
   try {
@@ -233,11 +243,20 @@ export async function updateMember(
   input: UpdateMemberInput
 ) {
   const validated = updateMemberSchema.parse(input)
-  await requireGymPermission(gymId, 'members:edit')
+  const user = await requireGymPermission(gymId, 'members:edit')
 
   const member = await prisma.user.update({
     where: { id: memberId, gymId },
     data: validated,
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'MEMBER',
+    resourceId: memberId,
+    description: `Updated member ${memberId}`,
   })
 
   revalidatePath('/admin/members')
@@ -246,10 +265,19 @@ export async function updateMember(
 }
 
 export async function deleteMember(gymId: string, memberId: string) {
-  await requireGymPermission(gymId, 'members:delete')
+  const user = await requireGymPermission(gymId, 'members:delete')
 
   await prisma.user.delete({
     where: { id: memberId, gymId },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'MEMBER',
+    resourceId: memberId,
+    description: `Deleted member ${memberId}`,
   })
 
   revalidatePath('/admin/members')
@@ -261,7 +289,7 @@ export async function assignMembership(
   planId: string,
   startDate?: Date
 ) {
-  await requireGymPermission(gymId, 'members:edit')
+  const user = await requireGymPermission(gymId, 'members:edit')
 
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId, gymId },
@@ -300,6 +328,15 @@ export async function assignMembership(
       },
     })
   }
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'MEMBER',
+    resourceId: memberId,
+    description: `Assigned membership plan to member ${memberId}`,
+  })
 
   revalidatePath(`/admin/members/${memberId}`)
   revalidatePath('/admin/members')

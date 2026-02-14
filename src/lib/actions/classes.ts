@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 import {
   createGymClassSchema,
   updateGymClassSchema,
@@ -104,7 +105,7 @@ export async function getGymClassById(gymId: string, classId: string) {
 
 export async function createGymClass(input: CreateGymClassInput) {
   const validated = createGymClassSchema.parse(input)
-  await requireGymPermission(validated.gymId, 'classes:manage')
+  const user = await requireGymPermission(validated.gymId, 'classes:manage')
 
   const gymClass = await prisma.gymClass.create({
     data: {
@@ -119,6 +120,15 @@ export async function createGymClass(input: CreateGymClassInput) {
     },
   })
 
+  logActivity({
+    gymId: validated.gymId,
+    userId: user.id,
+    action: 'CREATE',
+    resourceType: 'CLASS',
+    resourceId: gymClass.id,
+    description: `Created class ${validated.name}`,
+  })
+
   revalidatePath('/admin/classes')
   return { id: gymClass.id }
 }
@@ -129,11 +139,20 @@ export async function updateGymClass(
   input: UpdateGymClassInput
 ) {
   const validated = updateGymClassSchema.parse(input)
-  await requireGymPermission(gymId, 'classes:manage')
+  const user = await requireGymPermission(gymId, 'classes:manage')
 
   const updated = await prisma.gymClass.update({
     where: { id: classId, gymId },
     data: validated,
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'CLASS',
+    resourceId: classId,
+    description: `Updated class ${classId}`,
   })
 
   revalidatePath('/admin/classes')
@@ -142,7 +161,7 @@ export async function updateGymClass(
 }
 
 export async function deleteGymClass(gymId: string, classId: string) {
-  await requireGymPermission(gymId, 'classes:manage')
+  const user = await requireGymPermission(gymId, 'classes:manage')
 
   const schedulesCount = await prisma.classSchedule.count({
     where: { gymId, classId },
@@ -156,11 +175,20 @@ export async function deleteGymClass(gymId: string, classId: string) {
     where: { id: classId, gymId },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'CLASS',
+    resourceId: classId,
+    description: `Deleted class ${classId}`,
+  })
+
   revalidatePath('/admin/classes')
 }
 
 export async function toggleGymClassStatus(gymId: string, classId: string) {
-  await requireGymPermission(gymId, 'classes:manage')
+  const user = await requireGymPermission(gymId, 'classes:manage')
 
   const gymClass = await prisma.gymClass.findUnique({
     where: { id: classId, gymId },
@@ -173,6 +201,15 @@ export async function toggleGymClassStatus(gymId: string, classId: string) {
   const updated = await prisma.gymClass.update({
     where: { id: classId, gymId },
     data: { isActive: !gymClass.isActive },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'CLASS',
+    resourceId: classId,
+    description: `${updated.isActive ? 'Activated' : 'Deactivated'} class ${classId}`,
   })
 
   revalidatePath('/admin/classes')

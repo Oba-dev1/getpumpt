@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
     LayoutDashboard, Users, UserCheck, UsersRound, CreditCard, IdCard,
     Dumbbell, CalendarDays, ClipboardList, UserCog, Wallet, Bell,
-    Settings, ExternalLink, X,
+    Settings, ExternalLink, X, ScrollText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -25,6 +25,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
     trainers: UserCog,
     payments: Wallet,
     notifications: Bell,
+    activity: ScrollText,
     settings: Settings,
 };
 

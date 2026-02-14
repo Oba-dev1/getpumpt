@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireGymAdminAuth } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 import {
   createPlanSchema,
   updatePlanSchema,
@@ -92,7 +93,7 @@ export async function createMembershipPlan(
 ): Promise<{ id?: string; error?: string }> {
   try {
     const validated = createPlanSchema.parse(input)
-    await requireGymAdminAuth(validated.gymId)
+    const user = await requireGymAdminAuth(validated.gymId)
 
     const maxSortOrder = await prisma.membershipPlan.aggregate({
       where: { gymId: validated.gymId },
@@ -115,6 +116,15 @@ export async function createMembershipPlan(
         isFeatured: validated.isFeatured,
         sortOrder: (maxSortOrder._max.sortOrder ?? 0) + 1,
       },
+    })
+
+    logActivity({
+      gymId: validated.gymId,
+      userId: user.id,
+      action: 'CREATE',
+      resourceType: 'PLAN',
+      resourceId: plan.id,
+      description: `Created plan ${validated.name}`,
     })
 
     if (validated.isFeatured) {
@@ -162,11 +172,20 @@ export async function updateMembershipPlan(
   input: UpdatePlanInput
 ) {
   const validated = updatePlanSchema.parse(input)
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   const plan = await prisma.membershipPlan.update({
     where: { id: planId, gymId },
     data: validated,
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'PLAN',
+    resourceId: planId,
+    description: `Updated plan ${planId}`,
   })
 
   if (input.isFeatured === true) {
@@ -195,7 +214,7 @@ export async function updateMembershipPlan(
 }
 
 export async function deleteMembershipPlan(gymId: string, planId: string) {
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   const activeSubscribers = await prisma.membership.count({
     where: { planId, gymId, status: 'ACTIVE' },
@@ -214,6 +233,15 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
     where: { id: planId, gymId },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'PLAN',
+    resourceId: planId,
+    description: `Deleted membership plan ${planId}`,
+  })
+
   revalidatePath('/admin/plans')
   if (gym) {
     revalidatePath(`/gym/${gym.slug}`)
@@ -222,7 +250,7 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
 }
 
 export async function togglePlanStatus(gymId: string, planId: string) {
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId, gymId },
@@ -242,6 +270,15 @@ export async function togglePlanStatus(gymId: string, planId: string) {
       select: { slug: true },
     }),
   ])
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'PLAN',
+    resourceId: planId,
+    description: `${updated.isActive ? 'Activated' : 'Deactivated'} plan ${planId}`,
+  })
 
   revalidatePath('/admin/plans')
   if (gym) {

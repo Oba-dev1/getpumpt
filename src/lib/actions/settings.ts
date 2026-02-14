@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 
 const operationalSettingsSchema = z.object({
   membershipGracePeriod: z.number().int().min(0).max(60),
@@ -120,7 +121,7 @@ export async function updateGymSettings(
   gymId: string,
   input: z.infer<typeof gymSettingsSchema>
 ) {
-  await requireGymPermission(gymId, 'settings:manage')
+  const user = await requireGymPermission(gymId, 'settings:manage')
 
   const data = gymSettingsSchema.parse(input)
 
@@ -150,6 +151,15 @@ export async function updateGymSettings(
       },
     },
     select: { slug: true },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'SETTING',
+    resourceId: gymId,
+    description: 'Updated gym settings',
   })
 
   revalidatePath('/admin/settings')

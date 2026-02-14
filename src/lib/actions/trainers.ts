@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 import {
   createTrainerSchema,
   updateTrainerSchema,
@@ -127,7 +128,7 @@ export async function getTrainerById(gymId: string, trainerId: string) {
 
 export async function createTrainer(input: CreateTrainerInput) {
   const validated = createTrainerSchema.parse(input)
-  await requireGymPermission(validated.gymId, 'trainers:manage')
+  const user = await requireGymPermission(validated.gymId, 'trainers:manage')
 
   const trainer = await prisma.trainer.create({
     data: {
@@ -145,6 +146,15 @@ export async function createTrainer(input: CreateTrainerInput) {
     },
   })
 
+  logActivity({
+    gymId: validated.gymId,
+    userId: user.id,
+    action: 'CREATE',
+    resourceType: 'TRAINER',
+    resourceId: trainer.id,
+    description: `Created trainer ${validated.firstName} ${validated.lastName}`,
+  })
+
   revalidatePath('/admin/trainers')
   return { id: trainer.id }
 }
@@ -155,11 +165,20 @@ export async function updateTrainer(
   input: UpdateTrainerInput
 ) {
   const validated = updateTrainerSchema.parse(input)
-  await requireGymPermission(gymId, 'trainers:manage')
+  const user = await requireGymPermission(gymId, 'trainers:manage')
 
   const updated = await prisma.trainer.update({
     where: { id: trainerId, gymId },
     data: validated,
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'TRAINER',
+    resourceId: trainerId,
+    description: `Updated trainer ${trainerId}`,
   })
 
   revalidatePath('/admin/trainers')
@@ -168,7 +187,7 @@ export async function updateTrainer(
 }
 
 export async function deleteTrainer(gymId: string, trainerId: string) {
-  await requireGymPermission(gymId, 'trainers:manage')
+  const user = await requireGymPermission(gymId, 'trainers:manage')
 
   const schedulesCount = await prisma.classSchedule.count({
     where: { gymId, trainerId },
@@ -182,11 +201,20 @@ export async function deleteTrainer(gymId: string, trainerId: string) {
     where: { id: trainerId, gymId },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'TRAINER',
+    resourceId: trainerId,
+    description: `Deleted trainer ${trainerId}`,
+  })
+
   revalidatePath('/admin/trainers')
 }
 
 export async function toggleTrainerStatus(gymId: string, trainerId: string) {
-  await requireGymPermission(gymId, 'trainers:manage')
+  const user = await requireGymPermission(gymId, 'trainers:manage')
 
   const trainer = await prisma.trainer.findUnique({
     where: { id: trainerId, gymId },
@@ -199,6 +227,15 @@ export async function toggleTrainerStatus(gymId: string, trainerId: string) {
   const updated = await prisma.trainer.update({
     where: { id: trainerId, gymId },
     data: { isActive: !trainer.isActive },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'TRAINER',
+    resourceId: trainerId,
+    description: `${updated.isActive ? 'Activated' : 'Deactivated'} trainer ${trainerId}`,
   })
 
   revalidatePath('/admin/trainers')

@@ -440,6 +440,20 @@ export const checkInSchema = z.object({
 
 export type CheckInInput = z.infer<typeof checkInSchema>;
 
+// Activity log filters
+export const activityLogFilterSchema = z.object({
+  gymId: z.string().min(1),
+  search: z.string().optional(),
+  resourceType: z.string().optional(),
+  userId: z.string().optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  page: z.number().int().positive().optional(),
+  limit: z.number().int().positive().max(100).optional(),
+})
+
+export type ActivityLogFilterInput = z.infer<typeof activityLogFilterSchema>;
+
 // Admin action types
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
