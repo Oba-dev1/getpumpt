@@ -399,6 +399,197 @@ async function main() {
 
   console.log(`✅ Created ${gymClasses.length} gym classes`);
 
+  // Fetch created gym classes and trainers for schedule creation
+  const createdClasses = await prisma.gymClass.findMany({
+    where: { gymId: fitgym.id },
+  });
+  const createdTrainers = await prisma.trainer.findMany({
+    where: { gymId: fitgym.id },
+  });
+
+  const classByName = (name: string) =>
+    createdClasses.find((c) => c.name === name)!;
+  const trainerByLastName = (lastName: string) =>
+    createdTrainers.find((t) => t.lastName === lastName)!;
+
+  // Create class schedules
+  const classSchedules = [
+    {
+      classId: classByName('HIIT Blast').id,
+      trainerId: trainerByLastName('Okonkwo').id,
+      dayOfWeek: 'MONDAY' as const,
+      startTime: '06:00',
+      endTime: '06:45',
+      maxCapacity: 20,
+      location: 'Studio A',
+    },
+    {
+      classId: classByName('HIIT Blast').id,
+      trainerId: trainerByLastName('Okonkwo').id,
+      dayOfWeek: 'WEDNESDAY' as const,
+      startTime: '06:00',
+      endTime: '06:45',
+      maxCapacity: 20,
+      location: 'Studio A',
+    },
+    {
+      classId: classByName('HIIT Blast').id,
+      trainerId: trainerByLastName('Okonkwo').id,
+      dayOfWeek: 'FRIDAY' as const,
+      startTime: '06:00',
+      endTime: '06:45',
+      maxCapacity: 20,
+      location: 'Studio A',
+    },
+    {
+      classId: classByName('Power Yoga').id,
+      trainerId: trainerByLastName('Eze').id,
+      dayOfWeek: 'TUESDAY' as const,
+      startTime: '07:00',
+      endTime: '08:00',
+      maxCapacity: 15,
+      location: 'Studio B',
+    },
+    {
+      classId: classByName('Power Yoga').id,
+      trainerId: trainerByLastName('Eze').id,
+      dayOfWeek: 'THURSDAY' as const,
+      startTime: '07:00',
+      endTime: '08:00',
+      maxCapacity: 15,
+      location: 'Studio B',
+    },
+    {
+      classId: classByName('Power Yoga').id,
+      trainerId: trainerByLastName('Eze').id,
+      dayOfWeek: 'SATURDAY' as const,
+      startTime: '09:00',
+      endTime: '10:00',
+      maxCapacity: 15,
+      location: 'Studio B',
+    },
+    {
+      classId: classByName('Spin Class').id,
+      trainerId: trainerByLastName('Nwachukwu').id,
+      dayOfWeek: 'MONDAY' as const,
+      startTime: '17:00',
+      endTime: '17:45',
+      maxCapacity: 25,
+      location: 'Spin Room',
+    },
+    {
+      classId: classByName('Spin Class').id,
+      trainerId: trainerByLastName('Nwachukwu').id,
+      dayOfWeek: 'WEDNESDAY' as const,
+      startTime: '17:00',
+      endTime: '17:45',
+      maxCapacity: 25,
+      location: 'Spin Room',
+    },
+    {
+      classId: classByName('Spin Class').id,
+      trainerId: trainerByLastName('Nwachukwu').id,
+      dayOfWeek: 'FRIDAY' as const,
+      startTime: '17:00',
+      endTime: '17:45',
+      maxCapacity: 25,
+      location: 'Spin Room',
+    },
+    {
+      classId: classByName('Strength 101').id,
+      trainerId: trainerByLastName('Okonkwo').id,
+      dayOfWeek: 'TUESDAY' as const,
+      startTime: '18:00',
+      endTime: '18:50',
+      maxCapacity: 12,
+      location: 'Weight Room',
+    },
+    {
+      classId: classByName('Strength 101').id,
+      trainerId: trainerByLastName('Okonkwo').id,
+      dayOfWeek: 'THURSDAY' as const,
+      startTime: '18:00',
+      endTime: '18:50',
+      maxCapacity: 12,
+      location: 'Weight Room',
+    },
+    {
+      classId: classByName('Boxing Basics').id,
+      trainerId: trainerByLastName('Nwachukwu').id,
+      dayOfWeek: 'MONDAY' as const,
+      startTime: '08:00',
+      endTime: '09:00',
+      maxCapacity: 16,
+      location: 'Boxing Ring',
+    },
+    {
+      classId: classByName('Boxing Basics').id,
+      trainerId: trainerByLastName('Nwachukwu').id,
+      dayOfWeek: 'WEDNESDAY' as const,
+      startTime: '08:00',
+      endTime: '09:00',
+      maxCapacity: 16,
+      location: 'Boxing Ring',
+    },
+    {
+      classId: classByName('Boxing Basics').id,
+      trainerId: trainerByLastName('Nwachukwu').id,
+      dayOfWeek: 'SATURDAY' as const,
+      startTime: '10:00',
+      endTime: '11:00',
+      maxCapacity: 16,
+      location: 'Boxing Ring',
+    },
+    {
+      classId: classByName('CrossFit WOD').id,
+      trainerId: trainerByLastName('Adeyemi').id,
+      dayOfWeek: 'MONDAY' as const,
+      startTime: '07:00',
+      endTime: '08:00',
+      maxCapacity: 15,
+      location: 'CrossFit Box',
+    },
+    {
+      classId: classByName('CrossFit WOD').id,
+      trainerId: trainerByLastName('Adeyemi').id,
+      dayOfWeek: 'WEDNESDAY' as const,
+      startTime: '07:00',
+      endTime: '08:00',
+      maxCapacity: 15,
+      location: 'CrossFit Box',
+    },
+    {
+      classId: classByName('CrossFit WOD').id,
+      trainerId: trainerByLastName('Adeyemi').id,
+      dayOfWeek: 'FRIDAY' as const,
+      startTime: '07:00',
+      endTime: '08:00',
+      maxCapacity: 15,
+      location: 'CrossFit Box',
+    },
+    {
+      classId: classByName('CrossFit WOD').id,
+      trainerId: trainerByLastName('Adeyemi').id,
+      dayOfWeek: 'SATURDAY' as const,
+      startTime: '08:00',
+      endTime: '09:00',
+      maxCapacity: 15,
+      location: 'CrossFit Box',
+    },
+  ];
+
+  for (const schedule of classSchedules) {
+    await prisma.classSchedule.create({
+      data: {
+        gymId: fitgym.id,
+        ...schedule,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${classSchedules.length} class schedules`);
+
   console.log('✅ Seeding completed!');
 }
 
