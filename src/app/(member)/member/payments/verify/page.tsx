@@ -21,8 +21,33 @@ export default function PaymentVerificationPage() {
   const [paymentDetails, setPaymentDetails] = useState<any>(null)
 
   const reference = searchParams.get('reference')
+  const preStatus = searchParams.get('status')
+  const preMessage = searchParams.get('message')
+  const preAmount = searchParams.get('amount')
+  const preCurrency = searchParams.get('currency')
 
   useEffect(() => {
+    // If redirected from /api/payments/verify with pre-verified result
+    if (preStatus === 'success') {
+      setPaymentDetails({
+        amount: preAmount ? Number(preAmount) : 0,
+        currency: preCurrency || 'NGN',
+        status: 'COMPLETED',
+      })
+      setSuccess(true)
+      setVerifying(false)
+      toast.success('Payment verified successfully')
+      return
+    }
+
+    if (preStatus === 'error') {
+      setError(preMessage || 'Payment verification failed')
+      setVerifying(false)
+      toast.error('Payment verification failed')
+      return
+    }
+
+    // Fallback: verify directly if accessed without pre-verified status
     async function verifyPayment() {
       if (!session?.user?.gymId || !reference) {
         setError('Invalid payment reference')
@@ -46,7 +71,7 @@ export default function PaymentVerificationPage() {
     if (session?.user?.gymId && reference) {
       verifyPayment()
     }
-  }, [session, reference])
+  }, [session, reference, preStatus, preMessage, preAmount, preCurrency])
 
   if (verifying) {
     return (

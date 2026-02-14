@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { redirect } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-helpers'
 import { initializeMembershipPayment } from '@/lib/actions/payments'
@@ -103,7 +104,7 @@ export async function startMembershipPayment(
   }
 
   try {
-    const callbackUrl = `${getAppUrl()}/member/payments/verify`
+    const callbackUrl = `${getAppUrl()}/api/payments/verify`
     const payment = await initializeMembershipPayment(
       user.gymId,
       user.id,
@@ -112,6 +113,7 @@ export async function startMembershipPayment(
     )
     redirect(payment.authorizationUrl)
   } catch (error: any) {
+    if (isRedirectError(error)) throw error
     return { status: 'error' as const, message: error?.message || 'Unable to start payment.' }
   }
 
