@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { getGymSettings, updateGymSettings } from '@/lib/actions/settings'
+import { CustomDomainCard } from '@/components/admin/CustomDomainCard'
 
 const settingsSchema = z.object({
   name: z.string().min(2, 'Gym name is required'),
@@ -205,6 +206,10 @@ export default function SettingsPage() {
           Configure your gym profile, branding, and operational defaults.
         </p>
       </div>
+
+      {session?.user?.gymId && (
+        <CustomDomainCard gymId={session.user.gymId} />
+      )}
 
       {loading ? (
         <div className="space-y-4">
