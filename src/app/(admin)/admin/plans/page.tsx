@@ -35,6 +35,7 @@ export default function PlansPage() {
   const router = useRouter()
   const sessionData = useSession()
   const session = sessionData?.data
+  const isStaff = session?.user?.role === 'STAFF'
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -125,10 +126,12 @@ export default function PlansPage() {
             Manage subscription plans and pricing
           </p>
         </div>
-        <Button variant="gym" onClick={() => router.push('/admin/plans/new')}>
-          <Plus className="h-4 w-4" />
-          Create Plan
-        </Button>
+        {!isStaff && (
+          <Button variant="gym" onClick={() => router.push('/admin/plans/new')}>
+            <Plus className="h-4 w-4" />
+            Create Plan
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -151,13 +154,15 @@ export default function PlansPage() {
         <Card className="border-gray-200 bg-slate-950/90 p-10">
           <div className="text-center">
             <p className="text-gray-600">No membership plans yet</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => router.push('/admin/plans/new')}
-            >
-              Create your first plan
-            </Button>
+            {!isStaff && (
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => router.push('/admin/plans/new')}
+              >
+                Create your first plan
+              </Button>
+            )}
           </div>
         </Card>
       ) : (
@@ -193,40 +198,42 @@ export default function PlansPage() {
                       </CardDescription>
                     )}
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Open actions for ${plan.name}`}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => router.push(`/admin/plans/${plan.id}/edit`)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleToggleStatus(plan.id)}
-                        disabled={toggling === plan.id}
-                      >
-                        <Power className="mr-2 h-4 w-4" />
-                        {plan.isActive ? 'Deactivate' : 'Activate'}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => openDeleteDialog(plan.id)}
-                        className="text-red-600"
-                        disabled={(plan._count?.memberships || 0) > 0}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {!isStaff && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Open actions for ${plan.name}`}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/admin/plans/${plan.id}/edit`)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleToggleStatus(plan.id)}
+                          disabled={toggling === plan.id}
+                        >
+                          <Power className="mr-2 h-4 w-4" />
+                          {plan.isActive ? 'Deactivate' : 'Activate'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => openDeleteDialog(plan.id)}
+                          className="text-red-600"
+                          disabled={(plan._count?.memberships || 0) > 0}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </CardHeader>
 

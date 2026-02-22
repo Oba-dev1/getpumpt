@@ -17,6 +17,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
+    maxAge: 24 * 60 * 60,
   },
   providers: [
     // Re-declare providers here with full implementations (authorize for Credentials)
@@ -42,7 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findFirst({
           where: gymId
             ? { email, gymId }
-            : { email },
+            : { email, role: { in: ['ADMIN', 'STAFF', 'SUPER_ADMIN'] } },
           include: {
             gym: {
               select: {

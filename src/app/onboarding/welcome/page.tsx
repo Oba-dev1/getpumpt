@@ -14,7 +14,8 @@ export default function WelcomePage() {
   const [copied, setCopied] = useState(false)
 
   const gymSlug = session?.user?.gymSlug || ''
-  const subdomain = `${gymSlug}.gymflowpro.com`
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'getpumpt.com'
+  const subdomain = `${gymSlug}.${rootDomain}`
 
   const handleCopy = async () => {
     try {
@@ -38,7 +39,7 @@ export default function WelcomePage() {
           <Check className="h-7 w-7 text-emerald-300" />
         </div>
         <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          Welcome to GymFlowPro
+          Welcome to GetPumpt
         </h1>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">
           Your gym account is ready. Share your URL and finish setup in minutes.

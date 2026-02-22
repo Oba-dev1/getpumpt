@@ -21,6 +21,14 @@ type ApiResponse<T = unknown> = {
   error?: string
 }
 
+async function requireOnboardingAuth() {
+  const session = await auth()
+  if (!session?.user?.gymId || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    return null
+  }
+  return session
+}
+
 export async function getOnboardingState(): Promise<
   ApiResponse<{
     currentStep: number
@@ -29,8 +37,8 @@ export async function getOnboardingState(): Promise<
   }>
 > {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -65,8 +73,8 @@ export async function createOnboardingPlan(
   input: OnboardingPlanInput
 ): Promise<ApiResponse<{ planId: string }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -117,8 +125,8 @@ export async function updateOnboardingBranding(
   input: OnboardingBrandingInput
 ): Promise<ApiResponse> {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -154,8 +162,8 @@ export async function createOnboardingClass(
   input: OnboardingClassInput
 ): Promise<ApiResponse<{ classId: string }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -205,8 +213,8 @@ export async function sendTeamInvites(
   input: OnboardingInviteInput
 ): Promise<ApiResponse<{ sentCount: number }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -240,8 +248,8 @@ export async function skipOnboardingStep(
   stepNumber: number
 ): Promise<ApiResponse> {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -281,8 +289,8 @@ export async function skipOnboardingStep(
 
 export async function completeOnboarding(): Promise<ApiResponse> {
   try {
-    const session = await auth()
-    if (!session?.user?.gymId) {
+    const session = await requireOnboardingAuth()
+    if (!session) {
       return { success: false, error: 'Unauthorized' }
     }
 

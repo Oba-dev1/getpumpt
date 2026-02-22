@@ -29,12 +29,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   UserPlus,
+  Upload,
   Eye,
   RefreshCcw,
   X,
   MoreVertical,
   Trash2,
 } from 'lucide-react'
+import { MemberImportDialog } from '@/components/admin/MemberImportDialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +68,7 @@ export default function MembersPage() {
   const [selectedMemberName, setSelectedMemberName] = useState<string | null>(null)
   const [selectedMemberActive, setSelectedMemberActive] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
 
   const [sortBy, sortDir] = sort.split('_') as ['joined' | 'name' | 'status', 'asc' | 'desc']
 
@@ -166,10 +169,16 @@ export default function MembersPage() {
             {loading ? 'Loading members...' : `${totalMembers} members found`}
           </p>
         </div>
-        <Button variant="gym" onClick={() => router.push('/admin/members/new')}>
-          <UserPlus className="h-4 w-4" />
-          Add Member
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
+          <Button variant="gym" onClick={() => router.push('/admin/members/new')}>
+            <UserPlus className="h-4 w-4" />
+            Add Member
+          </Button>
+        </div>
       </div>
 
       <Card className="border-gray-200 bg-slate-950/90">
@@ -368,6 +377,15 @@ export default function MembersPage() {
         onConfirm={selectedMemberActive ? () => setDeleteDialogOpen(false) : handleDelete}
         isLoading={deleting}
       />
+
+      {session?.user?.gymId && (
+        <MemberImportDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          gymId={session.user.gymId}
+          onImportComplete={fetchMembers}
+        />
+      )}
     </main>
   )
 }

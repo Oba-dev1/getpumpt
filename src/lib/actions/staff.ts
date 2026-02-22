@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymAdminAuth } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 import {
   createStaffSchema,
   updateStaffRoleSchema,
@@ -114,7 +115,7 @@ export async function getStaffById(gymId: string, staffId: string) {
 }
 
 export async function createStaff(gymId: string, input: CreateStaffInput) {
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   const validated = createStaffSchema.parse(input)
 
@@ -153,6 +154,15 @@ export async function createStaff(gymId: string, input: CreateStaffInput) {
     },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'CREATE',
+    resourceType: 'STAFF',
+    resourceId: staff.id,
+    description: `Created staff ${validated.firstName} ${validated.lastName}`,
+  })
+
   revalidatePath('/admin/staff')
   return staff
 }
@@ -163,7 +173,7 @@ export async function updateStaffRole(
   currentUserId: string,
   input: UpdateStaffRoleInput
 ) {
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   const validated = updateStaffRoleSchema.parse(input)
 
@@ -194,6 +204,15 @@ export async function updateStaffRole(
     },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'STAFF',
+    resourceId: staffId,
+    description: `Updated staff role to ${validated.role}`,
+  })
+
   revalidatePath('/admin/staff')
   revalidatePath(`/admin/staff/${staffId}`)
   return updated
@@ -204,7 +223,7 @@ export async function deleteStaff(
   staffId: string,
   currentUserId: string
 ) {
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   if (staffId === currentUserId) {
     throw new Error('You cannot delete your own account')
@@ -224,6 +243,15 @@ export async function deleteStaff(
 
   await prisma.user.delete({
     where: { id: staffId, gymId },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'STAFF',
+    resourceId: staffId,
+    description: `Deleted staff member ${existingStaff.firstName} ${existingStaff.lastName}`,
   })
 
   revalidatePath('/admin/staff')

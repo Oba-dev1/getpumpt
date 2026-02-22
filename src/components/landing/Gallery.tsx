@@ -2,8 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface GalleryProps {
   images: string[];
@@ -40,16 +39,10 @@ export default function Gallery({ images = [], gymName }: GalleryProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (lightboxIndex === null) return;
-
-      if (e.key === 'Escape') {
-        closeLightbox();
-      } else if (e.key === 'ArrowLeft') {
-        goToPrevious();
-      } else if (e.key === 'ArrowRight') {
-        goToNext();
-      }
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') goToPrevious();
+      else if (e.key === 'ArrowRight') goToNext();
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxIndex, images.length]);
@@ -66,27 +59,25 @@ export default function Gallery({ images = [], gymName }: GalleryProps) {
   }, [lightboxIndex]);
 
   return (
-    <section id="gallery" className="py-16 md:py-24 lg:py-32 bg-[#141414]">
+    <section id="gallery" className="bg-[#0F0F14] py-16 md:py-24 lg:py-32">
       <div className="container-custom">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16 lg:mb-20">
-          <span className="inline-block bg-[rgba(var(--gym-primary-rgb),0.1)] border border-[rgba(var(--gym-primary-rgb),0.3)] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))] mb-6 rounded-md">
+        <div className="mx-auto mb-12 max-w-3xl text-center md:mb-16 lg:mb-20">
+          <span className="mb-6 inline-block rounded-full border border-[rgba(var(--gym-primary-rgb),0.3)] bg-[rgba(var(--gym-primary-rgb),0.1)] px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))]">
             Our Facility
           </span>
-          <h2 className="font-['Bebas_Neue'] text-4xl lg:text-[4.5rem] tracking-[0.02em] mb-4 text-white leading-tight">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
             Experience {gymName}
           </h2>
-          <p className="text-gray-400 text-lg">
+          <p className="text-lg text-slate-400">
             Explore our state-of-the-art facilities and vibrant fitness community.
           </p>
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
           {images.map((image, index) => (
             <div
               key={index}
-              className="relative aspect-square overflow-hidden rounded-lg cursor-pointer group"
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-2xl border border-white/[0.06]"
               onClick={() => openLightbox(index)}
             >
               <Image
@@ -96,55 +87,50 @@ export default function Gallery({ images = [], gymName }: GalleryProps) {
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="text-white text-sm font-semibold uppercase tracking-wider">
+              <div className="absolute inset-0 bg-black/0 transition-all duration-300 group-hover:bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <span className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
                   View
-                </div>
+                </span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Lightbox Modal */}
         {lightboxIndex !== null && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-            {/* Close Button */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm">
             <button
               onClick={closeLightbox}
-              className="absolute top-4 right-4 text-white text-2xl w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors duration-200 z-10"
+              className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors duration-200 hover:bg-white/10"
               aria-label="Close lightbox"
             >
-              <FontAwesomeIcon icon={faXmark} />
+              <X className="h-5 w-5" />
             </button>
 
-            {/* Navigation Buttons */}
             {images.length > 1 && (
               <>
                 <button
                   onClick={goToPrevious}
-                  className="absolute left-4 text-white text-2xl w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors duration-200 z-10"
+                  className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors duration-200 hover:bg-white/10"
                   aria-label="Previous image"
                 >
-                  <FontAwesomeIcon icon={faChevronLeft} />
+                  <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
                   onClick={goToNext}
-                  className="absolute right-4 text-white text-2xl w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors duration-200 z-10"
+                  className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors duration-200 hover:bg-white/10"
                   aria-label="Next image"
                 >
-                  <FontAwesomeIcon icon={faChevronRight} />
+                  <ChevronRight className="h-5 w-5" />
                 </button>
               </>
             )}
 
-            {/* Image Counter */}
-            <div className="absolute top-4 left-4 text-white text-sm font-semibold bg-black/50 px-4 py-2 rounded-full">
+            <div className="absolute left-4 top-4 rounded-full bg-black/50 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
               {lightboxIndex + 1} / {images.length}
             </div>
 
-            {/* Image */}
-            <div className="relative w-full h-full max-w-5xl max-h-[90vh] flex items-center justify-center">
+            <div className="relative flex h-full max-h-[90vh] w-full max-w-5xl items-center justify-center">
               <Image
                 src={images[lightboxIndex]}
                 alt={`${gymName} facility ${lightboxIndex + 1}`}

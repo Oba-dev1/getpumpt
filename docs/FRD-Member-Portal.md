@@ -1,5 +1,5 @@
 # Functional Requirements Document (FRD)
-# GymFlow Pro - Member Portal
+# Pumpt - Member Portal
 
 **Version:** 1.0
 **Date:** January 2026
@@ -11,10 +11,10 @@
 
 The Member Portal is a self-service web application for gym members to manage their membership, book classes, view schedules, make payments, and interact with their gym. Each gym's member portal is branded according to the gym's customization settings.
 
-**Portal URL:** `fitgym.gymflowpro.com/member` or `member.fitgym.gymflowpro.com`
+**Portal URL:** `fitgym.getpumpt.com/member` or `member.fitgym.getpumpt.com`
 
 **Related Documents:**
-- [FRD-Platform-Admin-Portal.md](./FRD-Platform-Admin-Portal.md) - GymFlow Pro platform management
+- [FRD-Platform-Admin-Portal.md](./FRD-Platform-Admin-Portal.md) - Pumpt platform management
 - [FRD-Gym-Admin-Portal.md](./FRD-Gym-Admin-Portal.md) - Individual gym management
 
 ---

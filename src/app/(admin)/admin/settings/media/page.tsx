@@ -50,7 +50,6 @@ export default function MediaManagementPage() {
       setSuccess(`${mediaType} image uploaded successfully!`);
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
-      console.error('Upload failed:', err);
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
@@ -82,7 +81,6 @@ export default function MediaManagementPage() {
       setSuccess('Video URL updated successfully!');
       setVideoUrl('');
     } catch (err) {
-      console.error('Update failed:', err);
       setError(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setUploading(false);

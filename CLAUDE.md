@@ -20,11 +20,11 @@ GymFlow Pro is a multi-tenant SaaS platform for gym management. It enables gym o
 ### Architecture
 
 Multi-tenant with subdomain-based routing:
-- `gymflowpro.com` - Marketing website
-- `admin.gymflowpro.com` - Platform admin (SUPER_ADMIN)
-- `fitgym.gymflowpro.com` - Individual gym website
-- `fitgym.gymflowpro.com/admin` - Gym admin portal
-- `fitgym.gymflowpro.com/member` - Member portal
+- `getpumpt.com` - Marketing website
+- `admin.getpumpt.com` - Platform admin (SUPER_ADMIN)
+- `fitstudio.getpumpt.com` - Individual gym website
+- `fitstudio.getpumpt.com/admin` - Gym admin portal
+- `fitstudio.getpumpt.com/member` - Member portal
 
 ---
 

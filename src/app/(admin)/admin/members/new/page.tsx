@@ -70,7 +70,7 @@ export default function NewMemberPage() {
         const result = await getMembershipPlans(session.user.gymId, false)
         setPlans(result)
       } catch (error) {
-        console.error('Failed to fetch plans:', error)
+        // Plans fetch failed silently
       }
     }
 

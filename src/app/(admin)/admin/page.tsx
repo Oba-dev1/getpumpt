@@ -77,112 +77,122 @@ export default async function DashboardPage() {
     1
   )
 
+  const firstName = session.user.name?.split(' ')[0] || 'Admin'
+
   return (
-    <main className="space-y-4" aria-labelledby="dashboard-title">
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <Card className="border-white/10 bg-slate-900 text-slate-100 shadow-2xl xl:col-span-8">
-          <CardContent className="flex h-full flex-col justify-between gap-6 p-6">
-            <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-200">
-                <Sparkles className="h-3.5 w-3.5" />
-                FitStudio Admin Hub
-              </p>
-              <h1
-                id="dashboard-title"
-                className="max-w-2xl text-2xl font-semibold tracking-tight leading-tight tracking-tight text-white"
-              >
-                Run your gym operations with speed, clarity, and control.
-              </h1>
-              <p className="max-w-2xl text-sm text-slate-300">
-                Monitor growth, manage members, and keep payments on track from one dashboard.
-              </p>
-            </div>
+    <main className="space-y-6" aria-labelledby="dashboard-title">
+      {/* Welcome banner with quick actions */}
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 p-6 shadow-2xl sm:p-8">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-indigo-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl" />
 
-            <div className="flex flex-wrap gap-2">
-              <Button variant="gym" asChild>
-                <Link href="/admin/members/new">
-                  <PlusCircle className="h-4 w-4" />
-                  Add Member
-                </Link>
-              </Button>
-              <Button variant="gym-outline" asChild>
-                <Link href="/admin/plans/new">
-                  <CreditCard className="h-4 w-4" />
-                  Create Plan
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700">
-                <Link href="/admin/members">
-                  <ArrowUpRight className="h-4 w-4" />
-                  View Members
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-3">
+            <p className="inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-indigo-300">
+              <Sparkles className="h-3.5 w-3.5" />
+              Admin Dashboard
+            </p>
+            <h1
+              id="dashboard-title"
+              className="text-2xl font-bold tracking-tight text-white sm:text-3xl"
+            >
+              Welcome back, {firstName}
+            </h1>
+            <p className="max-w-lg text-sm text-slate-300">
+              Monitor growth, manage members, and keep payments on track from one dashboard.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:col-span-4 xl:grid-cols-1">
-          <Card className="border-white/10 bg-slate-900 text-slate-100 shadow-xl">
-            <CardContent className="space-y-1.5 p-5">
-              <p className="text-sm text-slate-400">Total Members</p>
-              <p className="text-4xl font-semibold tracking-tight text-white">{stats.totalMembers}</p>
-              <p className="text-xs text-emerald-300">Active member base</p>
-            </CardContent>
-          </Card>
-          <Card className="border-white/10 bg-slate-900 text-slate-100 shadow-xl">
-            <CardContent className="space-y-1.5 p-5">
-              <p className="text-sm text-slate-400">Monthly Revenue</p>
-              <p className="text-2xl font-semibold tracking-tight tracking-tight text-white">
-                {revenueFormatter.format(stats.monthlyRevenue)}
-              </p>
-              <p className="text-xs text-cyan-300">Current month performance</p>
-            </CardContent>
-          </Card>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="gym" asChild>
+              <Link href="/admin/members/new">
+                <PlusCircle className="h-4 w-4" />
+                Add Member
+              </Link>
+            </Button>
+            <Button variant="gym-outline" asChild>
+              <Link href="/admin/plans/new">
+                <CreditCard className="h-4 w-4" />
+                Create Plan
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="border-slate-600 bg-slate-800/80 text-slate-100 hover:bg-slate-700">
+              <Link href="/admin/members">
+                <ArrowUpRight className="h-4 w-4" />
+                View Members
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
-        <Card className="border-white/10 bg-slate-900 text-slate-100">
-          <CardContent className="space-y-2.5 p-5">
-            <Users className="h-5 w-5 text-cyan-300" />
-            <p className="text-sm text-slate-400">Total Members</p>
-            <p className="text-2xl font-semibold tracking-tight text-white">{stats.totalMembers}</p>
+      {/* Key metrics - single row, no duplicates */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+        <Card className="group border-white/10 bg-slate-900/80 text-slate-100 transition-colors hover:border-cyan-500/20">
+          <CardContent className="flex items-start justify-between p-5">
+            <div className="space-y-2">
+              <p className="text-sm text-slate-400">Total Members</p>
+              <p className="text-3xl font-bold tracking-tight text-white">{stats.totalMembers}</p>
+              <p className="text-xs text-slate-500">Active member base</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+              <Users className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-white/10 bg-slate-900 text-slate-100">
-          <CardContent className="space-y-2.5 p-5">
-            <DollarSign className="h-5 w-5 text-emerald-300" />
-            <p className="text-sm text-slate-400">Monthly Revenue</p>
-            <p className="text-2xl font-semibold tracking-tight text-white">
-              {revenueFormatter.format(stats.monthlyRevenue)}
-            </p>
+
+        <Card className="group border-white/10 bg-slate-900/80 text-slate-100 transition-colors hover:border-emerald-500/20">
+          <CardContent className="flex items-start justify-between p-5">
+            <div className="space-y-2">
+              <p className="text-sm text-slate-400">Monthly Revenue</p>
+              <p className="text-3xl font-bold tracking-tight text-white">
+                {revenueFormatter.format(stats.monthlyRevenue)}
+              </p>
+              <p className="text-xs text-slate-500">Current month</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
+              <DollarSign className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-white/10 bg-slate-900 text-slate-100">
-          <CardContent className="space-y-2.5 p-5">
-            <UserPlus className="h-5 w-5 text-fuchsia-300" />
-            <p className="text-sm text-slate-400">New Members</p>
-            <p className="text-2xl font-semibold tracking-tight text-white">{stats.newMembersThisMonth}</p>
+
+        <Card className="group border-white/10 bg-slate-900/80 text-slate-100 transition-colors hover:border-fuchsia-500/20">
+          <CardContent className="flex items-start justify-between p-5">
+            <div className="space-y-2">
+              <p className="text-sm text-slate-400">New Members</p>
+              <p className="text-3xl font-bold tracking-tight text-white">{stats.newMembersThisMonth}</p>
+              <p className="text-xs text-slate-500">This month</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-500/10 text-fuchsia-300">
+              <UserPlus className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-white/10 bg-slate-900 text-slate-100">
-          <CardContent className="space-y-2.5 p-5">
-            <CalendarCheck className="h-5 w-5 text-amber-300" />
-            <p className="text-sm text-slate-400">Today&apos;s Bookings</p>
-            <p className="text-2xl font-semibold tracking-tight text-white">{stats.todayBookings}</p>
+
+        <Card className="group border-white/10 bg-slate-900/80 text-slate-100 transition-colors hover:border-amber-500/20">
+          <CardContent className="flex items-start justify-between p-5">
+            <div className="space-y-2">
+              <p className="text-sm text-slate-400">Today&apos;s Bookings</p>
+              <p className="text-3xl font-bold tracking-tight text-white">{stats.todayBookings}</p>
+              <p className="text-xs text-slate-500">Scheduled today</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-300">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
       </section>
 
+      {/* Analytics charts */}
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-12" aria-label="Analytics charts">
-        <Card className="border-white/10 bg-slate-900 text-slate-100 xl:col-span-4">
-          <CardHeader className="border-b border-white/10">
-            <CardTitle className="text-white">Plan Distribution</CardTitle>
+        <Card className="border-white/10 bg-slate-900/80 text-slate-100 xl:col-span-4">
+          <CardHeader className="border-b border-white/10 pb-4">
+            <CardTitle className="text-base text-white">Plan Distribution</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-5 pt-5">
             <div className="flex items-center gap-5">
               <div
-                className="relative h-28 w-28 rounded-full"
+                className="relative h-28 w-28 shrink-0 rounded-full"
                 style={{ background: donutBackground }}
                 role="img"
                 aria-label="Membership plan distribution donut chart"
@@ -214,19 +224,19 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-900 text-slate-100 xl:col-span-8">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-white/10">
-            <CardTitle className="text-white">Revenue Snapshot</CardTitle>
+        <Card className="border-white/10 bg-slate-900/80 text-slate-100 xl:col-span-8">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-4">
+            <CardTitle className="text-base text-white">Revenue Snapshot</CardTitle>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-300">
               <TrendingUp className="h-3.5 w-3.5" />
               Last 6 payments
             </span>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-5">
             {paymentSeries.length === 0 ? (
               <p className="text-sm text-slate-400">No payment activity yet.</p>
             ) : (
-              <div className="grid grid-cols-6 items-end gap-3 pt-2">
+              <div className="grid grid-cols-6 items-end gap-3">
                 {paymentSeries.map((payment) => {
                   const height = Math.max(
                     Math.round((payment.amount / maxPaymentAmount) * 100),
@@ -235,9 +245,9 @@ export default async function DashboardPage() {
 
                   return (
                     <div key={payment.id} className="space-y-2">
-                      <div className="h-36 rounded-md bg-slate-800/80 p-1">
+                      <div className="h-36 rounded-lg bg-slate-800/60 p-1">
                         <div
-                          className="w-full rounded bg-gradient-to-t from-cyan-400 to-blue-500"
+                          className="w-full rounded-md bg-gradient-to-t from-indigo-500 to-cyan-400"
                           style={{ height: `${height}%`, marginTop: `${100 - height}%` }}
                           aria-hidden="true"
                         />
@@ -257,17 +267,18 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
+      {/* Payments table and breakdown */}
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-12" aria-label="Dashboard details">
-        <Card className="border-white/10 bg-slate-900 text-slate-100 xl:col-span-8">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-white/10">
-            <CardTitle className="text-white">Recent Payments</CardTitle>
-            <Button variant="link" asChild className="text-cyan-300 hover:text-cyan-200">
+        <Card className="border-white/10 bg-slate-900/80 text-slate-100 xl:col-span-8">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-4">
+            <CardTitle className="text-base text-white">Recent Payments</CardTitle>
+            <Button variant="link" asChild className="text-indigo-400 hover:text-indigo-300">
               <Link href="/admin/payments">View all</Link>
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             {stats.recentPayments.length === 0 ? (
-              <p className="text-sm text-slate-400">No payments yet.</p>
+              <p className="py-8 text-center text-sm text-slate-400">No payments yet.</p>
             ) : (
               <Table>
                 <caption className="sr-only">Latest payment transactions</caption>
@@ -288,7 +299,7 @@ export default async function DashboardPage() {
                           <span className="text-xs text-slate-400">{payment.memberEmail}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-100">
+                      <TableCell className="font-medium text-slate-100">
                         {new Intl.NumberFormat('en-NG', {
                           style: 'currency',
                           currency: payment.currency,
@@ -309,11 +320,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-900 text-slate-100 xl:col-span-4">
-          <CardHeader className="border-b border-white/10">
-            <CardTitle className="text-white">Membership Breakdown</CardTitle>
+        <Card className="border-white/10 bg-slate-900/80 text-slate-100 xl:col-span-4">
+          <CardHeader className="border-b border-white/10 pb-4">
+            <CardTitle className="text-base text-white">Membership Breakdown</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-5">
             {stats.membershipBreakdown.length === 0 ? (
               <p className="text-sm text-slate-400">No active memberships yet.</p>
             ) : (
@@ -327,7 +338,7 @@ export default async function DashboardPage() {
                       </span>
                     </div>
                     <div
-                      className="h-2.5 w-full rounded-full bg-slate-800"
+                      className="h-2 w-full rounded-full bg-slate-800"
                       role="progressbar"
                       aria-valuenow={plan.count}
                       aria-valuemin={0}
@@ -335,7 +346,7 @@ export default async function DashboardPage() {
                       aria-label={`${plan.planName} membership share`}
                     >
                       <div
-                        className="h-2.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                        className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400"
                         style={{
                           width: maxPlanCount
                             ? `${(plan.count / maxPlanCount) * 100}%`

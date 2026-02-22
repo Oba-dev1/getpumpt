@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireGymPermission } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 import { checkInSchema, type CheckInInput } from '@/lib/validations'
 
 export async function searchMembersForCheckIn(gymId: string, query: string) {
@@ -92,6 +93,15 @@ export async function checkInMember(gymId: string, input: CheckInInput) {
       checkedInBy: staff.id,
       notes: validated.notes,
     },
+  })
+
+  logActivity({
+    gymId,
+    userId: staff.id,
+    action: 'CREATE',
+    resourceType: 'CHECK_IN',
+    resourceId: checkIn.id,
+    description: `Checked in member ${member.firstName} ${member.lastName}`,
   })
 
   revalidatePath('/admin/check-in')

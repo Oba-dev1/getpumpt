@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faUser, faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
+import { User, MapPin } from 'lucide-react';
 import type { ClassSchedule } from '@/types/gym';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -13,7 +12,7 @@ interface ScheduleProps {
 }
 
 export default function Schedule({ schedules = [] }: ScheduleProps) {
-  const [activeDay, setActiveDay] = useState(days[new Date().getDay() -1] || 'Monday');
+  const [activeDay, setActiveDay] = useState(days[new Date().getDay() - 1] || 'Monday');
 
   const groupedSchedules = useMemo(() => {
     const grouped: Record<string, ClassSchedule[]> = {};
@@ -35,82 +34,78 @@ export default function Schedule({ schedules = [] }: ScheduleProps) {
   };
 
   return (
-    <section id="schedule" className="py-16 md:py-24 lg:py-32 bg-[#141414]">
+    <section id="schedule" className="bg-[#0F0F14] py-16 md:py-24 lg:py-32">
       <div className="container-custom">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16 lg:mb-20">
-          <span className="inline-block bg-[rgba(var(--gym-primary-rgb),0.1)] border border-[rgba(var(--gym-primary-rgb),0.3)] px-3 md:px-4 py-2 text-[0.7rem] md:text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-[rgb(var(--gym-primary))] mb-4 md:mb-6 rounded-md">
+        <div className="mx-auto mb-12 max-w-3xl text-center md:mb-16 lg:mb-20">
+          <span className="mb-6 inline-block rounded-full border border-[rgba(var(--gym-primary-rgb),0.3)] bg-[rgba(var(--gym-primary-rgb),0.1)] px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))]">
             Class Schedule
           </span>
-          <h2 className="font-['Bebas_Neue'] text-3xl md:text-4xl lg:text-[4.5rem] tracking-[0.02em] mb-3 md:mb-4 text-white">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
             Find Your Perfect Class
           </h2>
-          <p className="text-[#A0A0A0] text-base md:text-[1.1rem]">
+          <p className="text-base text-slate-400 md:text-lg">
             From high-intensity workouts to mindful yoga sessions, we have something for everyone.
           </p>
         </div>
 
-        {/* Day Tabs */}
-        <div className="flex justify-center mb-8 md:mb-12">
-            <div className="bg-[#0A0A0A] border border-white/5 p-1.5 rounded-lg flex flex-wrap justify-center">
-                {days.map((day, index) => (
-                    <button
-                    key={day}
-                    onClick={() => setActiveDay(day)}
-                    className={`px-3 sm:px-4 md:px-5 py-2 md:py-2.5 font-semibold text-sm rounded-md transition-all duration-300 ${
-                        activeDay === day
-                        ? 'bg-[rgb(var(--gym-primary))] text-white shadow-md'
-                        : 'text-[#A0A0A0] hover:text-white'
-                    }`}
-                    >
-                    <span className="hidden sm:inline">{day}</span>
-                    <span className="sm:hidden">{shortDays[index]}</span>
-                    </button>
-                ))}
-            </div>
+        <div className="mb-8 flex justify-center md:mb-12">
+          <div className="flex flex-wrap justify-center gap-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-1.5 backdrop-blur-sm">
+            {days.map((day, index) => (
+              <button
+                key={day}
+                onClick={() => setActiveDay(day)}
+                className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-300 sm:px-5 ${
+                  activeDay === day
+                    ? 'bg-[rgb(var(--gym-primary))] text-white shadow-lg shadow-[rgba(var(--gym-primary-rgb),0.3)]'
+                    : 'text-slate-500 hover:bg-white/[0.04] hover:text-white'
+                }`}
+              >
+                <span className="hidden sm:inline">{day}</span>
+                <span className="sm:hidden">{shortDays[index]}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Schedule Grid */}
         <div className="grid gap-3 md:gap-4">
           {groupedSchedules[activeDay]?.length > 0 ? (
             groupedSchedules[activeDay].map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[80px,1fr] md:grid-cols-[120px,1fr,180px,150px] gap-4 items-center bg-[#0A0A0A] border border-white/5 p-4 rounded-lg transition-all duration-300 hover:border-[rgba(var(--gym-primary-rgb),0.3)] hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.05)]"
+                className="grid grid-cols-[80px,1fr] items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all duration-300 hover:border-[rgba(var(--gym-primary-rgb),0.2)] hover:bg-white/[0.04] md:grid-cols-[120px,1fr,180px,150px] md:p-5"
               >
-                <div className="font-['Bebas_Neue'] text-lg md:text-xl text-[rgb(var(--gym-primary))]">
+                <div className="text-lg font-bold text-[rgb(var(--gym-primary))] md:text-xl">
                   {formatTime(item.startTime)}
                 </div>
-                
+
                 <div className="md:col-span-1">
-                  <h4 className="text-base md:text-lg font-semibold text-white mb-1">{item.gymClass.name}</h4>
-                  <p className="text-[#A0A0A0] text-xs md:text-sm hidden sm:block">{item.gymClass.description}</p>
+                  <h4 className="mb-1 text-base font-semibold text-white md:text-lg">{item.gymClass.name}</h4>
+                  <p className="hidden text-sm text-slate-500 sm:block">{item.gymClass.description}</p>
                 </div>
 
-                <div className="col-span-2 md:col-span-1 flex flex-wrap gap-x-4 gap-y-2 text-xs md:text-sm text-[#A0A0A0]">
+                <div className="col-span-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-400 md:col-span-1 md:text-sm">
+                  <div className="flex items-center gap-2">
+                    <User className="h-3.5 w-3.5 text-[rgb(var(--gym-primary))]" />
+                    <span>{item.trainer.firstName} {item.trainer.lastName}</span>
+                  </div>
+                  {item.location && (
                     <div className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faUser} className="text-[rgb(var(--gym-primary))]" />
-                        <span>{item.trainer.firstName} {item.trainer.lastName}</span>
+                      <MapPin className="h-3.5 w-3.5 text-[rgb(var(--gym-primary))]" />
+                      <span>{item.location}</span>
                     </div>
-                    {item.location && (
-                        <div className="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-[rgb(var(--gym-primary))]" />
-                            <span>{item.location}</span>
-                        </div>
-                    )}
-                </div>
-                
-                <div className="col-span-2 md:col-span-1 flex justify-end">
-                    <button className="bg-[rgb(var(--gym-primary))] text-white font-bold py-2 px-4 rounded-md text-sm hover:brightness-110 transition-all duration-300">
-                        Book Spot
-                    </button>
+                  )}
                 </div>
 
+                <div className="col-span-2 flex justify-end md:col-span-1">
+                  <button className="rounded-xl bg-[rgb(var(--gym-primary))] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)]">
+                    Book Spot
+                  </button>
+                </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-12 bg-[#0A0A0A] border border-white/5 rounded-lg">
-                <p className="text-lg text-[#A0A0A0]">No classes scheduled for {activeDay}.</p>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] py-12 text-center">
+              <p className="text-lg text-slate-500">No classes scheduled for {activeDay}.</p>
             </div>
           )}
         </div>

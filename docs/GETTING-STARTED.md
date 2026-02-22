@@ -141,8 +141,8 @@ Password: member123
 ### Multi-Tenant Structure
 
 ```
-GymFlowPro Platform (Future Phase)
-└─ admin.gymflowpro.com → SUPER_ADMIN
+Pumpt Platform (Future Phase)
+└─ admin.getpumpt.com → SUPER_ADMIN
    └─ Manages all gyms on platform
 
 FitStudio Gym (Current)

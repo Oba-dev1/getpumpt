@@ -4,6 +4,13 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymAdminAuth, requireGymOwnerOrAdmin } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
+import {
+  createBookingSchema,
+  updateBookingStatusSchema,
+  type CreateBookingInput,
+  type UpdateBookingStatusInput,
+} from '@/lib/validations'
 
 export async function getBookings(
   gymId: string,
@@ -128,7 +135,8 @@ export async function updateBookingStatus(
   bookingId: string,
   status: 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
 ) {
-  await requireGymAdminAuth(gymId)
+  updateBookingStatusSchema.parse({ status })
+  const user = await requireGymAdminAuth(gymId)
 
   const booking = await prisma.classBooking.findUnique({
     where: { id: bookingId, gymId },
@@ -143,26 +151,30 @@ export async function updateBookingStatus(
     data: { status },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'BOOKING',
+    resourceId: bookingId,
+    description: `Updated booking status to ${status}`,
+  })
+
   revalidatePath('/admin/bookings')
   revalidatePath(`/admin/bookings/${bookingId}`)
   return { id: updated.id, status: updated.status }
 }
 
-export async function createBooking(input: {
-  gymId: string
-  userId: string
-  scheduleId: string
-  date: Date
-  status?: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
-}) {
-  await requireGymOwnerOrAdmin(input.gymId, input.userId)
+export async function createBooking(input: CreateBookingInput) {
+  const validated = createBookingSchema.parse(input)
+  const user = await requireGymOwnerOrAdmin(validated.gymId, validated.userId)
 
   const today = new Date()
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   const bookingDate = new Date(
-    input.date.getFullYear(),
-    input.date.getMonth(),
-    input.date.getDate()
+    validated.date.getFullYear(),
+    validated.date.getMonth(),
+    validated.date.getDate()
   )
 
   if (bookingDate < startOfToday) {
@@ -170,7 +182,7 @@ export async function createBooking(input: {
   }
 
   const schedule = await prisma.classSchedule.findUnique({
-    where: { id: input.scheduleId, gymId: input.gymId },
+    where: { id: validated.scheduleId, gymId: validated.gymId },
     select: { dayOfWeek: true, startTime: true, endTime: true, maxCapacity: true },
   })
 
@@ -191,8 +203,8 @@ export async function createBooking(input: {
 
   const activeBookings = await prisma.classBooking.count({
     where: {
-      gymId: input.gymId,
-      scheduleId: input.scheduleId,
+      gymId: validated.gymId,
+      scheduleId: validated.scheduleId,
       date: bookingDate,
       status: { not: 'CANCELLED' },
     },
@@ -207,8 +219,8 @@ export async function createBooking(input: {
 
   const existingBookings = await prisma.classBooking.findMany({
     where: {
-      gymId: input.gymId,
-      userId: input.userId,
+      gymId: validated.gymId,
+      userId: validated.userId,
       date: bookingDate,
       status: { not: 'CANCELLED' },
     },
@@ -229,12 +241,21 @@ export async function createBooking(input: {
 
   const booking = await prisma.classBooking.create({
     data: {
-      gymId: input.gymId,
-      userId: input.userId,
-      scheduleId: input.scheduleId,
-      date: input.date,
-      status: input.status ?? 'CONFIRMED',
+      gymId: validated.gymId,
+      userId: validated.userId,
+      scheduleId: validated.scheduleId,
+      date: validated.date,
+      status: validated.status,
     },
+  })
+
+  logActivity({
+    gymId: validated.gymId,
+    userId: user.id,
+    action: 'CREATE',
+    resourceType: 'BOOKING',
+    resourceId: booking.id,
+    description: `Created booking for ${validated.date.toLocaleDateString()}`,
   })
 
   revalidatePath('/admin/bookings')

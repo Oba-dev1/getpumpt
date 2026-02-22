@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getGym } from '@/lib/gym';
 import { GymProvider } from '@/contexts/GymContext';
 import type { Metadata } from 'next';
+import type { CSSProperties } from 'react';
 
 interface GymLayoutProps {
   children: React.ReactNode;
@@ -40,21 +41,18 @@ export default async function GymLayout({ children, params }: GymLayoutProps) {
     notFound();
   }
 
+  const primaryColor = sanitizeHexColor(gym.primaryColor, '#6366F1');
+  const secondaryColor = sanitizeHexColor(gym.secondaryColor, '#818CF8');
+  const themeVars = {
+    '--gym-primary': primaryColor,
+    '--gym-secondary': secondaryColor,
+    '--gym-primary-rgb': hexToRgb(primaryColor),
+    '--gym-secondary-rgb': hexToRgb(secondaryColor),
+  } as CSSProperties;
+
   return (
     <GymProvider gym={gym}>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            :root {
-              --gym-primary: ${gym.primaryColor};
-              --gym-secondary: ${gym.secondaryColor};
-              --gym-primary-rgb: ${hexToRgb(gym.primaryColor)};
-              --gym-secondary-rgb: ${hexToRgb(gym.secondaryColor)};
-            }
-          `,
-        }}
-      />
-      {children}
+      <div style={themeVars}>{children}</div>
     </GymProvider>
   );
 }
@@ -66,4 +64,9 @@ function hexToRgb(hex: string): string {
     return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
   }
   return '99, 102, 241';
+}
+
+function sanitizeHexColor(value: string | null | undefined, fallback: string): string {
+  if (!value) return fallback;
+  return /^#([A-Fa-f0-9]{6})$/.test(value) ? value : fallback;
 }

@@ -34,8 +34,21 @@ yarn-error.log*
 .env*
 !.env.example
 
+# credentials
+docs/LOGIN-CREDENTIALS.md
+
+# reports
+.reports/
+
 # vercel
 .vercel
+
+# python
+__pycache__/
+*.pyc
+
+# windows artifacts
+nul
 
 # typescript
 *.tsbuildinfo

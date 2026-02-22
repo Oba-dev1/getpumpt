@@ -2,13 +2,22 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { assignMembershipSchema, type AssignMembershipInput } from '@/lib/validations'
+import {
+  assignMembershipSchema,
+  adminCancelMembershipSchema,
+  renewMembershipSchema,
+  updateAutoRenewSchema,
+  type AssignMembershipInput,
+} from '@/lib/validations'
+import { requireGymPermission } from '@/lib/auth-helpers'
 
 export async function assignMembershipToPlan(
   gymId: string,
   memberId: string,
   input: AssignMembershipInput
 ) {
+  await requireGymPermission(gymId, 'members:edit')
+
   const validated = assignMembershipSchema.parse(input)
 
   const member = await prisma.user.findUnique({
@@ -91,6 +100,9 @@ export async function cancelMembership(
   membershipId: string,
   reason?: string
 ) {
+  adminCancelMembershipSchema.parse({ reason })
+  await requireGymPermission(gymId, 'members:edit')
+
   const membership = await prisma.membership.findUnique({
     where: { id: membershipId, gymId },
   })
@@ -124,6 +136,9 @@ export async function renewMembership(
   membershipId: string,
   autoRenew?: boolean
 ) {
+  renewMembershipSchema.parse({ autoRenew })
+  await requireGymPermission(gymId, 'members:edit')
+
   const membership = await prisma.membership.findUnique({
     where: { id: membershipId, gymId },
     include: { plan: true },
@@ -173,6 +188,9 @@ export async function updateMembershipAutoRenew(
   membershipId: string,
   autoRenew: boolean
 ) {
+  updateAutoRenewSchema.parse({ autoRenew })
+  await requireGymPermission(gymId, 'members:edit')
+
   const membership = await prisma.membership.findUnique({
     where: { id: membershipId, gymId },
   })

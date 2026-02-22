@@ -15,7 +15,7 @@ export default function MemberShell({
     <div className="member-shell relative flex min-h-screen bg-slate-950 text-slate-100">
       <a
         href="#member-main-content"
-        className="sr-only z-50 rounded-md bg-white px-4 py-2 text-slate-900 focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        className="sr-only z-50 rounded-md bg-white px-4 py-2 text-slate-900 focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-indigo-400"
       >
         Skip to main content
       </a>
@@ -25,9 +25,9 @@ export default function MemberShell({
         onClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-        <div className="pointer-events-none absolute -right-40 -top-40 h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -left-56 top-1/4 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+      <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950 text-slate-100">
+        <div className="pointer-events-none absolute -right-40 -top-40 h-80 w-80 rounded-full bg-indigo-500/[0.07] blur-3xl" />
+        <div className="pointer-events-none absolute -left-56 top-1/4 h-96 w-96 rounded-full bg-blue-500/[0.05] blur-3xl" />
 
         <MemberHeader onMenuToggle={() => setMobileNavOpen((prev) => !prev)} />
 

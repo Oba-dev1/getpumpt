@@ -37,42 +37,35 @@ export default auth((req) => {
     'register',
   ];
 
-  // Check if this is a custom domain (e.g., fitgym.ng)
-  const isCustomDomain = !hostname.includes('gymflowpro.com') &&
+  // Root domain from env (defaults to getpumpt.com)
+  const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'getpumpt.com';
+
+  // Check if this is a custom domain (e.g., fitstudio.ng)
+  const isCustomDomain = !hostname.includes(ROOT_DOMAIN) &&
                          !hostname.includes('localhost') &&
                          !hostname.includes('vercel.app');
 
   if (isCustomDomain) {
-    const response = NextResponse.rewrite(new URL(`/gym/${hostnameWithoutPort}${pathname}`, req.url));
-    response.headers.set('x-gym-domain', hostnameWithoutPort);
+    // Strip www. prefix so custom domain lookup matches (e.g., www.fitstudio.ng -> fitstudio.ng)
+    const cleanDomain = hostnameWithoutPort.replace(/^www\./, '');
+    const response = NextResponse.rewrite(new URL(`/gym/${cleanDomain}${pathname}`, req.url));
+    response.headers.set('x-gym-domain', cleanDomain);
     response.headers.set('x-gym-type', 'custom-domain');
     return response;
   }
 
-  // Check if this is a subdomain (e.g., fitgym.gymflowpro.com)
+  // Check if this is a subdomain (e.g., fitstudio.getpumpt.com)
   const parts = hostnameWithoutPort.split('.');
   let gymSlug: string | null = null;
 
-  // Production subdomain detection
-  if (parts.length >= 3 && !RESERVED_SUBDOMAINS.includes(parts[0])) {
+  // Production subdomain detection (only on root domain, e.g., fitstudio.getpumpt.com)
+  if (hostname.includes(ROOT_DOMAIN) && parts.length >= 3 && !RESERVED_SUBDOMAINS.includes(parts[0])) {
     gymSlug = parts[0];
   }
 
   // Development subdomain simulation
   if (!gymSlug && (hostname.includes('localhost') || hostname.includes('127.0.0.1'))) {
     gymSlug = url.searchParams.get('gym') || req.headers.get('x-gym-slug');
-  }
-
-  // Vercel preview deployments
-  if (!gymSlug && hostname.includes('.vercel.app')) {
-    const vercelParts = hostnameWithoutPort.split('.');
-    if (vercelParts.length >= 3) {
-      const subdomain = vercelParts[0];
-      const slugMatch = subdomain.match(/-([a-z0-9-]+)$/);
-      if (slugMatch) {
-        gymSlug = slugMatch[1];
-      }
-    }
   }
 
   // If we have a gym slug, rewrite to the gym routes

@@ -9,6 +9,12 @@ import {
   generatePaymentReference,
 } from '@/lib/paystack'
 import { requireGymAdminAuth, requireGymOwnerOrAdmin, requireAuth, verifyGymAccess } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
+import {
+  refundPaymentSchema,
+  initializePaymentSchema,
+  verifyPaymentSchema,
+} from '@/lib/validations'
 
 export async function getPayments(
   gymId: string,
@@ -87,7 +93,7 @@ export async function getPaymentById(gymId: string, paymentId: string) {
   await requireGymAdminAuth(gymId)
 
   const payment = await prisma.payment.findUnique({
-    where: { id: paymentId, gymId },
+    where: { id: paymentId },
     include: {
       user: { select: { firstName: true, lastName: true, email: true } },
       membership: {
@@ -99,6 +105,9 @@ export async function getPaymentById(gymId: string, paymentId: string) {
   })
 
   if (!payment) {
+    throw new Error('Payment not found')
+  }
+  if (payment.gymId !== gymId) {
     throw new Error('Payment not found')
   }
 
@@ -123,13 +132,19 @@ export async function refundPayment(
   paymentId: string,
   input?: { amount?: number; reason?: string }
 ) {
-  await requireGymAdminAuth(gymId)
+  if (input) {
+    refundPaymentSchema.parse(input)
+  }
+  const user = await requireGymAdminAuth(gymId)
 
   const payment = await prisma.payment.findUnique({
-    where: { id: paymentId, gymId },
+    where: { id: paymentId },
   })
 
   if (!payment) {
+    throw new Error('Payment not found')
+  }
+  if (payment.gymId !== gymId) {
     throw new Error('Payment not found')
   }
 
@@ -145,13 +160,22 @@ export async function refundPayment(
   }
 
   const updated = await prisma.payment.update({
-    where: { id: paymentId, gymId },
+    where: { id: paymentId },
     data: {
       status: 'REFUNDED',
       description: input?.reason
         ? `${payment.description ?? 'Refunded payment'} · ${input.reason}`
         : payment.description ?? 'Refunded payment',
     },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'PAYMENT',
+    resourceId: paymentId,
+    description: `Refunded payment ${paymentId}`,
   })
 
   revalidatePath('/admin/payments')
@@ -174,7 +198,22 @@ export async function initializeMembershipPayment(
   membershipId: string,
   callbackUrl: string
 ) {
+  initializePaymentSchema.parse({ gymId, userId, membershipId, callbackUrl })
   await requireGymOwnerOrAdmin(gymId, userId)
+
+  // Validate callback URL is on our domain
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL
+  if (appUrl) {
+    try {
+      const parsed = new URL(callbackUrl)
+      const allowed = new URL(appUrl)
+      if (parsed.origin !== allowed.origin) {
+        throw new Error('Invalid callback URL')
+      }
+    } catch {
+      throw new Error('Invalid callback URL')
+    }
+  }
 
   const membership = await prisma.membership.findUnique({
     where: { id: membershipId, gymId },
@@ -239,8 +278,26 @@ export async function initializeMembershipPayment(
  * @returns Updated payment data
  */
 export async function verifyMembershipPayment(gymId: string, reference: string) {
+  verifyPaymentSchema.parse({ reference })
   const user = await requireAuth()
   verifyGymAccess(user, gymId)
+
+  // Check if already processed by webhook
+  const existingPayment = await prisma.payment.findFirst({
+    where: {
+      gymId,
+      providerRef: reference,
+    },
+  })
+
+  if (existingPayment && existingPayment.status === 'COMPLETED') {
+    return {
+      id: existingPayment.id,
+      status: existingPayment.status,
+      amount: Number(existingPayment.amount),
+      currency: existingPayment.currency,
+    }
+  }
 
   const payment = await prisma.payment.findFirst({
     where: {
@@ -254,7 +311,7 @@ export async function verifyMembershipPayment(gymId: string, reference: string) 
   })
 
   if (!payment) {
-    throw new Error('Payment not found or already processed')
+    throw new Error('Payment not found')
   }
 
   if (payment.userId !== user.id && !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
@@ -341,11 +398,14 @@ export async function handlePaystackWebhook(
   }
 
   const payment = await prisma.payment.findUnique({
-    where: { id: paymentId, gymId },
+    where: { id: paymentId },
     include: { membership: true },
   })
 
   if (!payment) {
+    throw new Error('Payment not found')
+  }
+  if (payment.gymId !== gymId) {
     throw new Error('Payment not found')
   }
 

@@ -64,6 +64,7 @@ model Gym {
   trainers         Trainer[]
   trainingSessions TrainingSession[]
   users            User[]
+  activityLogs     ActivityLog[]
 
   @@map("gyms")
 }
@@ -92,6 +93,7 @@ model User {
   checkIns         CheckIn[]         @relation("MemberCheckIns")
   staffCheckIns    CheckIn[]         @relation("StaffCheckIns")
   gym              Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  activityLogs     ActivityLog[]
 
   @@unique([gymId, email])
   @@index([gymId])
@@ -134,6 +136,17 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([email, token])
+  @@map("password_reset_tokens")
 }
 
 model MembershipPlan {
@@ -416,6 +429,26 @@ model CheckIn {
   @@index([userId])
   @@index([createdAt])
   @@map("check_ins")
+}
+
+model ActivityLog {
+  id           String   @id @default(cuid())
+  gymId        String
+  userId       String
+  action       String
+  resourceType String
+  resourceId   String?
+  description  String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  gym          Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resourceType])
+  @@map("activity_logs")
 }
 
 enum UserRole {

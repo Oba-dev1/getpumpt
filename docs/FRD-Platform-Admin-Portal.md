@@ -1,5 +1,5 @@
 # Functional Requirements Document (FRD)
-# GymFlow Pro - Platform Admin Portal
+# Pumpt - Platform Admin Portal
 
 **Version:** 1.0
 **Date:** January 2026
@@ -9,9 +9,9 @@
 
 ## 1. Executive Summary
 
-The Platform Admin Portal is the central management hub for GymFlow Pro SaaS platform owners (SUPER_ADMIN). This portal provides complete oversight and control over all tenant gyms, platform subscriptions, revenue, support, and system configuration.
+The Platform Admin Portal is the central management hub for Pumpt SaaS platform owners (SUPER_ADMIN). This portal provides complete oversight and control over all tenant gyms, platform subscriptions, revenue, support, and system configuration.
 
-**Portal URL:** `admin.gymflowpro.com`
+**Portal URL:** `admin.getpumpt.com`
 
 **Related Documents:**
 - [FRD-Gym-Admin-Portal.md](./FRD-Gym-Admin-Portal.md) - Individual gym management
@@ -451,7 +451,7 @@ The Platform Admin Portal is the central management hub for GymFlow Pro SaaS pla
 #### 3.9.2 Settings Sections
 
 **General**
-- Platform Name: "GymFlow Pro"
+- Platform Name: "Pumpt"
 - Logo, Favicon
 - Primary Color, Secondary Color
 - Support Email
@@ -759,7 +759,7 @@ enum PlatformRole {
 // Platform Settings
 model PlatformSettings {
   id            String   @id @default("default")
-  name          String   @default("GymFlow Pro")
+  name          String   @default("Pumpt")
   logo          String?
   favicon       String?
   primaryColor  String   @default("#6366F1")
@@ -789,7 +789,7 @@ model PlatformSettings {
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Header: GymFlow Pro Logo | Search | Notifications | Profile    │
+│  Header: Pumpt Logo | Search | Notifications | Profile    │
 ├────────────────┬────────────────────────────────────────────────┤
 │                │                                                │
 │    Sidebar     │               Main Content Area                │

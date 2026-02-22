@@ -16,33 +16,31 @@ function shouldRateLimit(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    if (shouldRateLimit(request)) {
+  if (shouldRateLimit(request)) {
+    try {
       const clientIp = getClientIp(request.headers)
-      checkRateLimit(authRateLimiter, clientIp)
+      await checkRateLimit(authRateLimiter, clientIp)
+    } catch {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
     }
-    return authGET(request)
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Rate limit exceeded'
-    return NextResponse.json(
-      { error: message },
-      { status: 429 }
-    )
   }
+  return authGET(request)
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    if (shouldRateLimit(request)) {
+  if (shouldRateLimit(request)) {
+    try {
       const clientIp = getClientIp(request.headers)
-      checkRateLimit(authRateLimiter, clientIp)
+      await checkRateLimit(authRateLimiter, clientIp)
+    } catch {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
     }
-    return authPOST(request)
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Rate limit exceeded'
-    return NextResponse.json(
-      { error: message },
-      { status: 429 }
-    )
   }
+  return authPOST(request)
 }

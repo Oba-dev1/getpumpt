@@ -51,13 +51,13 @@ export async function deleteGymMedia(url: string): Promise<void> {
 }
 
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   const maxSize = 5 * 1024 * 1024; // 5MB
 
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: 'Invalid file type. Only JPEG, PNG, WebP, and SVG are allowed.',
+      error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.',
     };
   }
 

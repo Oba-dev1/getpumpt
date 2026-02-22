@@ -273,6 +273,133 @@ export const updateStaffRoleSchema = z.object({
   }),
 });
 
+// ==================== MEMBER ADMIN SCHEMAS ====================
+
+export const createMemberSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
+  email: z.string().email('Please enter a valid email address'),
+  phone: z.string().optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  planId: z.string().optional(),
+  startDate: z.date().optional(),
+});
+
+export const updateMemberSchema = z.object({
+  firstName: z.string().min(2).max(50).optional(),
+  lastName: z.string().min(2).max(50).optional(),
+  phone: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']).optional(),
+});
+
+// ==================== PLAN ADMIN SCHEMAS ====================
+
+export const createPlanSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  description: z.string().optional(),
+  price: z.number().positive('Price must be positive'),
+  currency: z.string().default('NGN'),
+  billingCycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']),
+  durationValue: z.number().int().positive('Duration must be a positive integer'),
+  durationType: z.enum(['DAYS', 'MONTHS', 'YEARS']),
+  classCredits: z.number().int().nonnegative().optional(),
+  features: z.array(z.string()).default([]),
+  isActive: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
+});
+
+export const updatePlanSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  description: z.string().optional(),
+  price: z.number().positive().optional(),
+  currency: z.string().optional(),
+  billingCycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']).optional(),
+  durationValue: z.number().int().positive().optional(),
+  durationType: z.enum(['DAYS', 'MONTHS', 'YEARS']).optional(),
+  classCredits: z.number().int().nonnegative().optional(),
+  features: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+});
+
+// ==================== TRAINER ADMIN SCHEMAS ====================
+
+export const createTrainerSchema = trainerSchema.omit({ sortOrder: true }).extend({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateTrainerSchema = trainerSchema.partial();
+
+// ==================== CLASS ADMIN SCHEMAS ====================
+
+export const createGymClassSchema = gymClassSchema.extend({
+  gymId: z.string().min(1, 'Gym ID is required'),
+});
+
+export const updateGymClassSchema = gymClassSchema.partial();
+
+// ==================== SCHEDULE ADMIN SCHEMAS ====================
+
+export const createClassScheduleSchema = classScheduleSchema.extend({
+  gymId: z.string().min(1, 'Gym ID is required'),
+});
+
+export const updateClassScheduleSchema = classScheduleSchema.partial();
+
+// ==================== BOOKING ADMIN SCHEMAS ====================
+
+export const createBookingSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  userId: z.string().min(1, 'User ID is required'),
+  scheduleId: z.string().min(1, 'Schedule ID is required'),
+  date: z.date(),
+  status: z.enum(['CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW']).default('CONFIRMED'),
+});
+
+export const updateBookingStatusSchema = z.object({
+  status: z.enum(['CANCELLED', 'COMPLETED', 'NO_SHOW']),
+});
+
+// ==================== MEMBERSHIP ADMIN SCHEMAS ====================
+
+export const adminCancelMembershipSchema = z.object({
+  reason: z.string().optional(),
+});
+
+export const renewMembershipSchema = z.object({
+  autoRenew: z.boolean().optional(),
+});
+
+export const updateAutoRenewSchema = z.object({
+  autoRenew: z.boolean(),
+});
+
+// ==================== PAYMENT ADMIN SCHEMAS ====================
+
+export const refundPaymentSchema = z.object({
+  amount: z.number().positive('Refund amount must be positive').optional(),
+  reason: z.string().optional(),
+});
+
+export const initializePaymentSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  userId: z.string().min(1, 'User ID is required'),
+  membershipId: z.string().min(1, 'Membership ID is required'),
+  callbackUrl: z.string().url('Callback URL must be a valid URL'),
+});
+
+export const verifyPaymentSchema = z.object({
+  reference: z.string().min(1, 'Payment reference is required'),
+});
+
 // ==================== TYPE EXPORTS ====================
 
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -312,3 +439,59 @@ export const checkInSchema = z.object({
 });
 
 export type CheckInInput = z.infer<typeof checkInSchema>;
+
+// Activity log filters
+export const activityLogFilterSchema = z.object({
+  gymId: z.string().min(1),
+  search: z.string().optional(),
+  resourceType: z.string().optional(),
+  userId: z.string().optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  page: z.number().int().positive().optional(),
+  limit: z.number().int().positive().max(100).optional(),
+})
+
+export type ActivityLogFilterInput = z.infer<typeof activityLogFilterSchema>;
+
+// Admin action types
+export type CreateMemberInput = z.infer<typeof createMemberSchema>;
+export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
+export type CreatePlanInput = z.input<typeof createPlanSchema>;
+export type UpdatePlanInput = z.input<typeof updatePlanSchema>;
+export type CreateTrainerInput = z.input<typeof createTrainerSchema>;
+export type UpdateTrainerInput = z.input<typeof updateTrainerSchema>;
+export type CreateGymClassInput = z.input<typeof createGymClassSchema>;
+export type UpdateGymClassInput = z.input<typeof updateGymClassSchema>;
+export type CreateClassScheduleInput = z.input<typeof createClassScheduleSchema>;
+export type UpdateClassScheduleInput = z.input<typeof updateClassScheduleSchema>;
+export type CreateBookingInput = z.input<typeof createBookingSchema>;
+export type UpdateBookingStatusInput = z.infer<typeof updateBookingStatusSchema>;
+export type AdminCancelMembershipInput = z.infer<typeof adminCancelMembershipSchema>;
+export type RenewMembershipInput = z.infer<typeof renewMembershipSchema>;
+export type UpdateAutoRenewInput = z.infer<typeof updateAutoRenewSchema>;
+export type RefundPaymentInput = z.infer<typeof refundPaymentSchema>;
+export type InitializePaymentInput = z.infer<typeof initializePaymentSchema>;
+export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
+
+// ==================== BULK IMPORT SCHEMAS ====================
+
+export const bulkMemberRowSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
+})
+
+export const bulkMemberImportSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  members: z
+    .array(bulkMemberRowSchema)
+    .min(1, 'At least one member is required')
+    .max(500, 'Maximum 500 members per import'),
+  duplicateStrategy: z.enum(['skip', 'update']),
+  sendWelcomeEmail: z.boolean().default(true),
+})
+
+export type BulkMemberRow = z.infer<typeof bulkMemberRowSchema>
+export type BulkMemberImportInput = z.infer<typeof bulkMemberImportSchema>

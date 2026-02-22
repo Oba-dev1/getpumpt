@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'GymFlow Pro | The #1 Gym Management Platform',
+  title: 'GetPumpt | The #1 Gym Management Platform',
   description: 'All-in-one platform to manage memberships, classes, trainers, and payments. Beautiful branded websites included.',
   keywords: ['gym management', 'fitness software', 'membership management', 'class scheduling', 'gym software'],
 };
@@ -11,5 +11,9 @@ export default function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <div className="bg-dark text-white min-h-screen">
+      {children}
+    </div>
+  );
 }

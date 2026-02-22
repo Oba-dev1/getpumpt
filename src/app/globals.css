@@ -24,6 +24,15 @@
   }
 }
 
+.container-narrow {
+  width: 100%;
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
 :root {
   /* Brand Colors from Logo - Blue/Indigo/Navy theme */
   --primary: #6366F1;
@@ -42,6 +51,7 @@
 }
 
 @theme inline {
+  /* Brand colors */
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
@@ -51,7 +61,27 @@
   --color-navy: var(--navy);
   --color-light: var(--light);
   --color-light-muted: var(--light-muted);
-  --color-accent: var(--accent);
+
+  /* shadcn/ui semantic tokens (dark theme) */
+  --color-background: #0F172A;
+  --color-foreground: #F8FAFC;
+  --color-card: #0F172A;
+  --color-card-foreground: #F8FAFC;
+  --color-popover: #1E293B;
+  --color-popover-foreground: #F8FAFC;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #1E293B;
+  --color-secondary-foreground: #F8FAFC;
+  --color-muted: #1E293B;
+  --color-muted-foreground: #94A3B8;
+  --color-accent: #1E293B;
+  --color-accent-foreground: #F8FAFC;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: rgba(148, 163, 184, 0.2);
+  --color-input: rgba(148, 163, 184, 0.2);
+  --color-ring: #6366F1;
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 }

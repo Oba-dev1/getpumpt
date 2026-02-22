@@ -38,6 +38,7 @@ export default function MemberDetailPage() {
   const sessionData = useSession()
   const session = sessionData?.data
   const sessionStatus = sessionData?.status || 'loading'
+  const isStaff = session?.user?.role === 'STAFF'
   const [member, setMember] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -54,7 +55,6 @@ export default function MemberDetailPage() {
         const result = await getMemberById(session.user.gymId, memberId)
         setMember(result)
       } catch (error) {
-        console.error('Failed to fetch member:', error)
         toast.error('Failed to load member details')
         router.push('/admin/members')
       } finally {
@@ -235,15 +235,17 @@ export default function MemberDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Current Membership</CardTitle>
-              <Button
-                size="sm"
-                onClick={() =>
-                  router.push(`/admin/members/${memberId}/assign-plan`)
-                }
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Assign Plan
-              </Button>
+              {!isStaff && (
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    router.push(`/admin/members/${memberId}/assign-plan`)
+                  }
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Assign Plan
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {member.membership ? (

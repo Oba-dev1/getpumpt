@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { ChevronDown } from 'lucide-react';
 
 interface FAQItem {
   question: string;
@@ -44,39 +43,36 @@ export default function FAQ({ faqs = defaultFAQs }: FAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-16 md:py-24 lg:py-32 bg-[#141414]">
+    <section id="faq" className="bg-[#0F0F14] py-16 md:py-24 lg:py-32">
       <div className="container-custom max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <span className="inline-block bg-[rgba(var(--gym-primary-rgb),0.1)] border border-[rgba(var(--gym-primary-rgb),0.3)] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))] mb-6 rounded-md">
+        <div className="mb-12 text-center md:mb-16">
+          <span className="mb-6 inline-block rounded-full border border-[rgba(var(--gym-primary-rgb),0.3)] bg-[rgba(var(--gym-primary-rgb),0.1)] px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))]">
             FAQ
           </span>
-          <h2 className="font-['Bebas_Neue'] text-4xl lg:text-[4.5rem] tracking-[0.02em] mb-4 text-white leading-tight">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
             Frequently Asked Questions
           </h2>
-          <p className="text-gray-400 text-lg">
+          <p className="text-base text-slate-400 md:text-lg">
             Everything you need to know about our gym and memberships.
           </p>
         </div>
 
-        {/* FAQ Items */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden transition-all duration-300 hover:border-white/10"
+              className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] transition-all duration-300 hover:border-white/[0.12]"
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full flex items-center justify-between p-6 text-left group"
+                className="group flex w-full items-center justify-between p-6 text-left"
                 aria-expanded={openIndex === index}
               >
-                <span className="text-white font-semibold text-lg pr-4 group-hover:text-[rgb(var(--gym-primary))] transition-colors duration-300">
+                <span className="pr-4 text-base font-semibold text-white transition-colors duration-300 group-hover:text-[rgb(var(--gym-primary))] md:text-lg">
                   {faq.question}
                 </span>
-                <FontAwesomeIcon
-                  icon={faChevronDown}
-                  className={`text-[rgb(var(--gym-primary))] transition-transform duration-300 flex-shrink-0 ${
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 text-[rgb(var(--gym-primary))] transition-transform duration-300 ${
                     openIndex === index ? 'rotate-180' : ''
                   }`}
                 />
@@ -86,7 +82,7 @@ export default function FAQ({ faqs = defaultFAQs }: FAQProps) {
                   openIndex === index ? 'max-h-96' : 'max-h-0'
                 }`}
               >
-                <div className="px-6 pb-6 text-gray-400 leading-relaxed">
+                <div className="px-6 pb-6 leading-relaxed text-slate-400">
                   {faq.answer}
                 </div>
               </div>
@@ -94,12 +90,11 @@ export default function FAQ({ faqs = defaultFAQs }: FAQProps) {
           ))}
         </div>
 
-        {/* Contact CTA */}
         <div className="mt-12 text-center">
-          <p className="text-gray-400 mb-4">Still have questions?</p>
+          <p className="mb-4 text-slate-400">Still have questions?</p>
           <a
             href="#contact"
-            className="inline-block bg-[rgb(var(--gym-primary))] hover:brightness-110 text-white px-8 py-3 font-semibold uppercase tracking-wider transition-all duration-200 rounded-md"
+            className="inline-block rounded-xl bg-[rgb(var(--gym-primary))] px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)]"
           >
             Contact Us
           </a>

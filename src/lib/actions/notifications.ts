@@ -3,7 +3,10 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAuth, requireGymPermission } from '@/lib/auth-helpers'
+import { z } from 'zod'
+
+const notificationIdParam = z.string().min(1, 'Notification ID is required')
 
 export async function getNotifications(
   gymId: string,
@@ -15,6 +18,8 @@ export async function getNotifications(
     limit?: number
   }
 ) {
+  await requireGymPermission(gymId, 'notifications:manage')
+
   const page = options?.page ?? 1
   const limit = options?.limit ?? 20
   const skip = (page - 1) * limit
@@ -63,6 +68,9 @@ export async function getNotifications(
 }
 
 export async function markNotificationRead(gymId: string, notificationId: string) {
+  notificationIdParam.parse(notificationId)
+  await requireGymPermission(gymId, 'notifications:manage')
+
   const updated = await prisma.notification.update({
     where: { id: notificationId, gymId },
     data: { isRead: true },
@@ -73,6 +81,8 @@ export async function markNotificationRead(gymId: string, notificationId: string
 }
 
 export async function markAllNotificationsRead(gymId: string) {
+  await requireGymPermission(gymId, 'notifications:manage')
+
   await prisma.notification.updateMany({
     where: { gymId, isRead: false },
     data: { isRead: true },
@@ -85,6 +95,9 @@ export async function getNotificationById(
   gymId: string,
   notificationId: string
 ) {
+  notificationIdParam.parse(notificationId)
+  await requireGymPermission(gymId, 'notifications:manage')
+
   const notification = await prisma.notification.findUnique({
     where: { id: notificationId, gymId },
   })
@@ -105,18 +118,27 @@ export async function getNotificationById(
 }
 
 export async function getMemberNotifications(
-  userId: string,
+  userId?: string,
   unreadOnly = false
 ) {
   const user = await requireAuth()
 
-  if (user.id !== userId && !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-    throw new Error('Unauthorized: Can only query your own notifications')
+  let targetUserId = user.id
+  if (['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId && userId !== user.id) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId, gymId: user.gymId },
+      select: { id: true },
+    })
+    if (!targetUser) {
+      throw new Error('User not found')
+    }
+    targetUserId = userId
   }
 
   const notifications = await prisma.notification.findMany({
     where: {
-      userId,
+      userId: targetUserId,
+      gymId: user.gymId,
       ...(unreadOnly && { isRead: false }),
     },
     orderBy: [{ isRead: 'asc' }, { createdAt: 'desc' }],
@@ -126,16 +148,25 @@ export async function getMemberNotifications(
   return notifications
 }
 
-export async function getMemberUnreadCount(userId: string): Promise<number> {
+export async function getMemberUnreadCount(userId?: string): Promise<number> {
   const user = await requireAuth()
 
-  if (user.id !== userId && !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-    throw new Error('Unauthorized: Can only query your own notifications')
+  let targetUserId = user.id
+  if (['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId && userId !== user.id) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId, gymId: user.gymId },
+      select: { id: true },
+    })
+    if (!targetUser) {
+      throw new Error('User not found')
+    }
+    targetUserId = userId
   }
 
   const count = await prisma.notification.count({
     where: {
-      userId,
+      userId: targetUserId,
+      gymId: user.gymId,
       isRead: false,
     },
   })
@@ -147,11 +178,15 @@ export async function markMemberNotificationRead(
   userId: string,
   notificationId: string
 ) {
+  notificationIdParam.parse(notificationId)
+  const user = await requireAuth()
+  const targetUserId = ['ADMIN', 'SUPER_ADMIN'].includes(user.role) ? userId : user.id
+
   const notification = await prisma.notification.findUnique({
-    where: { id: notificationId },
+    where: { id: notificationId, gymId: user.gymId },
   })
 
-  if (!notification || notification.userId !== userId) {
+  if (!notification || notification.userId !== targetUserId) {
     throw new Error('Notification not found or unauthorized')
   }
 
@@ -165,9 +200,13 @@ export async function markMemberNotificationRead(
 }
 
 export async function markAllMemberNotificationsRead(userId: string) {
+  const user = await requireAuth()
+  const targetUserId = ['ADMIN', 'SUPER_ADMIN'].includes(user.role) ? userId : user.id
+
   await prisma.notification.updateMany({
     where: {
-      userId,
+      userId: targetUserId,
+      gymId: user.gymId,
       isRead: false,
     },
     data: { isRead: true },

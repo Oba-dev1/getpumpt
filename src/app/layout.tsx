@@ -31,7 +31,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "GymFlow Pro | Run Your Gym Like a Pro",
+  title: "GetPumpt | Run Your Gym Like a Pro",
   description: "Complete gym management platform for memberships, payments, class scheduling, and analytics. Beautiful branded websites included. Everything you need to grow your fitness business.",
   keywords: ["gym management", "fitness software", "gym software", "membership management", "class scheduling", "gym analytics", "SaaS"],
 };

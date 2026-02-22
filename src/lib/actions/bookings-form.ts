@@ -1,8 +1,11 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { requireGymPermission } from '@/lib/auth-helpers'
 
 export async function getBookingFormOptions(gymId: string) {
+  await requireGymPermission(gymId, 'bookings:manage')
+
   const [members, classes, trainers] = await Promise.all([
     prisma.user.findMany({
       where: { gymId, role: 'MEMBER', status: 'ACTIVE' },

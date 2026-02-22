@@ -6,7 +6,7 @@ import { webhookRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limi
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request.headers)
-    checkRateLimit(webhookRateLimiter, clientIp)
+    await checkRateLimit(webhookRateLimiter, clientIp)
 
     const signature = request.headers.get('x-paystack-signature')
 
@@ -35,13 +35,11 @@ export async function POST(request: NextRequest) {
       success: true,
       message: result.message,
     })
-  } catch (error: any) {
-    console.error('Paystack webhook error:', error)
-
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Internal server error',
+        error: 'Internal server error',
       },
       { status: 500 }
     )

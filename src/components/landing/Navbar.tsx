@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Menu, X } from 'lucide-react';
 import { useGym } from '@/contexts/GymContext';
 
 export default function Navbar() {
@@ -30,14 +29,20 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'py-2 bg-[#0A0A0A]/95 backdrop-blur-md border-b border-white/5'
-          : 'py-3 bg-transparent'
+          ? 'bg-[#0A0A0A]/80 py-2 shadow-xl shadow-black/20 backdrop-blur-xl'
+          : 'bg-transparent py-4'
       }`}
     >
       <div className="container-custom">
-        <nav className="flex items-center justify-between">
+        <nav
+          className={`flex items-center justify-between ${
+            isScrolled
+              ? ''
+              : 'rounded-2xl border border-white/[0.06] bg-white/[0.03] px-6 py-2 backdrop-blur-md'
+          }`}
+        >
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             {gym?.logo ? (
@@ -46,21 +51,21 @@ export default function Navbar() {
                 alt={gym.name}
                 width={80}
                 height={40}
-                className="h-8 md:h-10 w-auto"
+                className="h-8 w-auto md:h-10"
                 priority
               />
             ) : (
-              <span className="text-2xl font-bold text-white">{gym?.name}</span>
+              <span className="text-xl font-bold text-white">{gym?.name}</span>
             )}
           </Link>
 
-          {/* Desktop Navigation - Centered */}
-          <ul className="hidden lg:flex items-center gap-8">
+          {/* Desktop Navigation */}
+          <ul className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-gray-400 text-sm font-medium uppercase tracking-wider hover:text-white transition-colors duration-200"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-400 transition-colors duration-200 hover:bg-white/[0.04] hover:text-white"
                 >
                   {link.label}
                 </Link>
@@ -68,17 +73,17 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* CTA Buttons Group */}
-          <div className="hidden lg:flex items-center gap-4">
+          {/* CTA Buttons */}
+          <div className="hidden items-center gap-3 lg:flex">
             <Link
               href={`/gym/${gym?.slug}/login`}
-              className="text-gray-400 hover:text-white px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-200"
+              className="rounded-xl px-5 py-2.5 text-sm font-medium text-slate-300 transition-colors duration-200 hover:text-white"
             >
               Member Login
             </Link>
             <Link
               href="#pricing"
-              className="inline-flex items-center justify-center bg-[rgb(var(--gym-primary))] hover:brightness-110 text-white px-10 py-4 text-base font-semibold uppercase tracking-wider transition-all duration-200 rounded-md"
+              className="inline-flex items-center justify-center rounded-xl bg-[rgb(var(--gym-primary))] px-7 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)]"
             >
               Join Now
             </Link>
@@ -86,43 +91,56 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden flex items-center justify-center w-10 h-10 text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10 lg:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            <FontAwesomeIcon icon={isMobileMenuOpen ? faXmark : faBars} className="text-xl" />
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </nav>
       </div>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-0 bg-[#0A0A0A] z-40">
-          <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-8">
+        <div className="fixed inset-0 top-0 z-40 bg-[#0A0A0A]/98 backdrop-blur-xl lg:hidden">
+          <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-white text-2xl font-bold uppercase tracking-wider"
+                className="text-2xl font-bold tracking-wide text-white transition-colors hover:text-[rgb(var(--gym-primary))]"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <Link
-              href={`/gym/${gym?.slug}/login`}
-              className="text-gray-300 text-xl font-semibold uppercase tracking-wider"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Member Login
-            </Link>
-            <Link
-              href="#pricing"
-              className="mt-6 bg-[rgb(var(--gym-primary))] text-white px-10 py-4 text-sm font-semibold uppercase tracking-wider rounded"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Join Now
-            </Link>
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <Link
+                href={`/gym/${gym?.slug}/login`}
+                className="text-lg font-medium text-slate-400 transition-colors hover:text-white"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Member Login
+              </Link>
+              <Link
+                href="#pricing"
+                className="rounded-xl bg-[rgb(var(--gym-primary))] px-10 py-3.5 text-sm font-semibold text-white transition-all hover:brightness-110"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Join Now
+              </Link>
+            </div>
           </div>
         </div>
       )}

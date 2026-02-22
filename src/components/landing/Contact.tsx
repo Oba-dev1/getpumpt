@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLocationDot, faPhone, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { MapPin, Phone, Mail } from 'lucide-react';
 
 const hours = [
   { day: 'Mon - Fri', time: '5AM - 11PM' },
@@ -29,65 +28,63 @@ export default function Contact() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const inputClasses = 'w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-sm text-white backdrop-blur-sm transition-all duration-300 focus:border-[rgb(var(--gym-primary))] focus:outline-none focus:ring-1 focus:ring-[rgba(var(--gym-primary-rgb),0.3)] md:p-4 md:text-base';
+
   return (
-    <section id="contact" className="py-16 md:py-24 lg:py-32">
+    <section id="contact" className="bg-[#0A0A0A] py-16 md:py-24 lg:py-32">
       <div className="container-custom">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16 lg:mb-20">
-          <span className="inline-block bg-[rgba(99,102,241,0.1)] border border-[rgba(99,102,241,0.3)] px-3 md:px-4 py-2 text-[0.7rem] md:text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-[#6366F1] mb-4 md:mb-6">
+        <div className="mx-auto mb-12 max-w-3xl text-center md:mb-16 lg:mb-20">
+          <span className="mb-6 inline-block rounded-full border border-[rgba(var(--gym-primary-rgb),0.3)] bg-[rgba(var(--gym-primary-rgb),0.1)] px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[rgb(var(--gym-primary))]">
             Get In Touch
           </span>
-          <h2 className="font-['Bebas_Neue'] text-3xl md:text-4xl lg:text-[4.5rem] tracking-[0.02em] mb-3 md:mb-4">
-            START YOUR FITNESS JOURNEY TODAY
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
+            Start Your Fitness Journey Today
           </h2>
-          <p className="text-[#A0A0A0] text-base md:text-[1.1rem]">
+          <p className="text-base text-slate-400 md:text-lg">
             Visit us or send a message. We&apos;re here to help you achieve your goals.
           </p>
         </div>
 
-        {/* Contact Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16">
-          {/* Contact Info */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
           <div>
-            <h3 className="font-['Bebas_Neue'] text-xl md:text-2xl lg:text-[2rem] tracking-[0.05em] mb-6 md:mb-8">
-              CONTACT INFORMATION
+            <h3 className="mb-6 text-xl font-bold text-white md:mb-8 md:text-2xl">
+              Contact Information
             </h3>
 
-            {/* Contact Items */}
-            <div className="space-y-4 md:space-y-6 mb-6 md:mb-8">
-              <div className="flex items-start gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 lg:w-[50px] lg:h-[50px] bg-[rgba(99,102,241,0.1)] flex items-center justify-center text-[#6366F1] text-base md:text-lg lg:text-[1.2rem] shrink-0">
-                  <FontAwesomeIcon icon={faLocationDot} />
+            <div className="mb-8 space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[rgba(var(--gym-primary-rgb),0.1)] text-[rgb(var(--gym-primary))]">
+                  <MapPin className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm md:text-[1rem] mb-1">Location</h4>
-                  <p className="text-[#A0A0A0] text-sm md:text-[0.95rem]">
+                  <h4 className="mb-1 text-sm font-semibold text-white">Location</h4>
+                  <p className="text-sm text-slate-400">
                     123 Fitness Avenue, RiverPark Estate<br />
                     Abuja, Nigeria
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 lg:w-[50px] lg:h-[50px] bg-[rgba(99,102,241,0.1)] flex items-center justify-center text-[#6366F1] text-base md:text-lg lg:text-[1.2rem] shrink-0">
-                  <FontAwesomeIcon icon={faPhone} />
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[rgba(var(--gym-primary-rgb),0.1)] text-[rgb(var(--gym-primary))]">
+                  <Phone className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm md:text-[1rem] mb-1">Phone</h4>
-                  <p className="text-[#A0A0A0] text-sm md:text-[0.95rem]">
+                  <h4 className="mb-1 text-sm font-semibold text-white">Phone</h4>
+                  <p className="text-sm text-slate-400">
                     +234 801 234 5678<br />
                     +234 802 345 6789
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 lg:w-[50px] lg:h-[50px] bg-[rgba(99,102,241,0.1)] flex items-center justify-center text-[#6366F1] text-base md:text-lg lg:text-[1.2rem] shrink-0">
-                  <FontAwesomeIcon icon={faEnvelope} />
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[rgba(var(--gym-primary-rgb),0.1)] text-[rgb(var(--gym-primary))]">
+                  <Mail className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm md:text-[1rem] mb-1">Email</h4>
-                  <p className="text-[#A0A0A0] text-sm md:text-[0.95rem]">
+                  <h4 className="mb-1 text-sm font-semibold text-white">Email</h4>
+                  <p className="text-sm text-slate-400">
                     info@fitgym.ng<br />
                     support@fitgym.ng
                   </p>
@@ -95,32 +92,28 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Hours Grid */}
-            <h4 className="font-['Bebas_Neue'] text-lg md:text-xl lg:text-[1.3rem] tracking-[0.05em] mb-3 md:mb-4">
-              OPENING HOURS
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+            <h4 className="mb-4 text-lg font-bold text-white">Opening Hours</h4>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {hours.map((item, index) => (
                 <div
                   key={index}
-                  className="flex justify-between p-2 md:p-3 bg-[#141414] border border-white/5 text-sm md:text-base"
+                  className="flex justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-sm"
                 >
-                  <span className="text-[#A0A0A0]">{item.day}</span>
-                  <span>{item.time}</span>
+                  <span className="text-slate-400">{item.day}</span>
+                  <span className="font-semibold text-white">{item.time}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Contact Form */}
-          <div className="bg-[#141414] border border-white/5 p-6 md:p-8 lg:p-12">
-            <h3 className="font-['Bebas_Neue'] text-xl md:text-2xl lg:text-[2rem] tracking-[0.05em] mb-6 md:mb-8">
-              SEND US A MESSAGE
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 backdrop-blur-sm md:p-8 lg:p-10">
+            <h3 className="mb-6 text-xl font-bold text-white md:mb-8 md:text-2xl">
+              Send Us a Message
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
               <div>
-                <label className="block text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.1em] text-[#A0A0A0] mb-2">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Full Name
                 </label>
                 <input
@@ -128,13 +121,13 @@ export default function Contact() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full bg-[#0A0A0A] border border-white/10 p-3 md:p-4 text-white font-sans text-sm md:text-[1rem] transition-colors duration-300 focus:outline-none focus:border-[#6366F1]"
+                  className={inputClasses}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.1em] text-[#A0A0A0] mb-2">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Email Address
                 </label>
                 <input
@@ -142,13 +135,13 @@ export default function Contact() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[#0A0A0A] border border-white/10 p-3 md:p-4 text-white font-sans text-sm md:text-[1rem] transition-colors duration-300 focus:outline-none focus:border-[#6366F1]"
+                  className={inputClasses}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.1em] text-[#A0A0A0] mb-2">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Phone Number
                 </label>
                 <input
@@ -156,19 +149,19 @@ export default function Contact() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full bg-[#0A0A0A] border border-white/10 p-3 md:p-4 text-white font-sans text-sm md:text-[1rem] transition-colors duration-300 focus:outline-none focus:border-[#6366F1]"
+                  className={inputClasses}
                 />
               </div>
 
               <div>
-                <label className="block text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.1em] text-[#A0A0A0] mb-2">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   I&apos;m Interested In
                 </label>
                 <select
                   name="interest"
                   value={formData.interest}
                   onChange={handleChange}
-                  className="w-full bg-[#0A0A0A] border border-white/10 p-3 md:p-4 text-white font-sans text-sm md:text-[1rem] transition-colors duration-300 focus:outline-none focus:border-[#6366F1]"
+                  className={inputClasses}
                 >
                   <option value="">Select an option</option>
                   <option value="basic">Basic Membership</option>
@@ -181,7 +174,7 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block text-[0.75rem] md:text-[0.85rem] uppercase tracking-[0.1em] text-[#A0A0A0] mb-2">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Message
                 </label>
                 <textarea
@@ -189,14 +182,14 @@ export default function Contact() {
                   value={formData.message}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full bg-[#0A0A0A] border border-white/10 p-3 md:p-4 text-white font-sans text-sm md:text-[1rem] transition-colors duration-300 focus:outline-none focus:border-[#6366F1] resize-y min-h-[100px] md:min-h-[120px]"
+                  className={`${inputClasses} min-h-[120px] resize-y`}
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#6366F1] text-white py-4 md:py-5 font-semibold text-sm md:text-[1rem] uppercase tracking-[0.1em] transition-colors duration-300 hover:bg-[#4F46E5]"
+                className="w-full rounded-xl bg-[rgb(var(--gym-primary))] py-4 text-sm font-semibold uppercase tracking-wider text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)]"
               >
                 Send Message
               </button>

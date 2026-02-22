@@ -4,35 +4,13 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireGymAdminAuth } from '@/lib/auth-helpers'
-
-interface CreatePlanInput {
-  gymId: string
-  name: string
-  description?: string
-  price: number
-  currency?: string
-  billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-  durationValue: number
-  durationType: 'DAYS' | 'MONTHS' | 'YEARS'
-  classCredits?: number
-  features?: string[]
-  isActive?: boolean
-  isFeatured?: boolean
-}
-
-interface UpdatePlanInput {
-  name?: string
-  description?: string
-  price?: number
-  currency?: string
-  billingCycle?: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-  durationValue?: number
-  durationType?: 'DAYS' | 'MONTHS' | 'YEARS'
-  classCredits?: number
-  features?: string[]
-  isActive?: boolean
-  isFeatured?: boolean
-}
+import { logActivity } from '@/lib/audit'
+import {
+  createPlanSchema,
+  updatePlanSchema,
+  type CreatePlanInput,
+  type UpdatePlanInput,
+} from '@/lib/validations'
 
 export async function getMembershipPlans(gymId: string, includeInactive = false) {
   await requireGymAdminAuth(gymId)
@@ -114,51 +92,45 @@ export async function createMembershipPlan(
   input: CreatePlanInput
 ): Promise<{ id?: string; error?: string }> {
   try {
-    await requireGymAdminAuth(input.gymId)
-
-    if (!input.gymId) {
-      return { error: 'Gym ID is required' }
-    }
-
-    if (!input.name || input.name.trim().length < 2) {
-      return { error: 'Plan name must be at least 2 characters' }
-    }
-
-    if (Number.isNaN(input.price) || input.price <= 0) {
-      return { error: 'Price must be a valid positive number' }
-    }
-
-    if (Number.isNaN(input.durationValue) || input.durationValue <= 0) {
-      return { error: 'Duration must be a valid positive number' }
-    }
+    const validated = createPlanSchema.parse(input)
+    const user = await requireGymAdminAuth(validated.gymId)
 
     const maxSortOrder = await prisma.membershipPlan.aggregate({
-      where: { gymId: input.gymId },
+      where: { gymId: validated.gymId },
       _max: { sortOrder: true },
     })
 
     const plan = await prisma.membershipPlan.create({
       data: {
-        gymId: input.gymId,
-        name: input.name,
-        description: input.description,
-        price: input.price,
-        currency: input.currency ?? 'NGN',
-        billingCycle: input.billingCycle,
-        durationValue: input.durationValue,
-        durationType: input.durationType,
-        classCredits: input.classCredits,
-        features: input.features ?? [],
-        isActive: input.isActive ?? true,
-        isFeatured: input.isFeatured ?? false,
+        gymId: validated.gymId,
+        name: validated.name,
+        description: validated.description,
+        price: validated.price,
+        currency: validated.currency,
+        billingCycle: validated.billingCycle,
+        durationValue: validated.durationValue,
+        durationType: validated.durationType,
+        classCredits: validated.classCredits,
+        features: validated.features,
+        isActive: validated.isActive,
+        isFeatured: validated.isFeatured,
         sortOrder: (maxSortOrder._max.sortOrder ?? 0) + 1,
       },
     })
 
-    if (input.isFeatured) {
+    logActivity({
+      gymId: validated.gymId,
+      userId: user.id,
+      action: 'CREATE',
+      resourceType: 'PLAN',
+      resourceId: plan.id,
+      description: `Created plan ${validated.name}`,
+    })
+
+    if (validated.isFeatured) {
       await prisma.membershipPlan.updateMany({
         where: {
-          gymId: input.gymId,
+          gymId: validated.gymId,
           id: { not: plan.id },
           isFeatured: true,
         },
@@ -167,7 +139,7 @@ export async function createMembershipPlan(
     }
 
     const gym = await prisma.gym.findUnique({
-      where: { id: input.gymId },
+      where: { id: validated.gymId },
       select: { slug: true },
     })
 
@@ -199,11 +171,21 @@ export async function updateMembershipPlan(
   planId: string,
   input: UpdatePlanInput
 ) {
-  await requireGymAdminAuth(gymId)
+  const validated = updatePlanSchema.parse(input)
+  const user = await requireGymAdminAuth(gymId)
 
   const plan = await prisma.membershipPlan.update({
     where: { id: planId, gymId },
-    data: input,
+    data: validated,
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'PLAN',
+    resourceId: planId,
+    description: `Updated plan ${planId}`,
   })
 
   if (input.isFeatured === true) {
@@ -232,8 +214,10 @@ export async function updateMembershipPlan(
 }
 
 export async function deleteMembershipPlan(gymId: string, planId: string) {
+  const user = await requireGymAdminAuth(gymId)
+
   const activeSubscribers = await prisma.membership.count({
-    where: { planId, status: 'ACTIVE' },
+    where: { planId, gymId, status: 'ACTIVE' },
   })
 
   if (activeSubscribers > 0) {
@@ -249,6 +233,15 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
     where: { id: planId, gymId },
   })
 
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'PLAN',
+    resourceId: planId,
+    description: `Deleted membership plan ${planId}`,
+  })
+
   revalidatePath('/admin/plans')
   if (gym) {
     revalidatePath(`/gym/${gym.slug}`)
@@ -257,7 +250,7 @@ export async function deleteMembershipPlan(gymId: string, planId: string) {
 }
 
 export async function togglePlanStatus(gymId: string, planId: string) {
-  await requireGymAdminAuth(gymId)
+  const user = await requireGymAdminAuth(gymId)
 
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId, gymId },
@@ -277,6 +270,15 @@ export async function togglePlanStatus(gymId: string, planId: string) {
       select: { slug: true },
     }),
   ])
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'UPDATE',
+    resourceType: 'PLAN',
+    resourceId: planId,
+    description: `${updated.isActive ? 'Activated' : 'Deactivated'} plan ${planId}`,
+  })
 
   revalidatePath('/admin/plans')
   if (gym) {
