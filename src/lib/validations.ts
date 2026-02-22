@@ -473,3 +473,25 @@ export type UpdateAutoRenewInput = z.infer<typeof updateAutoRenewSchema>;
 export type RefundPaymentInput = z.infer<typeof refundPaymentSchema>;
 export type InitializePaymentInput = z.infer<typeof initializePaymentSchema>;
 export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
+
+// ==================== BULK IMPORT SCHEMAS ====================
+
+export const bulkMemberRowSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
+})
+
+export const bulkMemberImportSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  members: z
+    .array(bulkMemberRowSchema)
+    .min(1, 'At least one member is required')
+    .max(500, 'Maximum 500 members per import'),
+  duplicateStrategy: z.enum(['skip', 'update']),
+  sendWelcomeEmail: z.boolean().default(true),
+})
+
+export type BulkMemberRow = z.infer<typeof bulkMemberRowSchema>
+export type BulkMemberImportInput = z.infer<typeof bulkMemberImportSchema>

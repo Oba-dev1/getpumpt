@@ -60,8 +60,6 @@ const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {
     'members:create',
     'members:checkin',
     'plans:view',
-    'plans:create',
-    'plans:edit',
     'trainers:view',
     'trainers:manage',
     'classes:view',
