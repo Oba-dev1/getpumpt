@@ -83,7 +83,7 @@ export interface MembershipPlan {
   description: string | null;
   price: number;
   currency: string;
-  billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  billingCycle: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'BIANNUAL' | 'YEARLY';
   durationValue: number;
   durationType: 'DAYS' | 'MONTHS' | 'YEARS';
   classCredits?: number;

@@ -35,13 +35,13 @@ async function main() {
       metaDescription: 'Join the most advanced fitness facility in Abuja. State-of-the-art equipment, world-class trainers, and a community that pushes you to achieve your best.',
       metaKeywords: ['gym', 'fitness', 'Abuja', 'Nigeria', 'personal training', 'workout', 'health'],
       businessHours: {
-        monday: { open: '06:00', close: '22:00' },
-        tuesday: { open: '06:00', close: '22:00' },
-        wednesday: { open: '06:00', close: '22:00' },
-        thursday: { open: '06:00', close: '22:00' },
-        friday: { open: '06:00', close: '22:00' },
-        saturday: { open: '07:00', close: '20:00' },
-        sunday: { open: '08:00', close: '18:00' },
+        monday: { open: '00:00', close: '23:59' },
+        tuesday: { open: '00:00', close: '23:59' },
+        wednesday: { open: '00:00', close: '23:59' },
+        thursday: { open: '00:00', close: '23:59' },
+        friday: { open: '00:00', close: '23:59' },
+        saturday: { open: '00:00', close: '23:59' },
+        sunday: { closed: true },
       },
       heroContent: {
         badge: 'Now Open in RiverPark Estate Abuja',
@@ -185,87 +185,206 @@ async function main() {
 
   console.log(`Created staff user: ${staffUser.email} (password: ${staffPwd})`);
 
-  // Create membership plans for FitGym
-  const basicPlan = await prisma.membershipPlan.upsert({
-    where: { gymId_name: { gymId: fitgym.id, name: 'Basic' } },
-    update: {},
-    create: {
-      gymId: fitgym.id,
-      name: 'Basic',
-      description: 'Perfect for getting started on your fitness journey',
-      price: 25000,
-      currency: 'NGN',
-      billingCycle: 'MONTHLY',
+  // Create membership plans for FitStudio
+  const membershipPlans = [
+    // Individual plans
+    {
+      name: 'Individual - Daily',
+      description: 'Single day gym access',
+      price: 5000,
+      billingCycle: 'DAILY' as const,
       durationValue: 1,
-      durationType: 'MONTHS',
-      classCredits: 8,
-      features: [
-        'Access to gym floor',
-        'Basic equipment usage',
-        'Locker room access',
-        '2 group classes/week',
-        'Fitness assessment',
-      ],
-      isActive: true,
+      durationType: 'DAYS' as const,
       isFeatured: false,
       sortOrder: 1,
     },
-  });
-
-  const premiumPlan = await prisma.membershipPlan.upsert({
-    where: { gymId_name: { gymId: fitgym.id, name: 'Premium' } },
-    update: {},
-    create: {
-      gymId: fitgym.id,
-      name: 'Premium',
-      description: 'Our most popular choice for serious fitness enthusiasts',
-      price: 45000,
-      currency: 'NGN',
-      billingCycle: 'MONTHLY',
-      durationValue: 1,
-      durationType: 'MONTHS',
-      classCredits: 20,
-      features: [
-        'Full gym access 24/7',
-        'All equipment & classes',
-        'Personal training (2x/month)',
-        'Nutrition consultation',
-        'Sauna & spa access',
-        'Guest passes (2/month)',
-      ],
-      isActive: true,
-      isFeatured: true,
+    {
+      name: 'Individual - Weekly',
+      description: 'One week of unlimited gym access',
+      price: 10000,
+      billingCycle: 'WEEKLY' as const,
+      durationValue: 7,
+      durationType: 'DAYS' as const,
+      isFeatured: false,
       sortOrder: 2,
     },
-  });
-
-  const vipPlan = await prisma.membershipPlan.upsert({
-    where: { gymId_name: { gymId: fitgym.id, name: 'VIP' } },
-    update: {},
-    create: {
-      gymId: fitgym.id,
-      name: 'VIP',
-      description: 'The ultimate experience for dedicated athletes',
-      price: 75000,
-      currency: 'NGN',
-      billingCycle: 'MONTHLY',
-      durationValue: 1,
-      durationType: 'MONTHS',
-      features: [
-        'Everything in Premium',
-        'Unlimited personal training',
-        'Priority class booking',
-        'Private locker',
-        'Complimentary supplements',
-        'Unlimited guest passes',
-      ],
-      isActive: true,
+    {
+      name: 'Individual - 2 Weeks',
+      description: 'Two weeks of unlimited gym access',
+      price: 20000,
+      billingCycle: 'BIWEEKLY' as const,
+      durationValue: 14,
+      durationType: 'DAYS' as const,
       isFeatured: false,
       sortOrder: 3,
     },
-  });
+    {
+      name: 'Individual - Monthly',
+      description: 'Full month of unlimited gym access',
+      price: 40000,
+      billingCycle: 'MONTHLY' as const,
+      durationValue: 1,
+      durationType: 'MONTHS' as const,
+      isFeatured: true,
+      sortOrder: 4,
+    },
+    {
+      name: 'Individual - 3 Months',
+      description: '3-month membership with savings',
+      price: 110000,
+      billingCycle: 'QUARTERLY' as const,
+      durationValue: 3,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 5,
+    },
+    {
+      name: 'Individual - 6 Months',
+      description: '6-month membership with greater savings',
+      price: 198000,
+      billingCycle: 'BIANNUAL' as const,
+      durationValue: 6,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 6,
+    },
+    {
+      name: 'Individual - 12 Months',
+      description: 'Full year membership — best value for individuals',
+      price: 360000,
+      billingCycle: 'YEARLY' as const,
+      durationValue: 12,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 7,
+    },
+    // Couples plans
+    {
+      name: 'Couples - Monthly',
+      description: 'Monthly membership for two people',
+      price: 70000,
+      billingCycle: 'MONTHLY' as const,
+      durationValue: 1,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 8,
+    },
+    {
+      name: 'Couples - 3 Months',
+      description: '3-month membership for two people',
+      price: 200000,
+      billingCycle: 'QUARTERLY' as const,
+      durationValue: 3,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 9,
+    },
+    {
+      name: 'Couples - 6 Months',
+      description: '6-month membership for two people',
+      price: 400000,
+      billingCycle: 'BIANNUAL' as const,
+      durationValue: 6,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 10,
+    },
+    {
+      name: 'Couples - 12 Months',
+      description: 'Full year membership for two people',
+      price: 700000,
+      billingCycle: 'YEARLY' as const,
+      durationValue: 12,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 11,
+    },
+    // Family (4) plans
+    {
+      name: 'Family (4) - Monthly',
+      description: 'Monthly membership for a family of four',
+      price: 140000,
+      billingCycle: 'MONTHLY' as const,
+      durationValue: 1,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 12,
+    },
+    {
+      name: 'Family (4) - 3 Months',
+      description: '3-month membership for a family of four',
+      price: 400000,
+      billingCycle: 'QUARTERLY' as const,
+      durationValue: 3,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 13,
+    },
+    {
+      name: 'Family (4) - 6 Months',
+      description: '6-month membership for a family of four',
+      price: 730000,
+      billingCycle: 'BIANNUAL' as const,
+      durationValue: 6,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 14,
+    },
+    // Family (5) plans
+    {
+      name: 'Family (5) - Monthly',
+      description: 'Monthly membership for a family of five',
+      price: 175000,
+      billingCycle: 'MONTHLY' as const,
+      durationValue: 1,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 15,
+    },
+    {
+      name: 'Family (5) - 3 Months',
+      description: '3-month membership for a family of five',
+      price: 500000,
+      billingCycle: 'QUARTERLY' as const,
+      durationValue: 3,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 16,
+    },
+    {
+      name: 'Family (5) - 6 Months',
+      description: '6-month membership for a family of five',
+      price: 900000,
+      billingCycle: 'BIANNUAL' as const,
+      durationValue: 6,
+      durationType: 'MONTHS' as const,
+      isFeatured: false,
+      sortOrder: 17,
+    },
+  ];
 
-  console.log(`✅ Created ${3} membership plans`);
+  const standardFeatures = [
+    'Full gym floor access',
+    'All equipment usage',
+    'Locker room access',
+    'Group classes access',
+  ];
+
+  for (const plan of membershipPlans) {
+    await prisma.membershipPlan.upsert({
+      where: { gymId_name: { gymId: fitgym.id, name: plan.name } },
+      update: {},
+      create: {
+        gymId: fitgym.id,
+        currency: 'NGN',
+        features: standardFeatures,
+        isActive: true,
+        ...plan,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${membershipPlans.length} membership plans`);
 
   // Create trainers for FitGym
   const trainers = [

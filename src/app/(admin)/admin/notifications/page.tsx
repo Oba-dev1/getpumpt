@@ -26,13 +26,14 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RefreshCcw, X, Bell, CheckCircle2 } from 'lucide-react'
+import { RefreshCcw, X, Bell, CheckCircle2, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from '@/lib/actions/notifications'
+import { SendNotificationDialog } from '@/components/admin/SendNotificationDialog'
 
 type NotificationStatus = 'all' | 'READ' | 'UNREAD'
 
@@ -61,6 +62,7 @@ export default function NotificationsPage() {
   const [totalNotifications, setTotalNotifications] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
   const [markingAll, setMarkingAll] = useState(false)
+  const [sendDialogOpen, setSendDialogOpen] = useState(false)
 
   const fetchNotifications = async () => {
     if (!session?.user?.gymId) return
@@ -159,6 +161,10 @@ export default function NotificationsPage() {
           >
             <CheckCircle2 className="h-4 w-4" />
             Mark all read
+          </Button>
+          <Button onClick={() => setSendDialogOpen(true)}>
+            <Send className="h-4 w-4" />
+            Send Notification
           </Button>
           <Badge className="bg-indigo-600">
             <Bell className="mr-2 h-3 w-3" />
@@ -313,6 +319,11 @@ export default function NotificationsPage() {
           )}
         </div>
       </section>
+      <SendNotificationDialog
+        open={sendDialogOpen}
+        onOpenChange={setSendDialogOpen}
+        onSuccess={fetchNotifications}
+      />
     </main>
   )
 }

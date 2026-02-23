@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/expire-pending-payments",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/expire-memberships",
+      "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/membership-expiry-notifications",
+      "schedule": "0 3 * * *"
     }
   ]
 }
