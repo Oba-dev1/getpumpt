@@ -8,6 +8,7 @@ import crypto from 'crypto'
 import { requireGymPermission } from '@/lib/auth-helpers'
 import { sendPasswordResetEmail } from '@/lib/email'
 import { logActivity } from '@/lib/audit'
+import { sendNotification } from '@/lib/notification-helpers'
 import {
   createMemberSchema,
   updateMemberSchema,
@@ -145,7 +146,63 @@ export async function getMemberById(gymId: string, memberId: string) {
     throw new Error('Member not found')
   }
 
-  return member
+  return {
+    id: member.id,
+    gymId: member.gymId,
+    firstName: member.firstName,
+    lastName: member.lastName,
+    email: member.email,
+    phone: member.phone,
+    avatar: member.avatar,
+    status: member.status,
+    role: member.role,
+    createdAt: member.createdAt,
+    updatedAt: member.updatedAt,
+    membership: member.membership
+      ? {
+          id: member.membership.id,
+          status: member.membership.status,
+          startDate: member.membership.startDate,
+          endDate: member.membership.endDate,
+          autoRenew: member.membership.autoRenew,
+          plan: {
+            id: member.membership.plan.id,
+            name: member.membership.plan.name,
+            price: Number(member.membership.plan.price),
+            currency: member.membership.plan.currency,
+            billingCycle: member.membership.plan.billingCycle,
+            durationValue: member.membership.plan.durationValue,
+            durationType: member.membership.plan.durationType,
+          },
+          payments: member.membership.payments.map((p) => ({
+            id: p.id,
+            amount: Number(p.amount),
+            currency: p.currency,
+            status: p.status,
+            description: p.description,
+            createdAt: p.createdAt,
+          })),
+        }
+      : null,
+    payments: member.payments.map((p) => ({
+      id: p.id,
+      amount: Number(p.amount),
+      currency: p.currency,
+      status: p.status,
+      paymentMethod: p.paymentMethod,
+      description: p.description,
+      createdAt: p.createdAt,
+    })),
+    bookings: member.bookings.map((b) => ({
+      id: b.id,
+      date: b.date,
+      status: b.status,
+      className: b.schedule?.gymClass?.name ?? null,
+      trainerName: b.schedule?.trainer
+        ? `${b.schedule.trainer.firstName} ${b.schedule.trainer.lastName}`
+        : null,
+    })),
+  }
 }
 
 export async function createMember(input: CreateMemberInput) {
@@ -232,6 +289,15 @@ export async function createMember(input: CreateMemberInput) {
   } catch {
     // Email failure should not block member creation
   }
+
+  sendNotification(
+    validated.gymId,
+    member.id,
+    'GENERAL',
+    'Welcome!',
+    `Your account has been created, ${validated.firstName}. Sign in to explore your member portal.`,
+    '/member/dashboard'
+  )
 
   revalidatePath('/admin/members')
   return member

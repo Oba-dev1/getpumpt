@@ -76,7 +76,7 @@ export async function updateMemberProfile(
 export async function getMemberMembership() {
   const user = await requireAuth()
 
-  return prisma.membership.findUnique({
+  const membership = await prisma.membership.findUnique({
     where: { userId: user.id, gymId: user.gymId },
     include: {
       plan: true,
@@ -86,6 +86,36 @@ export async function getMemberMembership() {
       },
     },
   })
+
+  if (!membership) return null
+
+  return {
+    id: membership.id,
+    status: membership.status,
+    startDate: membership.startDate,
+    endDate: membership.endDate,
+    autoRenew: membership.autoRenew,
+    plan: {
+      id: membership.plan.id,
+      name: membership.plan.name,
+      price: Number(membership.plan.price),
+      currency: membership.plan.currency,
+      billingCycle: membership.plan.billingCycle,
+      durationValue: membership.plan.durationValue,
+      durationType: membership.plan.durationType,
+      classCredits: membership.plan.classCredits,
+      features: membership.plan.features,
+    },
+    payments: membership.payments.map((p) => ({
+      id: p.id,
+      amount: Number(p.amount),
+      currency: p.currency,
+      status: p.status,
+      paymentMethod: p.paymentMethod,
+      description: p.description,
+      createdAt: p.createdAt,
+    })),
+  }
 }
 
 export async function startMembershipPayment(
@@ -319,7 +349,22 @@ export async function getMemberDashboardData() {
   ])
 
   return {
-    membership,
+    membership: membership
+      ? {
+          id: membership.id,
+          status: membership.status,
+          startDate: membership.startDate,
+          endDate: membership.endDate,
+          autoRenew: membership.autoRenew,
+          plan: {
+            id: membership.plan.id,
+            name: membership.plan.name,
+            price: Number(membership.plan.price),
+            currency: membership.plan.currency,
+            billingCycle: membership.plan.billingCycle,
+          },
+        }
+      : null,
     upcomingBookings,
     recentPayments: recentPayments.map((payment) => ({
       id: payment.id,

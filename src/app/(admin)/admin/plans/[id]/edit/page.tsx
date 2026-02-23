@@ -30,7 +30,7 @@ const planSchema = z.object({
   description: z.string().optional(),
   price: z.string().min(1, 'Price is required'),
   currency: z.string().min(1, 'Currency is required'),
-  billingCycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']),
+  billingCycle: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'BIANNUAL', 'YEARLY']),
   durationValue: z.string().min(1, 'Duration is required'),
   durationType: z.enum(['DAYS', 'MONTHS', 'YEARS']),
   classCredits: z.string().optional(),
@@ -252,8 +252,12 @@ export default function EditPlanPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="DAILY">Daily</SelectItem>
+                    <SelectItem value="WEEKLY">Weekly</SelectItem>
+                    <SelectItem value="BIWEEKLY">Biweekly (2 Weeks)</SelectItem>
                     <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    <SelectItem value="QUARTERLY">Quarterly</SelectItem>
+                    <SelectItem value="QUARTERLY">Quarterly (3 Months)</SelectItem>
+                    <SelectItem value="BIANNUAL">Biannual (6 Months)</SelectItem>
                     <SelectItem value="YEARLY">Yearly</SelectItem>
                   </SelectContent>
                 </Select>

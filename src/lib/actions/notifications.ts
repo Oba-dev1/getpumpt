@@ -3,8 +3,11 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
+import type { NotificationType } from '@prisma/client'
 import { requireAuth, requireGymPermission } from '@/lib/auth-helpers'
+import { logActivity } from '@/lib/audit'
 import { z } from 'zod'
+import { sendNotificationSchema, type SendNotificationInput } from '@/lib/validations'
 
 const notificationIdParam = z.string().min(1, 'Notification ID is required')
 
@@ -214,4 +217,82 @@ export async function markAllMemberNotificationsRead(userId: string) {
 
   revalidatePath('/member/notifications')
   return { success: true }
+}
+
+/**
+ * Admin action: send a notification to one or many members.
+ * Audience options:
+ *   ALL               — every MEMBER user in the gym
+ *   SPECIFIC          — one user (userId must be provided)
+ *   MEMBERSHIP_STATUS — members whose membership matches the given status
+ */
+export async function sendBulkNotification(
+  gymId: string,
+  input: SendNotificationInput
+): Promise<{ count: number }> {
+  const validated = sendNotificationSchema.parse(input)
+  const actor = await requireGymPermission(gymId, 'notifications:manage')
+
+  let userIds: string[] = []
+
+  if (validated.audience === 'SPECIFIC') {
+    if (!validated.userId) {
+      throw new Error('A member must be selected for specific audience')
+    }
+    const target = await prisma.user.findUnique({
+      where: { id: validated.userId, gymId },
+      select: { id: true },
+    })
+    if (!target) {
+      throw new Error('Member not found')
+    }
+    userIds = [validated.userId]
+  } else if (validated.audience === 'MEMBERSHIP_STATUS') {
+    if (!validated.membershipStatus) {
+      throw new Error('A membership status must be selected')
+    }
+    const memberships = await prisma.membership.findMany({
+      where: { gymId, status: validated.membershipStatus },
+      select: { userId: true },
+    })
+    userIds = memberships.map((m) => m.userId)
+  } else {
+    // ALL — every MEMBER user in the gym
+    const members = await prisma.user.findMany({
+      where: { gymId, role: 'MEMBER' },
+      select: { id: true },
+    })
+    userIds = members.map((m) => m.id)
+  }
+
+  if (userIds.length === 0) {
+    return { count: 0 }
+  }
+
+  const BATCH_SIZE = 1000
+  let totalCreated = 0
+
+  for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+    const batch = userIds.slice(i, i + BATCH_SIZE).map((uid) => ({
+      gymId,
+      userId: uid,
+      type: validated.type as NotificationType,
+      title: validated.title,
+      message: validated.message,
+      link: validated.link,
+    }))
+    const result = await prisma.notification.createMany({ data: batch })
+    totalCreated += result.count
+  }
+
+  logActivity({
+    gymId,
+    userId: actor.id,
+    action: 'CREATE',
+    resourceType: 'NOTIFICATION',
+    description: `Sent notification "${validated.title}" to ${totalCreated} member(s) (audience: ${validated.audience})`,
+  })
+
+  revalidatePath('/admin/notifications')
+  return { count: totalCreated }
 }

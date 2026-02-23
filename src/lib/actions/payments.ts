@@ -10,6 +10,7 @@ import {
 } from '@/lib/paystack'
 import { requireGymAdminAuth, requireGymOwnerOrAdmin, requireAuth, verifyGymAccess } from '@/lib/auth-helpers'
 import { logActivity } from '@/lib/audit'
+import { sendNotification } from '@/lib/notification-helpers'
 import {
   refundPaymentSchema,
   initializePaymentSchema,
@@ -177,6 +178,15 @@ export async function refundPayment(
     resourceId: paymentId,
     description: `Refunded payment ${paymentId}`,
   })
+
+  sendNotification(
+    gymId,
+    payment.userId,
+    'PAYMENT',
+    'Payment Refunded',
+    `A refund of ${payment.currency} ${refundAmount.toLocaleString()} has been processed for your account.`,
+    '/member/payments'
+  )
 
   revalidatePath('/admin/payments')
   revalidatePath(`/admin/payments/${paymentId}`)
@@ -437,6 +447,15 @@ export async function handlePaystackWebhook(
         : []),
     ])
 
+    sendNotification(
+      gymId,
+      payment.userId,
+      'PAYMENT',
+      'Payment Failed',
+      `Your payment of ${payment.currency} ${Number(payment.amount).toLocaleString()} could not be processed. Please try again.`,
+      '/member/membership'
+    )
+
     revalidatePath('/admin/payments')
     revalidatePath(`/admin/payments/${paymentId}`)
     revalidatePath('/admin/dashboard')
@@ -467,6 +486,15 @@ export async function handlePaystackWebhook(
       data: { status: 'ACTIVE' },
     })
   }
+
+  sendNotification(
+    gymId,
+    payment.userId,
+    'PAYMENT',
+    'Payment Successful',
+    `Your payment of ${payment.currency} ${Number(payment.amount).toLocaleString()} has been processed successfully. Your membership is now active.`,
+    '/member/membership'
+  )
 
   revalidatePath('/admin/payments')
   revalidatePath(`/admin/payments/${paymentId}`)

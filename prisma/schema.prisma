@@ -473,8 +473,12 @@ enum MembershipStatus {
 }
 
 enum BillingCycle {
+  DAILY
+  WEEKLY
+  BIWEEKLY
   MONTHLY
   QUARTERLY
+  BIANNUAL
   YEARLY
 }
 

@@ -306,7 +306,7 @@ export const createPlanSchema = z.object({
   description: z.string().optional(),
   price: z.number().positive('Price must be positive'),
   currency: z.string().default('NGN'),
-  billingCycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']),
+  billingCycle: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'BIANNUAL', 'YEARLY']),
   durationValue: z.number().int().positive('Duration must be a positive integer'),
   durationType: z.enum(['DAYS', 'MONTHS', 'YEARS']),
   classCredits: z.number().int().nonnegative().optional(),
@@ -320,7 +320,7 @@ export const updatePlanSchema = z.object({
   description: z.string().optional(),
   price: z.number().positive().optional(),
   currency: z.string().optional(),
-  billingCycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']).optional(),
+  billingCycle: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'BIANNUAL', 'YEARLY']).optional(),
   durationValue: z.number().int().positive().optional(),
   durationType: z.enum(['DAYS', 'MONTHS', 'YEARS']).optional(),
   classCredits: z.number().int().nonnegative().optional(),
@@ -495,3 +495,17 @@ export const bulkMemberImportSchema = z.object({
 
 export type BulkMemberRow = z.infer<typeof bulkMemberRowSchema>
 export type BulkMemberImportInput = z.infer<typeof bulkMemberImportSchema>
+
+// ==================== NOTIFICATION SEND SCHEMAS ====================
+
+export const sendNotificationSchema = z.object({
+  title: z.string().min(2, 'Title is required').max(100, 'Title must be 100 characters or fewer'),
+  message: z.string().min(5, 'Message is required').max(500, 'Message must be 500 characters or fewer'),
+  type: z.enum(['MEMBERSHIP', 'BOOKING', 'PAYMENT', 'GENERAL', 'PROMO']),
+  audience: z.enum(['ALL', 'SPECIFIC', 'MEMBERSHIP_STATUS']),
+  userId: z.string().optional(),
+  membershipStatus: z.enum(['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'PAUSED']).optional(),
+  link: z.string().optional(),
+})
+
+export type SendNotificationInput = z.infer<typeof sendNotificationSchema>

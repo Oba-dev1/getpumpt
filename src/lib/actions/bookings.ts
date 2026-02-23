@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { requireGymAdminAuth, requireGymOwnerOrAdmin } from '@/lib/auth-helpers'
 import { logActivity } from '@/lib/audit'
+import { sendNotification } from '@/lib/notification-helpers'
 import {
   createBookingSchema,
   updateBookingStatusSchema,
@@ -160,6 +161,17 @@ export async function updateBookingStatus(
     description: `Updated booking status to ${status}`,
   })
 
+  if (status === 'CANCELLED' || status === 'NO_SHOW') {
+    sendNotification(
+      gymId,
+      booking.userId,
+      'BOOKING',
+      'Booking Update',
+      `Your class booking has been marked as ${status.toLowerCase().replace('_', ' ')}.`,
+      '/member/bookings'
+    )
+  }
+
   revalidatePath('/admin/bookings')
   revalidatePath(`/admin/bookings/${bookingId}`)
   return { id: updated.id, status: updated.status }
@@ -183,7 +195,13 @@ export async function createBooking(input: CreateBookingInput) {
 
   const schedule = await prisma.classSchedule.findUnique({
     where: { id: validated.scheduleId, gymId: validated.gymId },
-    select: { dayOfWeek: true, startTime: true, endTime: true, maxCapacity: true },
+    select: {
+      dayOfWeek: true,
+      startTime: true,
+      endTime: true,
+      maxCapacity: true,
+      gymClass: { select: { name: true } },
+    },
   })
 
   if (!schedule) {
@@ -257,6 +275,15 @@ export async function createBooking(input: CreateBookingInput) {
     resourceId: booking.id,
     description: `Created booking for ${validated.date.toLocaleDateString()}`,
   })
+
+  sendNotification(
+    validated.gymId,
+    validated.userId,
+    'BOOKING',
+    'Booking Confirmed',
+    `Your booking for ${schedule.gymClass.name} on ${validated.date.toLocaleDateString()} has been confirmed.`,
+    '/member/bookings'
+  )
 
   revalidatePath('/admin/bookings')
   return { id: booking.id }

@@ -175,9 +175,20 @@ export async function getGymMembershipPlans(gymId: string) {
     });
 
     return plans.map(plan => ({
-      ...plan,
+      id: plan.id,
+      gymId: plan.gymId,
+      name: plan.name,
+      description: plan.description,
       price: Number(plan.price),
+      currency: plan.currency,
+      billingCycle: plan.billingCycle,
+      durationValue: plan.durationValue,
+      durationType: plan.durationType,
       classCredits: plan.classCredits ?? undefined,
+      features: plan.features,
+      isActive: plan.isActive,
+      isFeatured: plan.isFeatured,
+      sortOrder: plan.sortOrder,
     }));
   } catch (error) {
     return [];
