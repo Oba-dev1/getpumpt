@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { sendPasswordResetEmail } from '@/lib/email'
+import { sendPasswordResetEmail, buildFromEmail } from '@/lib/email'
 import { passwordResetRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter'
 
 const forgotPasswordSchema = z.object({
@@ -30,7 +30,12 @@ export async function requestPasswordReset(input: { email: string }) {
     // Look up the user (may exist in multiple gyms, send to first match)
     const user = await prisma.user.findFirst({
       where: { email: validated.email },
-      select: { id: true, email: true, firstName: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        gym: { select: { name: true, email: true, customDomain: true } },
+      },
     })
 
     if (!user) {
@@ -61,7 +66,7 @@ export async function requestPasswordReset(input: { email: string }) {
     await sendPasswordResetEmail(validated.email, {
       name: user.firstName,
       resetUrl,
-    })
+    }, user.gym ? buildFromEmail(user.gym) : undefined)
 
     return successResponse
   } catch (error) {

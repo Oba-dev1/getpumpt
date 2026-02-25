@@ -1,8 +1,14 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const PLATFORM_FROM = 'Pumpt <noreply@getpumpt.com>';
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Pumpt <noreply@getpumpt.com>';
+export function buildFromEmail(gym: { name: string; email?: string | null; customDomain?: string | null }): string {
+  if (gym.email) {
+    return `${gym.name} <${gym.email}>`;
+  }
+  const domain = gym.customDomain ?? 'getpumpt.com';
+  return `${gym.name} <noreply@${domain}>`;
+}
 
 interface SendEmailOptions {
   to: string | string[];
@@ -10,12 +16,18 @@ interface SendEmailOptions {
   html: string;
   text?: string;
   replyTo?: string;
+  from?: string;
 }
 
-export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, text, replyTo, from }: SendEmailOptions) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+  const resend = new Resend(apiKey);
   try {
     const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: from ?? PLATFORM_FROM,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
@@ -224,37 +236,40 @@ export const emailTemplates = {
 };
 
 // Helper functions to send specific emails
-export async function sendWelcomeEmail(to: string, data: Parameters<typeof emailTemplates.welcome>[0]) {
+export async function sendWelcomeEmail(to: string, data: Parameters<typeof emailTemplates.welcome>[0], fromEmail?: string) {
   const { subject, html } = emailTemplates.welcome(data);
-  return sendEmail({ to, subject, html });
+  return sendEmail({ to, subject, html, from: fromEmail });
 }
 
 export async function sendMembershipConfirmationEmail(
   to: string,
-  data: Parameters<typeof emailTemplates.membershipConfirmation>[0]
+  data: Parameters<typeof emailTemplates.membershipConfirmation>[0],
+  fromEmail?: string
 ) {
   const { subject, html } = emailTemplates.membershipConfirmation(data);
-  return sendEmail({ to, subject, html });
+  return sendEmail({ to, subject, html, from: fromEmail });
 }
 
 export async function sendClassBookingConfirmationEmail(
   to: string,
-  data: Parameters<typeof emailTemplates.classBookingConfirmation>[0]
+  data: Parameters<typeof emailTemplates.classBookingConfirmation>[0],
+  fromEmail?: string
 ) {
   const { subject, html } = emailTemplates.classBookingConfirmation(data);
-  return sendEmail({ to, subject, html });
+  return sendEmail({ to, subject, html, from: fromEmail });
 }
 
-export async function sendPasswordResetEmail(to: string, data: Parameters<typeof emailTemplates.passwordReset>[0]) {
+export async function sendPasswordResetEmail(to: string, data: Parameters<typeof emailTemplates.passwordReset>[0], fromEmail?: string) {
   const { subject, html } = emailTemplates.passwordReset(data);
-  return sendEmail({ to, subject, html });
+  return sendEmail({ to, subject, html, from: fromEmail });
 }
 
 export async function sendPaymentReminderEmail(
   to: string,
-  data: Parameters<typeof emailTemplates.paymentReminder>[0]
+  data: Parameters<typeof emailTemplates.paymentReminder>[0],
+  fromEmail?: string
 ) {
   const { subject, html } = emailTemplates.paymentReminder(data);
-  return sendEmail({ to, subject, html });
+  return sendEmail({ to, subject, html, from: fromEmail });
 }
 

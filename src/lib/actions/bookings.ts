@@ -6,6 +6,7 @@ import type { Prisma } from '@prisma/client'
 import { requireGymAdminAuth, requireGymOwnerOrAdmin } from '@/lib/auth-helpers'
 import { logActivity } from '@/lib/audit'
 import { sendNotification } from '@/lib/notification-helpers'
+import { sendClassBookingConfirmationEmail, buildFromEmail } from '@/lib/email'
 import {
   createBookingSchema,
   updateBookingStatusSchema,
@@ -201,6 +202,7 @@ export async function createBooking(input: CreateBookingInput) {
       endTime: true,
       maxCapacity: true,
       gymClass: { select: { name: true } },
+      trainer: { select: { firstName: true, lastName: true } },
     },
   })
 
@@ -284,6 +286,40 @@ export async function createBooking(input: CreateBookingInput) {
     `Your booking for ${schedule.gymClass.name} on ${validated.date.toLocaleDateString()} has been confirmed.`,
     '/member/bookings'
   )
+
+  ;(async () => {
+    try {
+      const [bookingUser, bookingGym] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: validated.userId },
+          select: { email: true, firstName: true },
+        }),
+        prisma.gym.findUnique({
+          where: { id: validated.gymId },
+          select: { name: true, address: true, city: true, email: true, customDomain: true },
+        }),
+      ])
+      const trainerName = schedule.trainer
+        ? `${schedule.trainer.firstName} ${schedule.trainer.lastName}`
+        : 'TBA'
+      const location =
+        [bookingGym?.address, bookingGym?.city].filter(Boolean).join(', ') ||
+        bookingGym?.name ||
+        ''
+      if (bookingUser?.email) {
+        await sendClassBookingConfirmationEmail(bookingUser.email, {
+          name: bookingUser.firstName,
+          className: schedule.gymClass.name,
+          trainerName,
+          date: validated.date.toLocaleDateString(),
+          time: schedule.startTime,
+          location,
+        }, bookingGym ? buildFromEmail(bookingGym) : undefined)
+      }
+    } catch {
+      // Email failure must not block booking creation
+    }
+  })()
 
   revalidatePath('/admin/bookings')
   return { id: booking.id }
