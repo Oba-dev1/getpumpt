@@ -50,6 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 id: true,
                 name: true,
                 slug: true,
+                isActive: true,
               },
             },
           },
@@ -67,6 +68,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (user.status !== 'ACTIVE') {
           throw new Error('Account is not active');
+        }
+
+        if (user.gym && !user.gym.isActive) {
+          throw new Error('Please verify your email to activate your gym');
         }
 
         return {

@@ -39,14 +39,14 @@ export default function GymResetPasswordPage() {
             </div>
           }
         >
-          <ResetPasswordContent />
+          <ResetPasswordContent gymSlug={gym.slug} />
         </Suspense>
       </div>
     </div>
   );
 }
 
-function ResetPasswordContent() {
+function ResetPasswordContent({ gymSlug }: { gymSlug: string }) {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -102,7 +102,7 @@ function ResetPasswordContent() {
           <p className="text-slate-400">This link may be malformed or expired.</p>
         </div>
         <Link
-          href="/forgot-password"
+          href={`/gym/${gymSlug}/forgot-password`}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-[rgb(var(--gym-primary))] px-6 py-3 font-semibold text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)]"
         >
           Request a New Link
@@ -123,7 +123,7 @@ function ResetPasswordContent() {
           <p className="text-slate-400">{success}</p>
         </div>
         <Link
-          href="/login"
+          href={`/gym/${gymSlug}/login`}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-[rgb(var(--gym-primary))] px-6 py-3 font-semibold text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)]"
         >
           Sign In
@@ -201,7 +201,7 @@ function ResetPasswordContent() {
 
       <p className="text-center">
         <Link
-          href="/login"
+          href={`/gym/${gymSlug}/login`}
           className="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors duration-300 hover:text-slate-300"
         >
           <ArrowLeft className="h-4 w-4" />

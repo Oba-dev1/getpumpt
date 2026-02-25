@@ -2,19 +2,22 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { PasswordInput } from '@/components/ui/password-input';
-import { Dumbbell, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Dumbbell, ArrowRight, ShieldCheck, Zap, CheckCircle } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get('verified') === 'true';
+  const prefillEmail = searchParams.get('email') ?? '';
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +142,13 @@ export default function LoginPage() {
             </h1>
             <p className="text-slate-400">Sign in to your gym owner dashboard.</p>
           </div>
+
+          {verified && (
+            <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-400 shrink-0" />
+              <p className="text-green-400 text-sm">Email verified. Your gym is now active — sign in to continue.</p>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">

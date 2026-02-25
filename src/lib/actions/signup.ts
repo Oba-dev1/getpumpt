@@ -3,8 +3,11 @@
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
 import { z } from 'zod'
 import { signupRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter'
+import { getRedis } from '@/lib/redis'
+import { sendGymOwnerVerificationEmail } from '@/lib/email'
 
 const signupSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
@@ -46,6 +49,8 @@ async function generateUniqueSlug(baseName: string): Promise<string> {
   }
 }
 
+const VERIFICATION_TOKEN_TTL = 60 * 60 * 24 // 24 hours in seconds
+
 export async function signupGymOwner(input: SignupInput) {
   try {
     const headersList = await headers()
@@ -68,17 +73,17 @@ export async function signupGymOwner(input: SignupInput) {
     const hashedPassword = await bcrypt.hash(validated.password, 10)
     const gymSlug = await generateUniqueSlug(validated.gymName)
 
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const gym = await tx.gym.create({
         data: {
           name: validated.gymName,
           slug: gymSlug,
           country: validated.country,
-          isActive: true,
+          isActive: false,
         },
       })
 
-      const user = await tx.user.create({
+      await tx.user.create({
         data: {
           gymId: gym.id,
           firstName: validated.firstName,
@@ -90,15 +95,27 @@ export async function signupGymOwner(input: SignupInput) {
         },
       })
 
-      return { gym, user }
+      return gym
+    })
+
+    const token = randomBytes(32).toString('hex')
+    const redis = getRedis()
+    await redis.setex(
+      `email:verify:${token}`,
+      VERIFICATION_TOKEN_TTL,
+      JSON.stringify({ email: validated.email, gymSlug })
+    )
+
+    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}`
+    await sendGymOwnerVerificationEmail(validated.email, {
+      name: validated.firstName,
+      gymName: validated.gymName,
+      verifyUrl,
     })
 
     return {
       success: true,
-      data: {
-        gymSlug: result.gym.slug,
-        userId: result.user.id,
-      },
+      requiresVerification: true,
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
