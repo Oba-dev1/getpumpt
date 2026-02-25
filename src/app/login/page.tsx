@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -10,54 +10,6 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Dumbbell, ArrowRight, ShieldCheck, Zap, CheckCircle } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const verified = searchParams.get('verified') === 'true';
-  const prefillEmail = searchParams.get('email') ?? '';
-  const [email, setEmail] = useState(prefillEmail);
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const result = await signIn('credentials', {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (result?.error) {
-        const errorMap: Record<string, string> = {
-          CredentialsSignin: 'Invalid email or password. Please try again.',
-          Configuration: 'Server configuration error. Please contact support.',
-          AccessDenied: 'Access denied. Your account may be inactive.',
-        };
-        setError(errorMap[result.error] || `Login failed: ${result.error}`);
-        setLoading(false);
-      } else if (result?.ok) {
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-
-        if (session?.user?.role === 'MEMBER') {
-          router.push('/member');
-        } else if (['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(session?.user?.role)) {
-          router.push('/admin');
-        } else {
-          router.push('/');
-        }
-        router.refresh();
-      }
-    } catch {
-      setError('An error occurred. Please try again.');
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="relative min-h-screen flex">
       {/* Left side - Branding panel */}
@@ -136,97 +88,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-white sm:text-3xl">
-              Welcome back
-            </h1>
-            <p className="text-slate-400">Sign in to your gym owner dashboard.</p>
-          </div>
-
-          {verified && (
-            <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-400 shrink-0" />
-              <p className="text-green-400 text-sm">Email verified. Your gym is now active — sign in to continue.</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300" htmlFor="email">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 transition-colors focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300" htmlFor="password">
-                Password
-              </label>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 transition-colors focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                placeholder="Enter your password"
-              />
-              <div className="text-right">
-                <Link href="/forgot-password" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-                  Forgot Password?
-                </Link>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="group w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-500 hover:shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Signing in...
-                </span>
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </>
-              )}
-            </button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-[#0A0A0A] px-4 text-slate-500">Or continue with</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => signIn('google', { callbackUrl: '/admin' })}
-              className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-medium text-white transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-            >
-              <FontAwesomeIcon icon={faGoogle} className="h-4 w-4" />
-              Sign In with Google
-            </button>
-          </form>
+          <Suspense fallback={<div className="h-10" />}>
+            <LoginForm />
+          </Suspense>
 
           <p className="text-center text-slate-500 text-sm">
             Don&apos;t have an account?{' '}
@@ -237,5 +101,151 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get('verified') === 'true';
+  const prefillEmail = searchParams.get('email') ?? '';
+  const [email, setEmail] = useState(prefillEmail);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        const errorMap: Record<string, string> = {
+          CredentialsSignin: 'Invalid email or password. Please try again.',
+          Configuration: 'Server configuration error. Please contact support.',
+          AccessDenied: 'Access denied. Your account may be inactive.',
+        };
+        setError(errorMap[result.error] || `Login failed: ${result.error}`);
+        setLoading(false);
+      } else if (result?.ok) {
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+
+        if (session?.user?.role === 'MEMBER') {
+          router.push('/member');
+        } else if (['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(session?.user?.role)) {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
+        router.refresh();
+      }
+    } catch {
+      setError('An error occurred. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold text-white sm:text-3xl">
+          Welcome back
+        </h1>
+        <p className="text-slate-400">Sign in to your gym owner dashboard.</p>
+      </div>
+
+      {verified && (
+        <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 flex items-center gap-3">
+          <CheckCircle className="h-5 w-5 text-green-400 shrink-0" />
+          <p className="text-green-400 text-sm">Email verified. Your gym is now active — sign in to continue.</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-red-400 text-sm text-center">{error}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-300" htmlFor="email">
+            Email Address
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 transition-colors focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-300" htmlFor="password">
+            Password
+          </label>
+          <PasswordInput
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 transition-colors focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            placeholder="Enter your password"
+          />
+          <div className="text-right">
+            <Link href="/forgot-password" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+              Forgot Password?
+            </Link>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="group w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-500 hover:shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              Signing in...
+            </span>
+          ) : (
+            <>
+              Sign In
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </>
+          )}
+        </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-[#0A0A0A] px-4 text-slate-500">Or continue with</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => signIn('google', { callbackUrl: '/admin' })}
+          className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-medium text-white transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+        >
+          <FontAwesomeIcon icon={faGoogle} className="h-4 w-4" />
+          Sign In with Google
+        </button>
+      </form>
+    </>
   );
 }
