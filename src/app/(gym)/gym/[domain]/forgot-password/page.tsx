@@ -73,7 +73,7 @@ export default function GymForgotPasswordPage() {
               </div>
             </div>
             <Link
-              href="/login"
+              href={`/gym/${gym.slug}/login`}
               className="inline-flex items-center gap-2 text-sm text-[rgb(var(--gym-primary))] transition-colors duration-300 hover:brightness-125"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -138,7 +138,7 @@ export default function GymForgotPasswordPage() {
 
             <p className="text-center">
               <Link
-                href="/login"
+                href={`/gym/${gym.slug}/login`}
                 className="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors duration-300 hover:text-slate-300"
               >
                 <ArrowLeft className="h-4 w-4" />

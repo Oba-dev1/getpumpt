@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import { PasswordInput } from '@/components/ui/password-input';
 import { signupGymOwner } from '@/lib/actions/signup';
-import { ArrowRight, Building2, Users, CreditCard, BarChart3 } from 'lucide-react';
+import { ArrowRight, Building2, Users, CreditCard, BarChart3, Mail } from 'lucide-react';
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState('');
@@ -17,6 +16,7 @@ export default function SignupPage() {
   const [country, setCountry] = useState('Nigeria');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,20 +40,7 @@ export default function SignupPage() {
         return;
       }
 
-      const signInResult = await signIn('credentials', {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (signInResult?.error) {
-        setError('Account created but failed to sign in. Please try logging in.');
-        setLoading(false);
-        return;
-      }
-
-      router.push('/onboarding/welcome');
-      router.refresh();
+      setVerificationSent(true);
     } catch {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -128,6 +115,30 @@ export default function SignupPage() {
             </Link>
           </div>
 
+          {verificationSent ? (
+            <div className="text-center space-y-6 py-8">
+              <div className="flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                  <Mail className="h-8 w-8 text-indigo-400" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-white">Check your email</h1>
+                <p className="text-slate-400">
+                  We sent a verification link to <span className="text-white font-medium">{email}</span>.
+                  Click the link to activate your gym.
+                </p>
+              </div>
+              <p className="text-slate-500 text-sm">
+                Didn&apos;t receive it? Check your spam folder or{' '}
+                <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  try again
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            <>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-white sm:text-3xl">
               Create your account
@@ -264,6 +275,8 @@ export default function SignupPage() {
               Sign in
             </Link>
           </p>
+          </>
+          )}
         </div>
       </div>
     </div>
