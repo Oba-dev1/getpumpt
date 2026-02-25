@@ -11,6 +11,7 @@ import {
 import { requireGymAdminAuth, requireGymOwnerOrAdmin, requireAuth, verifyGymAccess } from '@/lib/auth-helpers'
 import { logActivity } from '@/lib/audit'
 import { sendNotification } from '@/lib/notification-helpers'
+import { sendMembershipConfirmationEmail, buildFromEmail } from '@/lib/email'
 import {
   refundPaymentSchema,
   initializePaymentSchema,
@@ -243,20 +244,31 @@ export async function initializeMembershipPayment(
 
   const reference = generatePaymentReference('MEM')
 
-  const payment = await prisma.payment.create({
-    data: {
-      gymId,
-      userId,
-      membershipId,
-      amount: membership.plan.price,
-      currency: membership.plan.currency,
-      status: 'PENDING',
-      paymentProvider: 'PAYSTACK',
-      providerRef: reference,
-      paymentMethod: 'ONLINE',
-      description: `Payment for ${membership.plan.name} membership`,
-    },
-  })
+  // Cancel any stale pending payments for this membership before creating a new one.
+  // This prevents duplicate payment records while keeping the transaction atomic.
+  const [, payment] = await prisma.$transaction([
+    prisma.payment.updateMany({
+      where: { membershipId, gymId, status: 'PENDING' },
+      data: {
+        status: 'FAILED',
+        description: 'Cancelled: superseded by new payment attempt',
+      },
+    }),
+    prisma.payment.create({
+      data: {
+        gymId,
+        userId,
+        membershipId,
+        amount: membership.plan.price,
+        currency: membership.plan.currency,
+        status: 'PENDING',
+        paymentProvider: 'PAYSTACK',
+        providerRef: reference,
+        paymentMethod: 'ONLINE',
+        description: `Payment for ${membership.plan.name} membership`,
+      },
+    }),
+  ])
 
   const paystackResponse = await initializePayment({
     email: membership.user.email,
@@ -316,7 +328,10 @@ export async function verifyMembershipPayment(gymId: string, reference: string) 
       status: 'PENDING',
     },
     include: {
-      membership: true,
+      membership: {
+        include: { plan: { select: { name: true } } },
+      },
+      user: { select: { email: true, firstName: true, lastName: true } },
     },
   })
 
@@ -367,6 +382,27 @@ export async function verifyMembershipPayment(gymId: string, reference: string) 
     })
   }
 
+  ;(async () => {
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { id: gymId },
+        select: { name: true, email: true, customDomain: true },
+      })
+      if (payment.user?.email && payment.membership) {
+        await sendMembershipConfirmationEmail(payment.user.email, {
+          name: `${payment.user.firstName} ${payment.user.lastName}`,
+          gymName: gym?.name ?? '',
+          planName: payment.membership.plan?.name ?? 'Membership',
+          amount: `${payment.currency} ${Number(payment.amount).toLocaleString()}`,
+          startDate: payment.membership.startDate.toLocaleDateString(),
+          endDate: payment.membership.endDate.toLocaleDateString(),
+        }, gym ? buildFromEmail(gym) : undefined)
+      }
+    } catch {
+      // Email failure must not block payment verification
+    }
+  })()
+
   revalidatePath('/admin/payments')
   revalidatePath(`/admin/payments/${payment.id}`)
   revalidatePath('/admin/dashboard')
@@ -409,7 +445,12 @@ export async function handlePaystackWebhook(
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { membership: true },
+    include: {
+      membership: {
+        include: { plan: { select: { name: true } } },
+      },
+      user: { select: { email: true, firstName: true, lastName: true } },
+    },
   })
 
   if (!payment) {
@@ -495,6 +536,27 @@ export async function handlePaystackWebhook(
     `Your payment of ${payment.currency} ${Number(payment.amount).toLocaleString()} has been processed successfully. Your membership is now active.`,
     '/member/membership'
   )
+
+  ;(async () => {
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { id: gymId },
+        select: { name: true, email: true, customDomain: true },
+      })
+      if (payment.user?.email && payment.membership) {
+        await sendMembershipConfirmationEmail(payment.user.email, {
+          name: `${payment.user.firstName} ${payment.user.lastName}`,
+          gymName: gym?.name ?? '',
+          planName: payment.membership.plan?.name ?? 'Membership',
+          amount: `${payment.currency} ${Number(payment.amount).toLocaleString()}`,
+          startDate: payment.membership.startDate.toLocaleDateString(),
+          endDate: payment.membership.endDate.toLocaleDateString(),
+        }, gym ? buildFromEmail(gym) : undefined)
+      }
+    } catch {
+      // Email failure must not block webhook processing
+    }
+  })()
 
   revalidatePath('/admin/payments')
   revalidatePath(`/admin/payments/${paymentId}`)

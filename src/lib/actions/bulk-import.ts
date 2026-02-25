@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { requireGymPermission } from '@/lib/auth-helpers'
-import { sendPasswordResetEmail } from '@/lib/email'
+import { sendPasswordResetEmail, buildFromEmail } from '@/lib/email'
 import { logActivity } from '@/lib/audit'
 import { bulkMemberImportSchema, type BulkMemberImportInput } from '@/lib/validations'
 import { generateSecurePassword } from '@/lib/password-generator'
@@ -25,7 +25,7 @@ async function sendSetupEmailForMember(
 ): Promise<void> {
   const gym = await prisma.gym.findUnique({
     where: { id: gymId },
-    select: { name: true, slug: true },
+    select: { name: true, slug: true, email: true, customDomain: true },
   })
 
   if (!gym) return
@@ -47,7 +47,7 @@ async function sendSetupEmailForMember(
   await sendPasswordResetEmail(email, {
     name: `${firstName} ${lastName}`,
     resetUrl,
-  })
+  }, buildFromEmail(gym))
 }
 
 export async function bulkImportMembers(input: BulkMemberImportInput): Promise<ImportResult> {

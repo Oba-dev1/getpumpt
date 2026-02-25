@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { requireGymPermission } from '@/lib/auth-helpers'
-import { sendPasswordResetEmail } from '@/lib/email'
+import { sendPasswordResetEmail, sendWelcomeEmail, buildFromEmail } from '@/lib/email'
 import { logActivity } from '@/lib/audit'
 import { sendNotification } from '@/lib/notification-helpers'
 import {
@@ -259,7 +259,7 @@ export async function createMember(input: CreateMemberInput) {
   try {
     const gym = await prisma.gym.findUnique({
       where: { id: validated.gymId },
-      select: { name: true, slug: true },
+      select: { name: true, slug: true, email: true, customDomain: true },
     })
 
     if (gym) {
@@ -281,10 +281,17 @@ export async function createMember(input: CreateMemberInput) {
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       const resetUrl = `${appUrl}/reset-password?token=${rawToken}`
+      const fromEmail = buildFromEmail(gym);
       await sendPasswordResetEmail(validated.email, {
         name: `${validated.firstName} ${validated.lastName}`,
         resetUrl,
-      })
+      }, fromEmail)
+
+      sendWelcomeEmail(validated.email, {
+        name: `${validated.firstName} ${validated.lastName}`,
+        gymName: gym.name,
+        loginUrl: `${appUrl}/login`,
+      }, fromEmail).catch(() => {})
     }
   } catch {
     // Email failure should not block member creation
