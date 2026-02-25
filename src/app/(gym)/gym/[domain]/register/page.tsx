@@ -185,7 +185,7 @@ export default function GymRegisterPage() {
         <p className="text-center text-sm text-slate-500">
           Already have an account?{' '}
           <Link
-            href={`/gym/${gym.slug}/login`}
+            href="/login"
             className="font-semibold text-[rgb(var(--gym-primary))] transition-colors duration-300 hover:brightness-125"
           >
             Sign in
