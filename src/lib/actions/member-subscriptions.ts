@@ -96,6 +96,18 @@ export async function subscribeToPlan(
       }
     }
 
+    if (existingMembership?.status === 'PENDING') {
+      const pendingPayment = await prisma.payment.findFirst({
+        where: { membershipId: existingMembership.id, status: 'PENDING' },
+      })
+      if (pendingPayment) {
+        return {
+          status: 'error',
+          message: 'A payment is already in progress. Please complete the payment or wait a few minutes before trying again.',
+        }
+      }
+    }
+
     const plan = await prisma.membershipPlan.findUnique({
       where: { id: validated.planId, gymId: user.gymId },
     })
