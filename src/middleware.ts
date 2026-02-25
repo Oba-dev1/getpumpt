@@ -48,6 +48,12 @@ export default auth((req) => {
   if (isCustomDomain) {
     // Strip www. prefix so custom domain lookup matches (e.g., www.fitstudio.ng -> fitstudio.ng)
     const cleanDomain = hostnameWithoutPort.replace(/^www\./, '');
+
+    // Already rewritten — skip to avoid double-rewrite (e.g. /gym/slug/login on custom domain)
+    if (pathname.startsWith('/gym/')) {
+      return NextResponse.next();
+    }
+
     const response = NextResponse.rewrite(new URL(`/gym/${cleanDomain}${pathname}`, req.url));
     response.headers.set('x-gym-domain', cleanDomain);
     response.headers.set('x-gym-type', 'custom-domain');

@@ -110,7 +110,7 @@ export default function GymLoginPage() {
             />
             <div className="mt-2 text-right">
               <Link
-                href={`/gym/${gym.slug}/forgot-password`}
+                href="/forgot-password"
                 className="text-sm text-[rgb(var(--gym-primary))] transition-colors duration-300 hover:brightness-125"
               >
                 Forgot Password?
@@ -156,7 +156,7 @@ export default function GymLoginPage() {
           <p className="text-sm text-slate-500">
             Don&apos;t have an account?{' '}
             <Link
-              href={`/gym/${gym.slug}/register`}
+              href="/register"
               className="font-semibold text-[rgb(var(--gym-primary))] transition-colors duration-300 hover:brightness-125"
             >
               Create account
