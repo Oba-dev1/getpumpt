@@ -57,7 +57,7 @@ export default function NewMemberPage() {
     watch,
     formState: { errors },
   } = useForm<MemberFormData>({
-    resolver: zodResolver(memberSchema),
+    resolver: zodResolver(memberSchema) as any,
   })
 
   const selectedPlan = watch('planId')
