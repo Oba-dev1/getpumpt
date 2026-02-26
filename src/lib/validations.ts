@@ -279,8 +279,11 @@ export const createMemberSchema = z.object({
   gymId: z.string().min(1, 'Gym ID is required'),
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
   lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().optional(),
+  email: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().email('Please enter a valid email address').optional()
+  ),
+  phone: z.string().min(7, 'Phone number is required'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -479,8 +482,14 @@ export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
 export const bulkMemberRowSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
   lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
+  email: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().email('Invalid email address').optional()
+  ),
+  phone: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().optional()
+  ),
 })
 
 export const bulkMemberImportSchema = z.object({
@@ -509,3 +518,30 @@ export const sendNotificationSchema = z.object({
 })
 
 export type SendNotificationInput = z.infer<typeof sendNotificationSchema>
+
+// ==================== PHONE OTP SCHEMAS ====================
+
+// Nigerian phone: exactly +234 + 10 digits, or 0 + 10 digits
+export const nigerianPhoneSchema = z
+  .string()
+  .regex(
+    /^(\+234[0-9]{10}|0[0-9]{10})$/,
+    'Please enter a valid Nigerian phone number (e.g. 08012345678)'
+  )
+
+export const sendOtpSchema = z.object({
+  gymId: z.string().min(1, 'Gym ID is required'),
+  phone: nigerianPhoneSchema,
+})
+
+export const phoneLoginSchema = z.object({
+  phone: nigerianPhoneSchema,
+  code: z
+    .string()
+    .length(6, 'OTP must be 6 digits')
+    .regex(/^\d{6}$/, 'OTP must be numeric'),
+  gymId: z.string().min(1, 'Gym ID is required'),
+})
+
+export type SendOtpInput = z.infer<typeof sendOtpSchema>
+export type PhoneLoginInput = z.infer<typeof phoneLoginSchema>

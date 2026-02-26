@@ -68,11 +68,6 @@ The Admin Portal is the command center for gym operations, providing a unified i
 - Automatic session timeout after 30 days of inactivity
 - Multi-tenant isolation (users can only access their gym's data)
 
-**Default Credentials (Development):**
-- Email: `admin@fitstudio.ng`
-- Password: `admin123`
-- Role: `ADMIN`
-
 ---
 
 ## User Roles and Permissions

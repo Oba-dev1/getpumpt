@@ -3,7 +3,7 @@
 import React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Bell, ExternalLink, Menu, Search } from 'lucide-react'
-import { useSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -17,6 +17,10 @@ import {
 
 interface HeaderProps {
   onMenuToggle: () => void
+  userName?: string | null
+  userEmail?: string | null
+  userImage?: string | null
+  gymSlug?: string | null
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -42,18 +46,16 @@ function getPageTitle(pathname: string) {
   return matched ? PAGE_TITLES[matched] : 'Admin'
 }
 
-export default function Header({ onMenuToggle }: HeaderProps) {
+export default function Header({ onMenuToggle, userName, userEmail, userImage, gymSlug }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { data: session } = useSession()
   const pageTitle = getPageTitle(pathname)
   const notificationHref = '/admin/notifications'
   const hasNotificationsPage = pathname.startsWith(notificationHref)
 
   const initials = (() => {
-    const name = session?.user?.name
-    if (!name) return 'AD'
-    const parts = name.trim().split(/\s+/)
+    if (!userName) return 'AD'
+    const parts = userName.trim().split(/\s+/)
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
   })()
@@ -112,26 +114,26 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 aria-label="Open user account menu"
               >
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || 'Admin'} />
+                  <AvatarImage src={userImage || ''} alt={userName || 'Admin'} />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-indigo-400 text-[10px] font-semibold text-white">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <span className="hidden max-w-[140px] truncate text-slate-200 sm:inline">
-                  {session?.user?.name || 'Admin'}
+                  {userName || 'Admin'}
                 </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium text-slate-900">{session?.user?.name || 'Admin'}</p>
-                <p className="text-xs text-slate-500">{session?.user?.email || 'admin@fitstudio.com'}</p>
+                <p className="text-sm font-medium text-slate-900">{userName || 'Admin'}</p>
+                <p className="text-xs text-slate-500">{userEmail || ''}</p>
               </div>
               <DropdownMenuSeparator />
-              {session?.user?.gymSlug && (
+              {gymSlug && (
                 <DropdownMenuItem asChild>
                   <a
-                    href={`/gym/${session.user.gymSlug}`}
+                    href={`/gym/${gymSlug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"

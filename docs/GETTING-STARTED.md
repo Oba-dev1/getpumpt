@@ -45,30 +45,34 @@ Then visit: **http://localhost:3000/admin**
 
 ## Your Login Credentials
 
-### 🔑 Admin Portal Access
+### Admin Portal Access
 
 **URL:** `http://localhost:3000/admin`
 
 ```
 Email: admin@fitstudio.ng
-Password: admin123
+Password: check console output from `npx prisma db seed`
 ```
 
-**Permissions:**
-- ✅ View dashboard analytics
-- ✅ Manage members (CRUD)
-- ✅ Manage membership plans
-- ✅ Assign memberships
-- ✅ View payments & bookings
+Set via `SEED_ADMIN_PASSWORD` env var, or a random password is generated and printed to the console.
 
-### 👤 Test Member Account
+**Permissions:**
+- View dashboard analytics
+- Manage members (CRUD)
+- Manage membership plans
+- Assign memberships
+- View payments & bookings
+
+### Test Member Account
 
 **URL:** `http://localhost:3000/member` (Phase 3)
 
 ```
 Email: member@test.com
-Password: member123
+Password: check console output from `npx prisma db seed`
 ```
+
+Set via `SEED_MEMBER_PASSWORD` env var, or a random password is generated and printed to the console.
 
 **What members can do (Future):**
 - View membership details
@@ -243,7 +247,7 @@ npx prisma migrate deploy
 3. Fill in the form:
    - Name: Jane Smith
    - Email: jane@test.com
-   - Password: password123
+   - Password: (choose a strong password)
    - Phone: +234 800 000 0003
    - Select a plan (optional)
 4. Click "Create Member"
@@ -403,7 +407,7 @@ npx prisma db seed
 **Check:**
 1. Seed script ran successfully
 2. Email is exactly: `admin@fitstudio.ng`
-3. Password is exactly: `admin123`
+3. Password: check the console output from `npx prisma db seed` (or set `SEED_ADMIN_PASSWORD` before seeding)
 4. Check database: `npx prisma studio`
 
 ### "Cannot find module '@/lib/actions/...''"
@@ -517,7 +521,7 @@ Before moving to Phase 2, verify:
 
 - [ ] Database migration applied successfully
 - [ ] Seed script created test data
-- [ ] Can login as admin (`admin@fitstudio.ng`)
+- [ ] Can login as admin
 - [ ] Dashboard shows metrics
 - [ ] Can create new membership plan
 - [ ] Can add new member

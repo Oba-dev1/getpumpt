@@ -271,7 +271,7 @@ export async function initializeMembershipPayment(
   ])
 
   const paystackResponse = await initializePayment({
-    email: membership.user.email,
+    email: membership.user.email ?? '',
     amount: Number(membership.plan.price),
     reference,
     currency: membership.plan.currency,

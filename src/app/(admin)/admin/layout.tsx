@@ -23,5 +23,15 @@ export default async function AdminLayout({
     redirect('/onboarding/welcome')
   }
 
-  return <AdminLayoutClient>{children}</AdminLayoutClient>
+  return (
+    <AdminLayoutClient
+      userName={session.user.name ?? null}
+      userEmail={session.user.email ?? null}
+      userImage={session.user.image ?? null}
+      gymSlug={session.user.gymSlug ?? null}
+      userRole={session.user.role}
+    >
+      {children}
+    </AdminLayoutClient>
+  )
 }

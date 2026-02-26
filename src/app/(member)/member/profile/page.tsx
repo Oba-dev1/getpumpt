@@ -80,7 +80,7 @@ export default async function ProfilePage() {
                     <Input
                       id="email"
                       name="email"
-                      defaultValue={profile.email}
+                      defaultValue={profile.email ?? undefined}
                       className="border-white/10 bg-slate-900 text-slate-400"
                       readOnly
                     />

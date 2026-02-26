@@ -52,7 +52,9 @@
       "WebFetch(domain:www.scribd.com)",
       "WebFetch(domain:cdn.zkteco-store.ru)",
       "WebFetch(domain:securitymill.co.za)",
-      "WebFetch(domain:securitymart.co.za)"
+      "WebFetch(domain:securitymart.co.za)",
+      "Bash(python3:*)",
+      "Bash(find \"c:/Users/user/Documents/GitHub/fitgym-app/src/app/\\(gym\\)\" -name \"page.tsx\")"
     ]
   },
   "hooks": {

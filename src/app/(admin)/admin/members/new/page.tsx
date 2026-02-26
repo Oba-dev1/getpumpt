@@ -29,8 +29,8 @@ import { toast } from 'sonner'
 const memberSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
+  email: z.preprocess((v) => (v === '' ? undefined : v), z.string().email('Invalid email address').optional()),
+  phone: z.string().min(7, 'Phone number is required'),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
   address: z.string().optional(),
@@ -57,7 +57,7 @@ export default function NewMemberPage() {
     watch,
     formState: { errors },
   } = useForm<MemberFormData>({
-    resolver: zodResolver(memberSchema),
+    resolver: zodResolver(memberSchema) as any,
   })
 
   const selectedPlan = watch('planId')
@@ -155,9 +155,22 @@ export default function NewMemberPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">
-                  Email <span className="text-red-500">*</span>
+                <Label htmlFor="phone">
+                  Phone <span className="text-red-500">*</span>
                 </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  {...register('phone')}
+                  placeholder="+234 800 000 0000"
+                />
+                {errors.phone && (
+                  <p className="text-sm text-red-600">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -167,16 +180,6 @@ export default function NewMemberPage() {
                 {errors.email && (
                   <p className="text-sm text-red-600">{errors.email.message}</p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  {...register('phone')}
-                  placeholder="+1 234 567 8900"
-                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

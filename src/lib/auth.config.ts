@@ -14,14 +14,23 @@ const providers = [
         }),
       ]
     : []),
-  // Credentials provider needs authorize() for full auth,
-  // but for middleware we only need the JWT/session callbacks.
-  // Auth.js will skip authorize in middleware context.
+  // Credentials providers — stubs only (no authorize).
+  // Auth.js skips authorize in middleware context.
+  // Full implementations live in auth.ts.
   Credentials({
     name: 'credentials',
     credentials: {
       email: { label: 'Email', type: 'email' },
       password: { label: 'Password', type: 'password' },
+      gymId: { label: 'Gym ID', type: 'text' },
+    },
+  }),
+  Credentials({
+    id: 'phone-otp',
+    name: 'Phone OTP',
+    credentials: {
+      phone: { label: 'Phone', type: 'tel' },
+      code: { label: 'OTP Code', type: 'text' },
       gymId: { label: 'Gym ID', type: 'text' },
     },
   }),
