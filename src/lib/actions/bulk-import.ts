@@ -14,7 +14,7 @@ export interface ImportResult {
   created: number
   updated: number
   skipped: number
-  failed: Array<{ row: number; email: string; error: string }>
+  failed: Array<{ row: number; identifier: string; error: string }>
 }
 
 async function sendSetupEmailForMember(
@@ -56,21 +56,43 @@ export async function bulkImportMembers(input: BulkMemberImportInput): Promise<I
 
   const result: ImportResult = { created: 0, updated: 0, skipped: 0, failed: [] }
 
-  // Pre-fetch all emails in this batch to avoid N+1 queries for duplicate detection
-  const emailsInBatch = validated.members.map((m) => m.email.toLowerCase())
-  const existingUsers = await prisma.user.findMany({
-    where: { gymId: validated.gymId, email: { in: emailsInBatch } },
-    select: { id: true, email: true },
-  })
-  const existingEmailMap = new Map(existingUsers.map((u) => [u.email.toLowerCase(), u.id]))
+  // Pre-fetch all emails and phones in this batch to avoid N+1 queries for duplicate detection
+  const emailsInBatch = validated.members
+    .map((m) => m.email?.toLowerCase())
+    .filter((e): e is string => Boolean(e))
+  const phonesInBatch = validated.members
+    .map((m) => m.phone)
+    .filter((p): p is string => Boolean(p))
+
+  const [existingByEmail, existingByPhone] = await Promise.all([
+    emailsInBatch.length > 0
+      ? prisma.user.findMany({
+          where: { gymId: validated.gymId, email: { in: emailsInBatch } },
+          select: { id: true, email: true, phone: true },
+        })
+      : [],
+    phonesInBatch.length > 0
+      ? prisma.user.findMany({
+          where: { gymId: validated.gymId, phone: { in: phonesInBatch } },
+          select: { id: true, email: true, phone: true },
+        })
+      : [],
+  ])
+
+  const existingEmailMap = new Map(existingByEmail.map((u) => [(u.email ?? '').toLowerCase(), u.id]))
+  const existingPhoneMap = new Map(existingByPhone.map((u) => [u.phone ?? '', u.id]))
 
   for (let i = 0; i < validated.members.length; i++) {
     const member = validated.members[i]
     const rowNumber = i + 1
-    const emailLower = member.email.toLowerCase()
+    const emailLower = member.email?.toLowerCase()
+    const identifier = emailLower ?? member.phone ?? `row ${rowNumber}`
 
     try {
-      const existingUserId = existingEmailMap.get(emailLower)
+      const existingUserId =
+        (emailLower && existingEmailMap.get(emailLower)) ||
+        (member.phone && existingPhoneMap.get(member.phone)) ||
+        undefined
 
       if (existingUserId) {
         if (validated.duplicateStrategy === 'skip') {
@@ -101,7 +123,7 @@ export async function bulkImportMembers(input: BulkMemberImportInput): Promise<I
           gymId: validated.gymId,
           firstName: member.firstName,
           lastName: member.lastName,
-          email: emailLower,
+          ...(emailLower ? { email: emailLower } : {}),
           phone: member.phone || undefined,
           passwordHash: hashedPassword,
           role: 'MEMBER',
@@ -111,8 +133,8 @@ export async function bulkImportMembers(input: BulkMemberImportInput): Promise<I
 
       result.created++
 
-      // Send account setup email fire-and-forget
-      if (validated.sendWelcomeEmail) {
+      // Send account setup email fire-and-forget (only when email is available)
+      if (validated.sendWelcomeEmail && emailLower) {
         sendSetupEmailForMember(validated.gymId, emailLower, member.firstName, member.lastName).catch(
           () => {
             // Email failure must not block or roll back the import
@@ -121,7 +143,7 @@ export async function bulkImportMembers(input: BulkMemberImportInput): Promise<I
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error'
-      result.failed.push({ row: rowNumber, email: member.email, error: message })
+      result.failed.push({ row: rowNumber, identifier, error: message })
     }
   }
 

@@ -114,6 +114,12 @@ export const passwordResetRateLimiter = createLimiter(15 * 60 * 1000, 3)
 // API rate limiter: 100 requests per minute per user
 export const apiRateLimiter = createLimiter(60 * 1000, 100)
 
+// OTP send rate limiter: 3 sends per 15 minutes per phone
+export const otpSendRateLimiter = createLimiter(15 * 60 * 1000, 3)
+
+// OTP verify rate limiter: 10 verify attempts per 15 minutes per phone
+export const otpVerifyRateLimiter = createLimiter(15 * 60 * 1000, 10)
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

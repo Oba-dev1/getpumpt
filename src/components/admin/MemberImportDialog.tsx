@@ -71,12 +71,17 @@ function validateMappedRows(rows: MappedMemberRow[]): ValidatedRow[] {
     const result = bulkMemberRowSchema.safeParse({
       firstName: data.firstName,
       lastName: data.lastName,
-      email: data.email,
+      email: data.email || undefined,
       phone: data.phone || undefined,
     })
 
     return {
-      data: { firstName: data.firstName, lastName: data.lastName, email: data.email, phone: data.phone || undefined },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+      },
       rowIndex,
       valid: result.success,
       errors: result.success ? [] : result.error.issues.map((e) => e.message),
@@ -91,9 +96,7 @@ function getMappingErrors(mapping: Record<string, MemberField>): string[] {
   const hasFirstName = fields.includes('firstName')
   const hasLastName = fields.includes('lastName')
   const hasFullName = fields.includes('fullName')
-  const hasEmail = fields.includes('email')
 
-  if (!hasEmail) errors.push('Map a column to Email')
   if (!hasFirstName && !hasLastName && !hasFullName) errors.push('Map at least a Name column')
 
   const emailCount = fields.filter((f) => f === 'email').length
@@ -301,7 +304,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
 
               <div className="text-sm text-muted-foreground bg-muted rounded-md p-3 space-y-1">
                 <p className="font-medium text-foreground">Expected columns (any order):</p>
-                <p>First Name, Last Name (or Name/Full Name), Email, Phone</p>
+                <p>First Name, Last Name (or Full Name), Phone — Email is optional</p>
                 <p>Columns not mapped will be ignored. Maximum 500 rows.</p>
               </div>
             </div>
@@ -375,7 +378,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                     onCheckedChange={(checked) => setSendEmail(checked === true)}
                   />
                   <Label htmlFor="send-email" className="text-sm cursor-pointer">
-                    Send account setup email to new members
+                    Send account setup email to new members (requires email column)
                   </Label>
                 </div>
               </div>
@@ -453,7 +456,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-xs">Row</TableHead>
-                          <TableHead className="text-xs">Email</TableHead>
+                          <TableHead className="text-xs">Name</TableHead>
                           <TableHead className="text-xs">Issues</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -463,7 +466,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                           .map((r) => (
                             <TableRow key={r.rowIndex}>
                               <TableCell className="text-sm">{r.rowIndex}</TableCell>
-                              <TableCell className="text-sm">{r.data.email || '-'}</TableCell>
+                              <TableCell className="text-sm">{r.data.firstName} {r.data.lastName}</TableCell>
                               <TableCell className="text-sm text-destructive">{r.errors.join(', ')}</TableCell>
                             </TableRow>
                           ))}
@@ -541,7 +544,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-xs">Row</TableHead>
-                          <TableHead className="text-xs">Email</TableHead>
+                          <TableHead className="text-xs">Member</TableHead>
                           <TableHead className="text-xs">Error</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -549,7 +552,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                         {results.failed.map((f) => (
                           <TableRow key={f.row}>
                             <TableCell className="text-sm">{f.row}</TableCell>
-                            <TableCell className="text-sm">{f.email}</TableCell>
+                            <TableCell className="text-sm">{f.identifier}</TableCell>
                             <TableCell className="text-sm text-destructive">{f.error}</TableCell>
                           </TableRow>
                         ))}

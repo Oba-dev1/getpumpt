@@ -9,7 +9,6 @@ import {
     Settings, ExternalLink, X, ScrollText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS, hasPermission } from '@/lib/permissions';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -32,13 +31,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface SidebarProps {
     isMobileOpen: boolean
     onClose: () => void
+    gymSlug?: string
+    userRole: string
 }
 
-export default function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isMobileOpen, onClose, gymSlug, userRole }: SidebarProps) {
     const pathname = usePathname();
-    const { data: session } = useSession();
-    const gymSlug = session?.user?.gymSlug;
-    const userRole = session?.user?.role ?? '';
 
     const visibleNavItems = ADMIN_NAV_ITEMS.filter(
         (item) => hasPermission(userRole, item.requiredPermission)

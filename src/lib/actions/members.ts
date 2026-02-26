@@ -9,6 +9,7 @@ import { requireGymPermission } from '@/lib/auth-helpers'
 import { sendPasswordResetEmail, sendWelcomeEmail, buildFromEmail } from '@/lib/email'
 import { logActivity } from '@/lib/audit'
 import { sendNotification } from '@/lib/notification-helpers'
+import { normalizePhone } from '@/lib/otp-helpers'
 import {
   createMemberSchema,
   updateMemberSchema,
@@ -205,24 +206,48 @@ export async function getMemberById(gymId: string, memberId: string) {
   }
 }
 
+function isPrismaUniqueError(error: unknown): error is { code: string; meta?: { target?: string[] } } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code: unknown }).code === 'P2002'
+  )
+}
+
 export async function createMember(input: CreateMemberInput) {
   const validated = createMemberSchema.parse(input)
   const user = await requireGymPermission(validated.gymId, 'members:create')
 
   const hashedPassword = await bcrypt.hash(validated.password, 10)
 
-  const member = await prisma.user.create({
-    data: {
-      gymId: validated.gymId,
-      firstName: validated.firstName,
-      lastName: validated.lastName,
-      email: validated.email,
-      phone: validated.phone,
-      passwordHash: hashedPassword,
-      role: 'MEMBER',
-      status: 'ACTIVE',
-    },
-  })
+  let member: Awaited<ReturnType<typeof prisma.user.create>>
+  try {
+    member = await prisma.user.create({
+      data: {
+        gymId: validated.gymId,
+        firstName: validated.firstName,
+        lastName: validated.lastName,
+        email: validated.email,
+        phone: validated.phone ? normalizePhone(validated.phone) : undefined,
+        passwordHash: hashedPassword,
+        role: 'MEMBER',
+        status: 'ACTIVE',
+      },
+    })
+  } catch (error) {
+    if (isPrismaUniqueError(error)) {
+      const fields = (error.meta?.target as string[]) ?? []
+      if (fields.includes('phone')) {
+        throw new Error('A member with this phone number already exists in your gym.')
+      }
+      if (fields.includes('email')) {
+        throw new Error('A member with this email address already exists in your gym.')
+      }
+      throw new Error('A member with these details already exists.')
+    }
+    throw error
+  }
 
   if (validated.planId) {
     const plan = await prisma.membershipPlan.findUnique({
@@ -255,46 +280,48 @@ export async function createMember(input: CreateMemberInput) {
     description: `Created member ${validated.firstName} ${validated.lastName}`,
   })
 
-  // Send account setup email with password reset link (fire-and-forget)
-  try {
-    const gym = await prisma.gym.findUnique({
-      where: { id: validated.gymId },
-      select: { name: true, slug: true, email: true, customDomain: true },
-    })
-
-    if (gym) {
-      await prisma.passwordResetToken.deleteMany({
-        where: { email: validated.email },
+  // Send account setup email with password reset link (fire-and-forget, only if email provided)
+  if (validated.email) {
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { id: validated.gymId },
+        select: { name: true, slug: true, email: true, customDomain: true },
       })
 
-      const rawToken = crypto.randomBytes(32).toString('hex')
-      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
-      const expires = new Date(Date.now() + 60 * 60 * 1000)
+      if (gym) {
+        await prisma.passwordResetToken.deleteMany({
+          where: { email: validated.email },
+        })
 
-      await prisma.passwordResetToken.create({
-        data: {
-          email: validated.email,
-          token: tokenHash,
-          expires,
-        },
-      })
+        const rawToken = crypto.randomBytes(32).toString('hex')
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+        const expires = new Date(Date.now() + 60 * 60 * 1000)
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-      const resetUrl = `${appUrl}/reset-password?token=${rawToken}`
-      const fromEmail = buildFromEmail(gym);
-      await sendPasswordResetEmail(validated.email, {
-        name: `${validated.firstName} ${validated.lastName}`,
-        resetUrl,
-      }, fromEmail)
+        await prisma.passwordResetToken.create({
+          data: {
+            email: validated.email,
+            token: tokenHash,
+            expires,
+          },
+        })
 
-      sendWelcomeEmail(validated.email, {
-        name: `${validated.firstName} ${validated.lastName}`,
-        gymName: gym.name,
-        loginUrl: `${appUrl}/login`,
-      }, fromEmail).catch(() => {})
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const resetUrl = `${appUrl}/reset-password?token=${rawToken}`
+        const fromEmail = buildFromEmail(gym)
+        await sendPasswordResetEmail(validated.email, {
+          name: `${validated.firstName} ${validated.lastName}`,
+          resetUrl,
+        }, fromEmail)
+
+        sendWelcomeEmail(validated.email, {
+          name: `${validated.firstName} ${validated.lastName}`,
+          gymName: gym.name,
+          loginUrl: `${appUrl}/login`,
+        }, fromEmail).catch(() => {})
+      }
+    } catch {
+      // Email failure should not block member creation
     }
-  } catch {
-    // Email failure should not block member creation
   }
 
   sendNotification(
@@ -318,10 +345,22 @@ export async function updateMember(
   const validated = updateMemberSchema.parse(input)
   const user = await requireGymPermission(gymId, 'members:edit')
 
-  const member = await prisma.user.update({
-    where: { id: memberId, gymId },
-    data: validated,
-  })
+  let member: Awaited<ReturnType<typeof prisma.user.update>>
+  try {
+    member = await prisma.user.update({
+      where: { id: memberId, gymId },
+      data: validated,
+    })
+  } catch (error) {
+    if (isPrismaUniqueError(error)) {
+      const fields = (error.meta?.target as string[]) ?? []
+      if (fields.includes('phone')) {
+        throw new Error('A member with this phone number already exists in your gym.')
+      }
+      throw new Error('A member with these details already exists.')
+    }
+    throw error
+  }
 
   logActivity({
     gymId,

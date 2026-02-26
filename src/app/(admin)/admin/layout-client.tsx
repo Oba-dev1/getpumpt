@@ -4,11 +4,23 @@ import React, { useState } from 'react'
 import Header from '@/components/admin/Header'
 import Sidebar from '@/components/admin/Sidebar'
 
+interface AdminLayoutClientProps {
+  children: React.ReactNode
+  userName?: string | null
+  userEmail?: string | null
+  userImage?: string | null
+  gymSlug?: string | null
+  userRole: string
+}
+
 export default function AdminLayoutClient({
   children,
-}: {
-  children: React.ReactNode
-}) {
+  userName,
+  userEmail,
+  userImage,
+  gymSlug,
+  userRole,
+}: AdminLayoutClientProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
@@ -23,13 +35,21 @@ export default function AdminLayoutClient({
       <Sidebar
         isMobileOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
+        gymSlug={gymSlug ?? undefined}
+        userRole={userRole}
       />
 
       <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950 text-slate-100">
         <div className="pointer-events-none absolute -right-40 -top-40 h-80 w-80 rounded-full bg-indigo-500/[0.07] blur-3xl" />
         <div className="pointer-events-none absolute -left-56 top-1/4 h-96 w-96 rounded-full bg-blue-500/[0.05] blur-3xl" />
 
-        <Header onMenuToggle={() => setMobileNavOpen((prev) => !prev)} />
+        <Header
+          onMenuToggle={() => setMobileNavOpen((prev) => !prev)}
+          userName={userName}
+          userEmail={userEmail}
+          userImage={userImage}
+          gymSlug={gymSlug}
+        />
 
         <main
           id="admin-main-content"
