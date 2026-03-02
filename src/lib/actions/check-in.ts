@@ -18,6 +18,7 @@ export async function searchMembersForCheckIn(gymId: string, query: string) {
       gymId,
       role: 'MEMBER',
       status: 'ACTIVE',
+      deletedAt: null,
       OR: [
         { firstName: { contains: query, mode: 'insensitive' } },
         { lastName: { contains: query, mode: 'insensitive' } },
@@ -59,7 +60,7 @@ export async function checkInMember(gymId: string, input: CheckInInput) {
   const validated = checkInSchema.parse(input)
 
   const member = await prisma.user.findUnique({
-    where: { id: validated.userId, gymId, role: 'MEMBER' },
+    where: { id: validated.userId, gymId, role: 'MEMBER', deletedAt: null },
     select: {
       id: true,
       firstName: true,

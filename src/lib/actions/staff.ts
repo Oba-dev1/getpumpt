@@ -35,6 +35,7 @@ export async function getStaff(gymId: string, options?: GetStaffOptions) {
   const where: Prisma.UserWhereInput = {
     gymId,
     role: options?.role ? options.role : { in: ['STAFF', 'ADMIN'] },
+    deletedAt: null,
     ...(options?.search && {
       OR: [
         { firstName: { contains: options.search, mode: 'insensitive' } },
@@ -92,6 +93,7 @@ export async function getStaffById(gymId: string, staffId: string) {
       id: staffId,
       gymId,
       role: { in: ['STAFF', 'ADMIN'] },
+      deletedAt: null,
     },
     select: {
       id: true,
@@ -119,13 +121,8 @@ export async function createStaff(gymId: string, input: CreateStaffInput) {
 
   const validated = createStaffSchema.parse(input)
 
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      gymId_email: {
-        gymId,
-        email: validated.email,
-      },
-    },
+  const existingUser = await prisma.user.findFirst({
+    where: { gymId, email: validated.email, deletedAt: null },
   })
 
   if (existingUser) {
@@ -186,6 +183,7 @@ export async function updateStaffRole(
       id: staffId,
       gymId,
       role: { in: ['STAFF', 'ADMIN'] },
+      deletedAt: null,
     },
   })
 
@@ -234,6 +232,7 @@ export async function deleteStaff(
       id: staffId,
       gymId,
       role: { in: ['STAFF', 'ADMIN'] },
+      deletedAt: null,
     },
   })
 

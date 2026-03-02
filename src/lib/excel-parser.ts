@@ -1,6 +1,13 @@
 import * as XLSX from 'xlsx'
+import { normalizePhone, normalizePlanName } from '@/lib/utils'
 
-export type MemberField = 'firstName' | 'lastName' | 'fullName' | 'email' | 'phone' | 'skip'
+export type MemberField = 'firstName' | 'lastName' | 'fullName' | 'email' | 'phone' | 'planName' | 'startDate' | 'skip'
+
+export interface DataQualityIssue {
+  field: 'phone' | 'planName'
+  original: string
+  normalized: string
+}
 
 export interface ParsedExcelData {
   headers: string[]
@@ -24,10 +31,16 @@ export function parseExcelFile(file: File, sheetIndex: number = 0): Promise<Pars
         }
 
         const sheet = workbook.Sheets[sheetName]
-        const jsonData = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
+        const allRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
           defval: '',
           raw: false,
         })
+
+        // Drop rows where every cell is an empty string — these are "phantom" rows
+        // that Excel marks as used from scrolling, formatting, or prior edits.
+        const jsonData = allRows.filter((row) =>
+          Object.values(row).some((v) => v.toString().trim() !== '')
+        )
 
         if (jsonData.length === 0) {
           reject(new Error('The sheet contains no data rows'))
@@ -42,6 +55,24 @@ export function parseExcelFile(file: File, sheetIndex: number = 0): Promise<Pars
       }
     }
 
+    reader.onerror = () => reject(new Error('Failed to read the file'))
+    reader.readAsArrayBuffer(file)
+  })
+}
+
+// Reads only the workbook structure to extract sheet names without parsing cell data.
+export function getSheetNames(file: File): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const workbook = XLSX.read(data, { type: 'array', bookSheets: true })
+        resolve(workbook.SheetNames)
+      } catch {
+        reject(new Error('Failed to read sheet names from file'))
+      }
+    }
     reader.onerror = () => reject(new Error('Failed to read the file'))
     reader.readAsArrayBuffer(file)
   })
@@ -76,6 +107,47 @@ const COLUMN_NAME_MAP: Record<string, MemberField> = {
   'mobile number': 'phone',
   'cell': 'phone',
   'contact': 'phone',
+  'plan': 'planName',
+  'plan name': 'planName',
+  'membership plan': 'planName',
+  'membership': 'planName',
+  'membership type': 'planName',
+  'membership_type': 'planName',
+  'type': 'planName',
+  'package': 'planName',
+  'subscription': 'planName',
+  'subscription plan': 'planName',
+  'start date': 'startDate',
+  'startdate': 'startDate',
+  'start': 'startDate',
+  'join date': 'startDate',
+  'joined': 'startDate',
+  'date joined': 'startDate',
+  'subscription date': 'startDate',
+  'date started': 'startDate',
+  'date of payment': 'startDate',
+  'date_of_payment': 'startDate',
+  'payment date': 'startDate',
+  // Columns common in gym ledger sheets that should be skipped
+  's/n': 'skip',
+  'sn': 'skip',
+  '#': 'skip',
+  'no': 'skip',
+  'no.': 'skip',
+  'serial no': 'skip',
+  'serial': 'skip',
+  'serial number': 'skip',
+  'expiry date': 'skip',
+  'expiry_date': 'skip',
+  'expiry': 'skip',
+  'end date': 'skip',
+  'amount paid': 'skip',
+  'amount_paid': 'skip',
+  'amount': 'skip',
+  'payment mode': 'skip',
+  'payment_mode': 'skip',
+  'mode': 'skip',
+  'status': 'skip',
 }
 
 export function autoMapColumns(headers: string[]): Record<string, MemberField> {
@@ -94,7 +166,10 @@ export interface MappedMemberRow {
   lastName: string
   email: string
   phone: string
+  planName: string
+  startDate: string
   rowIndex: number
+  qualityIssues: DataQualityIssue[]
 }
 
 export function applyColumnMapping(
@@ -103,6 +178,7 @@ export function applyColumnMapping(
 ): MappedMemberRow[] {
   return rows.map((row, index) => {
     const mapped: Partial<MappedMemberRow> & { fullName?: string } = { rowIndex: index + 1 }
+    const qualityIssues: DataQualityIssue[] = []
 
     for (const [header, field] of Object.entries(mapping)) {
       if (field === 'skip') continue
@@ -110,8 +186,24 @@ export function applyColumnMapping(
 
       if (field === 'fullName') {
         mapped.fullName = value
-      } else if (field === 'firstName' || field === 'lastName' || field === 'email' || field === 'phone') {
+      } else if (field === 'firstName' || field === 'lastName' || field === 'email' || field === 'startDate') {
         mapped[field] = value
+      } else if (field === 'phone') {
+        if (value) {
+          const { value: normalized, changed } = normalizePhone(value)
+          mapped.phone = normalized
+          if (changed) qualityIssues.push({ field: 'phone', original: value, normalized })
+        } else {
+          mapped.phone = value
+        }
+      } else if (field === 'planName') {
+        if (value) {
+          const normalized = normalizePlanName(value)
+          mapped.planName = normalized
+          if (normalized !== value) qualityIssues.push({ field: 'planName', original: value, normalized })
+        } else {
+          mapped.planName = value
+        }
       }
     }
 
@@ -129,7 +221,10 @@ export function applyColumnMapping(
       lastName: mapped.lastName ?? '',
       email: mapped.email ?? '',
       phone: mapped.phone ?? '',
+      planName: mapped.planName ?? '',
+      startDate: mapped.startDate ?? '',
       rowIndex: mapped.rowIndex ?? index + 1,
+      qualityIssues,
     }
   })
 }

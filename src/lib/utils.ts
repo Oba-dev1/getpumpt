@@ -84,3 +84,32 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// Normalize a Nigerian phone number.
+// Strips non-digit characters, then prepends "0" to any 10-digit number that
+// starts with 7, 8, or 9 (the valid MTN/Airtel/Glo/9mobile prefixes).
+// Returns both the cleaned value and a flag indicating whether it changed.
+export function normalizePhone(raw: string): { value: string; changed: boolean } {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 10 && /^[789]/.test(digits)) {
+    return { value: '0' + digits, changed: true }
+  }
+  const cleaned = digits.length > 0 ? digits : raw
+  return { value: cleaned, changed: cleaned !== raw }
+}
+
+// Normalize a membership plan name by stripping common decorators that real
+// gym ledger sheets attach: parentheticals, bracket annotations, and "+addon" suffixes.
+// Examples:
+//   "1month (couple)"           → "1month"
+//   "walk in[2persons]"         → "walk in"
+//   "1 month + personal boxing" → "1 month"
+//   "1week+persol traininer (ken)" → "1week"
+export function normalizePlanName(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/\s*\[[^\]]*\]/g, '')
+    .replace(/\s*\+.*$/, '')
+    .trim()
+}

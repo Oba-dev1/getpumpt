@@ -28,14 +28,16 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Upload, FileSpreadsheet, ChevronRight, AlertTriangle, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { Upload, FileSpreadsheet, ChevronRight, AlertTriangle, CheckCircle2, XCircle, Loader2, Sparkles, ChevronDown } from 'lucide-react'
 import {
   parseExcelFile,
+  getSheetNames,
   autoMapColumns,
   applyColumnMapping,
   type MemberField,
   type ParsedExcelData,
   type MappedMemberRow,
+  type DataQualityIssue,
 } from '@/lib/excel-parser'
 import { bulkMemberRowSchema, type BulkMemberRow } from '@/lib/validations'
 import { bulkImportMembers, type ImportResult } from '@/lib/actions/bulk-import'
@@ -49,6 +51,8 @@ const MEMBER_FIELD_LABELS: Record<MemberField, string> = {
   fullName: 'Full Name (auto-split)',
   email: 'Email',
   phone: 'Phone',
+  planName: 'Membership Plan (by name)',
+  startDate: 'Subscription Start Date',
   skip: 'Skip this column',
 }
 
@@ -57,6 +61,8 @@ interface ValidatedRow {
   rowIndex: number
   valid: boolean
   errors: string[]
+  qualityIssues: DataQualityIssue[]
+  batchDuplicate?: { ofRow: number; field: 'phone' | 'name' }
 }
 
 interface MemberImportDialogProps {
@@ -67,24 +73,58 @@ interface MemberImportDialogProps {
 }
 
 function validateMappedRows(rows: MappedMemberRow[]): ValidatedRow[] {
-  return rows.map(({ rowIndex, ...data }) => {
+  // Build duplicate-detection maps: track the first row index a phone/name appears
+  const phonesSeen = new Map<string, number>()
+  const namesSeen = new Map<string, number>()
+
+  return rows.map(({ rowIndex, qualityIssues, ...data }) => {
     const result = bulkMemberRowSchema.safeParse({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email || undefined,
       phone: data.phone || undefined,
+      planName: data.planName || undefined,
+      startDate: data.startDate || undefined,
     })
 
+    const rowData: BulkMemberRow = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      planName: data.planName || undefined,
+      startDate: data.startDate || undefined,
+    }
+
+    // Check for batch duplicates
+    let batchDuplicate: ValidatedRow['batchDuplicate']
+    const fullName = `${data.firstName} ${data.lastName}`.toLowerCase().trim()
+
+    if (data.phone) {
+      const seenAt = phonesSeen.get(data.phone)
+      if (seenAt !== undefined) {
+        batchDuplicate = { ofRow: seenAt, field: 'phone' }
+      } else {
+        phonesSeen.set(data.phone, rowIndex)
+      }
+    }
+
+    if (!batchDuplicate && fullName.length > 1) {
+      const seenAt = namesSeen.get(fullName)
+      if (seenAt !== undefined) {
+        batchDuplicate = { ofRow: seenAt, field: 'name' }
+      } else {
+        namesSeen.set(fullName, rowIndex)
+      }
+    }
+
     return {
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
-      },
+      data: rowData,
       rowIndex,
       valid: result.success,
       errors: result.success ? [] : result.error.issues.map((e) => e.message),
+      qualityIssues,
+      batchDuplicate,
     }
   })
 }
@@ -117,6 +157,11 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
   const [results, setResults] = useState<ImportResult | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
   const [parsing, setParsing] = useState(false)
+  const [availableSheets, setAvailableSheets] = useState<string[]>([])
+  const [selectedSheetIndex, setSelectedSheetIndex] = useState(0)
+  const [showPhoneNorm, setShowPhoneNorm] = useState(false)
+  const [showPlanNorm, setShowPlanNorm] = useState(false)
+  const [showDuplicates, setShowDuplicates] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const reset = useCallback(() => {
@@ -131,6 +176,11 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
     setResults(null)
     setParseError(null)
     setParsing(false)
+    setAvailableSheets([])
+    setSelectedSheetIndex(0)
+    setShowPhoneNorm(false)
+    setShowPlanNorm(false)
+    setShowDuplicates(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
@@ -160,6 +210,15 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
 
     setFile(selected)
     setParseError(null)
+    setSelectedSheetIndex(0)
+    setAvailableSheets([])
+
+    // Peek at sheet names so the user can pick the right tab before parsing
+    getSheetNames(selected)
+      .then((names) => setAvailableSheets(names))
+      .catch(() => {
+        // Non-fatal: fall back to single-sheet behaviour
+      })
   }, [])
 
   const handleParse = useCallback(async () => {
@@ -169,7 +228,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
     setParseError(null)
 
     try {
-      const data = await parseExcelFile(file)
+      const data = await parseExcelFile(file, selectedSheetIndex)
       const mapping = autoMapColumns(data.headers)
       setParsedData(data)
       setColumnMapping(mapping)
@@ -179,7 +238,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
     } finally {
       setParsing(false)
     }
-  }, [file])
+  }, [file, selectedSheetIndex])
 
   const handleMappingChange = useCallback((header: string, field: MemberField) => {
     setColumnMapping((prev) => ({ ...prev, [header]: field }))
@@ -228,6 +287,19 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
   const previewRows = parsedData?.rows.slice(0, 5) ?? []
   const validCount = validatedRows.filter((r) => r.valid).length
   const invalidCount = validatedRows.filter((r) => !r.valid).length
+
+  type QualityItem = DataQualityIssue & { rowIndex: number; memberName: string }
+  const phoneNormalizations: QualityItem[] = validatedRows.flatMap((r) =>
+    r.qualityIssues
+      .filter((q) => q.field === 'phone')
+      .map((q) => ({ ...q, rowIndex: r.rowIndex, memberName: `${r.data.firstName} ${r.data.lastName}`.trim() }))
+  )
+  const planNormalizations: QualityItem[] = validatedRows.flatMap((r) =>
+    r.qualityIssues
+      .filter((q) => q.field === 'planName')
+      .map((q) => ({ ...q, rowIndex: r.rowIndex, memberName: `${r.data.firstName} ${r.data.lastName}`.trim() }))
+  )
+  const batchDuplicates = validatedRows.filter((r) => r.batchDuplicate)
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -295,6 +367,28 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                 onChange={handleFileChange}
               />
 
+              {/* Sheet selector — shown when the file has multiple tabs */}
+              {availableSheets.length > 1 && (
+                <div className="flex items-center gap-3">
+                  <Label className="text-sm text-muted-foreground shrink-0">Sheet to import</Label>
+                  <Select
+                    value={String(selectedSheetIndex)}
+                    onValueChange={(v) => setSelectedSheetIndex(Number(v))}
+                  >
+                    <SelectTrigger className="w-52 text-gray-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableSheets.map((name, i) => (
+                        <SelectItem key={i} value={String(i)}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {parseError && (
                 <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 px-3 py-2 rounded-md">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -305,6 +399,7 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
               <div className="text-sm text-muted-foreground bg-muted rounded-md p-3 space-y-1">
                 <p className="font-medium text-foreground">Expected columns (any order):</p>
                 <p>First Name, Last Name (or Full Name), Phone — Email is optional</p>
+                <p>Optional: Membership Plan (plan name), Start Date (YYYY-MM-DD or DD/MM/YYYY)</p>
                 <p>Columns not mapped will be ignored. Maximum 500 rows.</p>
               </div>
             </div>
@@ -445,6 +540,120 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                 </div>
               </div>
 
+              {/* Data Quality Report */}
+              {(phoneNormalizations.length > 0 || planNormalizations.length > 0 || batchDuplicates.length > 0) && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Data Quality Report — auto-corrections applied</p>
+                  </div>
+
+                  {phoneNormalizations.length > 0 && (
+                    <div>
+                      <button
+                        className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                        onClick={() => setShowPhoneNorm((v) => !v)}
+                      >
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showPhoneNorm ? 'rotate-180' : ''}`} />
+                        {phoneNormalizations.length} phone number{phoneNormalizations.length !== 1 ? 's' : ''} normalized (leading 0 added)
+                      </button>
+                      {showPhoneNorm && (
+                        <div className="mt-1.5 rounded border bg-white dark:bg-background overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-xs h-7">Row</TableHead>
+                                <TableHead className="text-xs h-7">Before</TableHead>
+                                <TableHead className="text-xs h-7">After</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {phoneNormalizations.map((n, i) => (
+                                <TableRow key={i}>
+                                  <TableCell className="text-xs py-1">{n.rowIndex}</TableCell>
+                                  <TableCell className="text-xs py-1 font-mono text-muted-foreground">{n.original}</TableCell>
+                                  <TableCell className="text-xs py-1 font-mono text-green-600">{n.normalized}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {planNormalizations.length > 0 && (
+                    <div>
+                      <button
+                        className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                        onClick={() => setShowPlanNorm((v) => !v)}
+                      >
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showPlanNorm ? 'rotate-180' : ''}`} />
+                        {planNormalizations.length} plan name{planNormalizations.length !== 1 ? 's' : ''} cleaned (extra text stripped)
+                      </button>
+                      {showPlanNorm && (
+                        <div className="mt-1.5 rounded border bg-white dark:bg-background overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-xs h-7">Row</TableHead>
+                                <TableHead className="text-xs h-7">Before</TableHead>
+                                <TableHead className="text-xs h-7">After</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {planNormalizations.map((n, i) => (
+                                <TableRow key={i}>
+                                  <TableCell className="text-xs py-1">{n.rowIndex}</TableCell>
+                                  <TableCell className="text-xs py-1 font-mono text-muted-foreground">{n.original}</TableCell>
+                                  <TableCell className="text-xs py-1 font-mono text-green-600">{n.normalized}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {batchDuplicates.length > 0 && (
+                    <div>
+                      <button
+                        className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-1 hover:underline"
+                        onClick={() => setShowDuplicates((v) => !v)}
+                      >
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showDuplicates ? 'rotate-180' : ''}`} />
+                        {batchDuplicates.length} potential duplicate{batchDuplicates.length !== 1 ? 's' : ''} found in this batch
+                      </button>
+                      {showDuplicates && (
+                        <div className="mt-1.5 rounded border bg-white dark:bg-background overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-xs h-7">Row</TableHead>
+                                <TableHead className="text-xs h-7">Name</TableHead>
+                                <TableHead className="text-xs h-7">Matches</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {batchDuplicates.map((r) => (
+                                <TableRow key={r.rowIndex}>
+                                  <TableCell className="text-xs py-1">{r.rowIndex}</TableCell>
+                                  <TableCell className="text-xs py-1">{r.data.firstName} {r.data.lastName}</TableCell>
+                                  <TableCell className="text-xs py-1 text-amber-600">
+                                    Same {r.batchDuplicate!.field === 'phone' ? 'phone number' : 'name'} as row {r.batchDuplicate!.ofRow}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {invalidCount > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-destructive flex items-center gap-1">
@@ -481,6 +690,15 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
                     New members will receive an account setup email with a link to set their password (valid for 7 days).
+                  </span>
+                </div>
+              )}
+
+              {validatedRows.some((r) => r.valid && r.data.planName) && (
+                <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted rounded-md p-3">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Membership plan column detected. Members with a recognised plan name will have their subscription created and expiry calculated automatically. Unrecognised plan names are ignored — the member is still created.
                   </span>
                 </div>
               )}
@@ -536,6 +754,20 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                 )}
               </div>
 
+              {results.expiredMemberships > 0 && (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                      {results.expiredMemberships} member{results.expiredMemberships !== 1 ? 's' : ''} imported with already-expired subscription{results.expiredMemberships !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-sm text-amber-700 dark:text-amber-400 mt-0.5">
+                      Their memberships have been recorded with an Expired status. Review their accounts and consider reaching out to renew.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {results.failed.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-destructive">Failed rows</p>
@@ -558,6 +790,63 @@ export function MemberImportDialog({ open, onOpenChange, gymId, onImportComplete
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+                </div>
+              )}
+
+              {results.unrecognizedPlanNames.length > 0 && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                        {results.unrecognizedPlanNames.length} plan name{results.unrecognizedPlanNames.length !== 1 ? 's' : ''} not matched — memberships were not created
+                      </p>
+                      <ul className="space-y-0.5">
+                        {results.unrecognizedPlanNames.map((name) => (
+                          <li key={name} className="text-sm font-mono text-amber-700 dark:text-amber-400">{name}</li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-amber-600 dark:text-amber-500">
+                        Tip: Create these plans in Membership Plans, then re-import the affected rows.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {results.membersWithPaymentDateNoPlan.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1.5 w-full">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                        {results.membersWithPaymentDateNoPlan.length} member{results.membersWithPaymentDateNoPlan.length !== 1 ? 's' : ''} imported with a payment date but no plan assigned
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        Use the payment dates below as the start date when assigning their membership plans.
+                      </p>
+                      <div className="rounded border bg-white dark:bg-background overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-xs h-7">Name</TableHead>
+                              <TableHead className="text-xs h-7">Email / Phone</TableHead>
+                              <TableHead className="text-xs h-7">Payment Date</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {results.membersWithPaymentDateNoPlan.map((m, i) => (
+                              <TableRow key={i}>
+                                <TableCell className="text-xs py-1">{m.name}</TableCell>
+                                <TableCell className="text-xs py-1 text-muted-foreground">{m.identifier}</TableCell>
+                                <TableCell className="text-xs py-1 font-mono text-amber-700 dark:text-amber-400">{m.paymentDate}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

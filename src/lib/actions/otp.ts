@@ -28,7 +28,7 @@ export async function sendOtp(
 
   // Look up member — use generic response to prevent phone enumeration
   const user = await prisma.user.findFirst({
-    where: { gymId, phone: normalized, role: 'MEMBER', status: 'ACTIVE' },
+    where: { gymId, phone: normalized, role: 'MEMBER', status: 'ACTIVE', deletedAt: null },
     select: { id: true, firstName: true },
   })
 

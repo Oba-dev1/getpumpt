@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { createMember } from '@/lib/actions/members'
 import { getMembershipPlans } from '@/lib/actions/plans'
 import { toast } from 'sonner'
@@ -38,6 +38,7 @@ const memberSchema = z.object({
   emergencyPhone: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   planId: z.string().optional(),
+  startDate: z.string().optional(),
 })
 
 type MemberFormData = z.infer<typeof memberSchema>
@@ -60,7 +61,20 @@ export default function NewMemberPage() {
     resolver: zodResolver(memberSchema) as any,
   })
 
-  const selectedPlan = watch('planId')
+  const selectedPlanId = watch('planId')
+  const startDateStr = watch('startDate')
+  const selectedPlan = plans.find((p) => p.id === selectedPlanId)
+
+  const calculatedEndDate = (() => {
+    if (!selectedPlan || !startDateStr) return null
+    const start = new Date(startDateStr)
+    if (isNaN(start.getTime())) return null
+    const end = new Date(start)
+    if (selectedPlan.durationType === 'DAYS') end.setDate(end.getDate() + selectedPlan.durationValue)
+    else if (selectedPlan.durationType === 'MONTHS') end.setMonth(end.getMonth() + selectedPlan.durationValue)
+    else end.setFullYear(end.getFullYear() + selectedPlan.durationValue)
+    return end
+  })()
 
   useEffect(() => {
     async function fetchPlans() {
@@ -85,6 +99,7 @@ export default function NewMemberPage() {
       await createMember({
         ...data,
         gymId: session.user.gymId,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
       })
 
       toast.success('Member created successfully')
@@ -185,7 +200,12 @@ export default function NewMemberPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    style={{ colorScheme: 'light' }}
+                    {...register('dateOfBirth')}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -270,10 +290,12 @@ export default function NewMemberPage() {
                 <div className="space-y-2">
                   <Label htmlFor="planId">Membership Plan (Optional)</Label>
                   <Select
-                    value={selectedPlan ?? 'none'}
-                    onValueChange={(value) =>
+                    value={selectedPlanId ?? 'none'}
+                    onValueChange={(value) => {
                       setValue('planId', value === 'none' ? undefined : value)
-                    }
+                      if (value === 'none') setValue('startDate', undefined)
+                      else if (!startDateStr) setValue('startDate', new Date().toISOString().split('T')[0])
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a plan" />
@@ -292,6 +314,33 @@ export default function NewMemberPage() {
                     You can assign a membership plan later if needed
                   </p>
                 </div>
+
+                {selectedPlanId && selectedPlanId !== 'none' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate">Payment Date</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      {...register('startDate')}
+                    />
+                    <p className="text-sm text-gray-500">
+                      Date the member originally paid — used to calculate membership expiry
+                    </p>
+                    {calculatedEndDate && (
+                      <p className="text-sm text-gray-600">
+                        Expires: <span className="font-medium">{calculatedEndDate.toLocaleDateString()}</span>
+                      </p>
+                    )}
+                    {calculatedEndDate && calculatedEndDate < new Date() && (
+                      <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-700">
+                          This membership will be saved as <strong>Expired</strong> because the end date is in the past.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

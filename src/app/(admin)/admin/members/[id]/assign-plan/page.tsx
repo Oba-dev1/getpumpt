@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, CreditCard } from 'lucide-react'
+import { ArrowLeft, CreditCard, AlertTriangle } from 'lucide-react'
 import { assignMembershipSchema, type AssignMembershipInput } from '@/lib/validations'
 import { assignMembershipToPlan } from '@/lib/actions/memberships'
 import { getMembershipPlans } from '@/lib/actions/plans'
@@ -43,6 +43,7 @@ export default function AssignPlanPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
+  const [calculatedEndDate, setCalculatedEndDate] = useState<Date | null>(null)
 
   const memberId = params.id as string
 
@@ -101,9 +102,25 @@ export default function AssignPlanPage() {
 
   useEffect(() => {
     const planId = form.watch('planId')
+    const startDateStr = form.watch('startDate')
     const plan = plans.find((p) => p.id === planId)
-    setSelectedPlan(plan)
-  }, [form.watch('planId'), plans])
+    setSelectedPlan(plan ?? null)
+
+    if (plan && startDateStr) {
+      const start = new Date(startDateStr)
+      if (!isNaN(start.getTime())) {
+        const end = new Date(start)
+        if (plan.durationType === 'DAYS') end.setDate(end.getDate() + plan.durationValue)
+        else if (plan.durationType === 'MONTHS') end.setMonth(end.getMonth() + plan.durationValue)
+        else end.setFullYear(end.getFullYear() + plan.durationValue)
+        setCalculatedEndDate(end)
+      } else {
+        setCalculatedEndDate(null)
+      }
+    } else {
+      setCalculatedEndDate(null)
+    }
+  }, [form.watch('planId'), form.watch('startDate'), plans])
 
   if (loading) {
     return (
@@ -311,6 +328,24 @@ export default function AssignPlanPage() {
                     </p>
                   </div>
                 )}
+                {calculatedEndDate && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Calculated End Date</p>
+                    <p className="text-sm text-gray-900">
+                      {calculatedEndDate.toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+
+                {calculatedEndDate && calculatedEndDate < new Date() && (
+                  <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700">
+                      This membership will be saved as <strong>Expired</strong> because the end date is in the past.
+                    </p>
+                  </div>
+                )}
+
                 {selectedPlan.features && selectedPlan.features.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">Features</p>

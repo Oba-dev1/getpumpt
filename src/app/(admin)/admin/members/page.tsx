@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -43,7 +44,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { getMembers, deleteMember } from '@/lib/actions/members'
+import { getMembers, deleteMember, bulkDeleteMembers } from '@/lib/actions/members'
 import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 
@@ -69,6 +70,11 @@ export default function MembersPage() {
   const [selectedMemberActive, setSelectedMemberActive] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   const [sortBy, sortDir] = sort.split('_') as ['joined' | 'name' | 'status', 'asc' | 'desc']
 
@@ -101,6 +107,11 @@ export default function MembersPage() {
   useEffect(() => {
     fetchMembers()
   }, [session, search, status, sort, currentPage])
+
+  // Clear selection when page/filters change
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [search, status, sort, currentPage])
 
   const handleSearch = (query: string) => {
     setSearch(query)
@@ -150,6 +161,56 @@ export default function MembersPage() {
     }
   }
 
+  // Bulk selection helpers
+  const toggleSelectMember = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const selectableMembers = members.filter((m) => m.membership?.status !== 'ACTIVE')
+  const allSelectableSelected =
+    selectableMembers.length > 0 && selectableMembers.every((m) => selectedIds.has(m.id))
+  const someSelected = selectedIds.size > 0
+
+  const toggleSelectAll = () => {
+    if (allSelectableSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(selectableMembers.map((m) => m.id)))
+    }
+  }
+
+  const selectedActiveCount = members.filter(
+    (m) => selectedIds.has(m.id) && m.membership?.status === 'ACTIVE'
+  ).length
+  const selectedDeletableIds = [...selectedIds].filter(
+    (id) => !members.find((m) => m.id === id && m.membership?.status === 'ACTIVE')
+  )
+
+  const handleBulkDelete = async () => {
+    if (!session?.user?.gymId || selectedDeletableIds.length === 0) return
+
+    setBulkDeleting(true)
+    try {
+      const result = await bulkDeleteMembers(session.user.gymId, selectedDeletableIds)
+      toast.success(`${result.deleted} member${result.deleted !== 1 ? 's' : ''} deleted`)
+      setSelectedIds(new Set())
+      await fetchMembers()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete members')
+    } finally {
+      setBulkDeleting(false)
+      setBulkDeleteDialogOpen(false)
+    }
+  }
+
   if (sessionStatus === 'loading') {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
@@ -157,6 +218,10 @@ export default function MembersPage() {
   if (!session?.user?.gymId) {
     return null
   }
+
+  const bulkDeleteDescription = selectedActiveCount > 0
+    ? `${selectedDeletableIds.length} of ${selectedIds.size} selected members will be deleted. ${selectedActiveCount} member${selectedActiveCount !== 1 ? 's' : ''} with an active membership will be skipped. This action cannot be undone.`
+    : `Delete ${selectedDeletableIds.length} selected member${selectedDeletableIds.length !== 1 ? 's' : ''}? This action cannot be undone.`
 
   return (
     <main className="space-y-4" aria-labelledby="members-title">
@@ -234,6 +299,34 @@ export default function MembersPage() {
         </CardContent>
       </Card>
 
+      {/* Bulk actions bar */}
+      {someSelected && (
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2.5 shadow-sm">
+          <span className="text-sm text-gray-700">
+            {selectedIds.size} member{selectedIds.size !== 1 ? 's' : ''} selected
+            {selectedActiveCount > 0 && (
+              <span className="ml-1 text-amber-600">
+                ({selectedActiveCount} with active membership — will be skipped)
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Clear selection
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={selectedDeletableIds.length === 0}
+              onClick={() => setBulkDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete {selectedDeletableIds.length > 0 ? selectedDeletableIds.length : ''} member{selectedDeletableIds.length !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <section aria-labelledby="members-table">
         <h2 id="members-table" className="sr-only">
           Members list
@@ -245,8 +338,8 @@ export default function MembersPage() {
                 <div key={i} className="flex items-center space-x-4">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-4 w-62.5" />
+                    <Skeleton className="h-4 w-50" />
                   </div>
                 </div>
               ))}
@@ -276,80 +369,100 @@ export default function MembersPage() {
                 <caption className="sr-only">Member records</caption>
                 <TableHeader>
                   <TableRow>
-                      <TableHead scope="col">Member</TableHead>
+                    <TableHead scope="col" className="w-10">
+                      <Checkbox
+                        checked={allSelectableSelected}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all members on this page"
+                        disabled={selectableMembers.length === 0}
+                      />
+                    </TableHead>
+                    <TableHead scope="col">Member</TableHead>
                     <TableHead scope="col">Email</TableHead>
                     <TableHead scope="col">Phone</TableHead>
                     <TableHead scope="col">Status</TableHead>
                     <TableHead scope="col">Plan</TableHead>
                     <TableHead scope="col">Joined</TableHead>
-                      <TableHead scope="col" className="text-right">
-                        Actions
-                      </TableHead>
+                    <TableHead scope="col" className="text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="font-medium text-gray-900">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9">
-                            {member.avatar ? (
-                              <AvatarImage src={member.avatar} alt="" />
-                            ) : null}
-                            <AvatarFallback>
-                              {member.firstName?.[0]}
-                              {member.lastName?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{member.firstName} {member.lastName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-gray-700">{member.email}</TableCell>
-                      <TableCell className="text-gray-600">
-                        {member.phone || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={member.status} />
-                      </TableCell>
-                      <TableCell className="text-gray-700">
-                        {member.membership?.plan || (
-                          <span className="text-gray-500">No plan</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-gray-600">
-                        {new Date(member.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Open actions for ${member.firstName} ${member.lastName}`}
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/admin/members/${member.id}`)}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => openDeleteDialog(member)}
-                              className="text-red-600"
-                              disabled={member.membership?.status === 'ACTIVE'}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {members.map((member) => {
+                    const isActive = member.membership?.status === 'ACTIVE'
+                    const isChecked = selectedIds.has(member.id)
+                    return (
+                      <TableRow key={member.id} data-state={isChecked ? 'selected' : undefined}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => toggleSelectMember(member.id)}
+                            disabled={isActive}
+                            aria-label={`Select ${member.firstName} ${member.lastName}`}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium text-gray-900">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9">
+                              {member.avatar ? (
+                                <AvatarImage src={member.avatar} alt="" />
+                              ) : null}
+                              <AvatarFallback>
+                                {member.firstName?.[0]}
+                                {member.lastName?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{member.firstName} {member.lastName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-gray-700">{member.email}</TableCell>
+                        <TableCell className="text-gray-600">
+                          {member.phone || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={member.status} />
+                        </TableCell>
+                        <TableCell className="text-gray-700">
+                          {member.membership?.plan || (
+                            <span className="text-gray-500">No plan</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {new Date(member.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Open actions for ${member.firstName} ${member.lastName}`}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/admin/members/${member.id}`)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                View profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => openDeleteDialog(member)}
+                                className="text-red-600"
+                                disabled={isActive}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
               <Pagination
@@ -363,6 +476,8 @@ export default function MembersPage() {
           )}
         </div>
       </section>
+
+      {/* Single member delete */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -376,6 +491,18 @@ export default function MembersPage() {
         variant={selectedMemberActive ? 'default' : 'destructive'}
         onConfirm={selectedMemberActive ? () => setDeleteDialogOpen(false) : handleDelete}
         isLoading={deleting}
+      />
+
+      {/* Bulk delete */}
+      <ConfirmDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        title="Delete Members"
+        description={bulkDeleteDescription}
+        confirmLabel={`Delete ${selectedDeletableIds.length} member${selectedDeletableIds.length !== 1 ? 's' : ''}`}
+        variant="destructive"
+        onConfirm={handleBulkDelete}
+        isLoading={bulkDeleting}
       />
 
       {session?.user?.gymId && (

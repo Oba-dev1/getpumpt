@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
       gymId: { in: gymIds },
       role: { in: ['ADMIN', 'SUPER_ADMIN'] },
       status: 'ACTIVE',
+      deletedAt: null,
     },
     select: { id: true, gymId: true },
   })
