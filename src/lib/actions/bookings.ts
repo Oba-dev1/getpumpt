@@ -291,7 +291,7 @@ export async function createBooking(input: CreateBookingInput) {
     try {
       const [bookingUser, bookingGym] = await Promise.all([
         prisma.user.findUnique({
-          where: { id: validated.userId },
+          where: { id: validated.userId, deletedAt: null },
           select: { email: true, firstName: true },
         }),
         prisma.gym.findUnique({

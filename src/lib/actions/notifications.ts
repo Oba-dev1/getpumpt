@@ -129,7 +129,7 @@ export async function getMemberNotifications(
   let targetUserId = user.id
   if (['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId && userId !== user.id) {
     const targetUser = await prisma.user.findUnique({
-      where: { id: userId, gymId: user.gymId },
+      where: { id: userId, gymId: user.gymId, deletedAt: null },
       select: { id: true },
     })
     if (!targetUser) {
@@ -157,7 +157,7 @@ export async function getMemberUnreadCount(userId?: string): Promise<number> {
   let targetUserId = user.id
   if (['ADMIN', 'SUPER_ADMIN'].includes(user.role) && userId && userId !== user.id) {
     const targetUser = await prisma.user.findUnique({
-      where: { id: userId, gymId: user.gymId },
+      where: { id: userId, gymId: user.gymId, deletedAt: null },
       select: { id: true },
     })
     if (!targetUser) {
@@ -240,7 +240,7 @@ export async function sendBulkNotification(
       throw new Error('A member must be selected for specific audience')
     }
     const target = await prisma.user.findUnique({
-      where: { id: validated.userId, gymId },
+      where: { id: validated.userId, gymId, deletedAt: null },
       select: { id: true },
     })
     if (!target) {
@@ -259,7 +259,7 @@ export async function sendBulkNotification(
   } else {
     // ALL — every MEMBER user in the gym
     const members = await prisma.user.findMany({
-      where: { gymId, role: 'MEMBER' },
+      where: { gymId, role: 'MEMBER', deletedAt: null },
       select: { id: true },
     })
     userIds = members.map((m) => m.id)

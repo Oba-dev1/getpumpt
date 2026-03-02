@@ -40,15 +40,12 @@ export async function assignMembershipToPlan(
     throw new Error('Cannot assign an inactive plan')
   }
 
+  // Check any existing record regardless of status — userId is @unique on Membership
   const existingMembership = await prisma.membership.findFirst({
-    where: {
-      userId: memberId,
-      gymId,
-      status: 'ACTIVE',
-    },
+    where: { userId: memberId, gymId },
   })
 
-  if (existingMembership) {
+  if (existingMembership?.status === 'ACTIVE' && existingMembership.endDate > new Date()) {
     throw new Error('Member already has an active membership. Cancel or expire it first.')
   }
 
@@ -66,21 +63,36 @@ export async function assignMembershipToPlan(
       break
   }
 
-  const membership = await prisma.membership.create({
-    data: {
-      userId: memberId,
-      gymId,
-      planId: validated.planId,
-      startDate,
-      endDate,
-      autoRenew: validated.autoRenew,
-      status: 'ACTIVE',
-    },
-    include: {
-      plan: { select: { name: true, price: true, currency: true } },
-      user: { select: { firstName: true, lastName: true } },
-    },
-  })
+  // Derive status from the calculated end date so historical start dates
+  // (e.g. imported payment dates) are stored as EXPIRED, not ACTIVE
+  const status = (endDate < new Date() ? 'EXPIRED' : 'ACTIVE') as 'EXPIRED' | 'ACTIVE'
+
+  const membershipData = {
+    planId: validated.planId,
+    startDate,
+    endDate,
+    autoRenew: validated.autoRenew,
+    status,
+  }
+
+  // If a prior record exists (e.g. from bulk import with unrecognised plan), update it.
+  // This avoids the @unique(userId) constraint violation that a plain create would throw.
+  const membership = existingMembership
+    ? await prisma.membership.update({
+        where: { id: existingMembership.id },
+        data: membershipData,
+        include: {
+          plan: { select: { name: true, price: true, currency: true } },
+          user: { select: { firstName: true, lastName: true } },
+        },
+      })
+    : await prisma.membership.create({
+        data: { userId: memberId, gymId, ...membershipData },
+        include: {
+          plan: { select: { name: true, price: true, currency: true } },
+          user: { select: { firstName: true, lastName: true } },
+        },
+      })
 
   revalidatePath('/admin/members')
   revalidatePath(`/admin/members/${memberId}`)

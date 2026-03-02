@@ -28,7 +28,7 @@ export async function getMemberProfile() {
   const user = await requireAuth()
 
   return prisma.user.findFirst({
-    where: { id: user.id, gymId: user.gymId },
+    where: { id: user.id, gymId: user.gymId, deletedAt: null },
     select: {
       id: true,
       firstName: true,

@@ -63,9 +63,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findFirst({
           where: gymId
             ? hasEmail
-              ? { email: email!, gymId }
-              : { phone: normalizedPhone!, gymId }
-            : { email: email!, role: { in: ['ADMIN', 'STAFF', 'SUPER_ADMIN'] } },
+              ? { email: email!, gymId, deletedAt: null }
+              : { phone: normalizedPhone!, gymId, deletedAt: null }
+            : { email: email!, role: { in: ['ADMIN', 'STAFF', 'SUPER_ADMIN'] }, deletedAt: null },
           include: {
             gym: {
               select: {
@@ -161,7 +161,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Code is valid — look up the user BEFORE deleting the token so a failed
         // user lookup does not permanently consume the OTP.
         const user = await prisma.user.findFirst({
-          where: { gymId, phone: normalized, role: 'MEMBER', status: 'ACTIVE' },
+          where: { gymId, phone: normalized, role: 'MEMBER', status: 'ACTIVE', deletedAt: null },
           include: {
             gym: { select: { id: true, name: true, slug: true, isActive: true } },
           },

@@ -52,6 +52,7 @@ export async function getMembers(gymId: string, options?: {
   const where: Prisma.UserWhereInput = {
     gymId,
     role: 'MEMBER',
+    deletedAt: null,
     ...(options?.search && {
       OR: [
         { firstName: { contains: options.search, mode: 'insensitive' } },
@@ -113,7 +114,7 @@ export async function getMemberById(gymId: string, memberId: string) {
   await requireGymPermission(gymId, 'members:view')
 
   const member = await prisma.user.findUnique({
-    where: { id: memberId, gymId },
+    where: { id: memberId, gymId, deletedAt: null },
     include: {
       membership: {
         include: {
@@ -220,8 +221,11 @@ export async function createMember(input: CreateMemberInput) {
   const user = await requireGymPermission(validated.gymId, 'members:create')
 
   const hashedPassword = await bcrypt.hash(validated.password, 10)
+  const phoneNormalized = validated.phone ? normalizePhone(validated.phone) : undefined
 
-  let member: Awaited<ReturnType<typeof prisma.user.create>>
+  let member: Awaited<ReturnType<typeof prisma.user.update>>
+  let reactivated = false
+
   try {
     member = await prisma.user.create({
       data: {
@@ -229,7 +233,7 @@ export async function createMember(input: CreateMemberInput) {
         firstName: validated.firstName,
         lastName: validated.lastName,
         email: validated.email,
-        phone: validated.phone ? normalizePhone(validated.phone) : undefined,
+        phone: phoneNormalized,
         passwordHash: hashedPassword,
         role: 'MEMBER',
         status: 'ACTIVE',
@@ -237,16 +241,44 @@ export async function createMember(input: CreateMemberInput) {
     })
   } catch (error) {
     if (isPrismaUniqueError(error)) {
-      const fields = (error.meta?.target as string[]) ?? []
-      if (fields.includes('phone')) {
-        throw new Error('A member with this phone number already exists in your gym.')
+      // Check if the conflict is with a previously soft-deleted member
+      const orConditions: Prisma.UserWhereInput[] = []
+      if (validated.email) orConditions.push({ email: validated.email })
+      if (phoneNormalized) orConditions.push({ phone: phoneNormalized })
+
+      const softDeleted = orConditions.length > 0
+        ? await prisma.user.findFirst({
+            where: { gymId: validated.gymId, deletedAt: { not: null }, OR: orConditions },
+          })
+        : null
+
+      if (softDeleted) {
+        member = await prisma.user.update({
+          where: { id: softDeleted.id },
+          data: {
+            firstName: validated.firstName,
+            lastName: validated.lastName,
+            email: validated.email,
+            phone: phoneNormalized,
+            passwordHash: hashedPassword,
+            deletedAt: null,
+            status: 'ACTIVE',
+          },
+        })
+        reactivated = true
+      } else {
+        const fields = (error.meta?.target as string[]) ?? []
+        if (fields.includes('phone')) {
+          throw new Error('A member with this phone number already exists in your gym.')
+        }
+        if (fields.includes('email')) {
+          throw new Error('A member with this email address already exists in your gym.')
+        }
+        throw new Error('A member with these details already exists.')
       }
-      if (fields.includes('email')) {
-        throw new Error('A member with this email address already exists in your gym.')
-      }
-      throw new Error('A member with these details already exists.')
+    } else {
+      throw error
     }
-    throw error
   }
 
   if (validated.planId) {
@@ -257,31 +289,43 @@ export async function createMember(input: CreateMemberInput) {
     if (plan) {
       const startDate = validated.startDate ?? new Date()
       const endDate = calculateEndDate(startDate, plan.durationValue, plan.durationType)
+      const membershipStatus = endDate < new Date() ? 'EXPIRED' : 'ACTIVE'
 
-      await prisma.membership.create({
-        data: {
-          gymId: validated.gymId,
-          userId: member.id,
-          planId: validated.planId,
-          status: 'ACTIVE',
-          startDate,
-          endDate,
-        },
-      })
+      // Use upsert pattern: reactivated members may already have a membership record
+      const existingMembership = await prisma.membership.findUnique({ where: { userId: member.id } })
+      if (existingMembership) {
+        await prisma.membership.update({
+          where: { userId: member.id },
+          data: { planId: validated.planId, status: membershipStatus, startDate, endDate },
+        })
+      } else {
+        await prisma.membership.create({
+          data: {
+            gymId: validated.gymId,
+            userId: member.id,
+            planId: validated.planId,
+            status: membershipStatus,
+            startDate,
+            endDate,
+          },
+        })
+      }
     }
   }
 
   logActivity({
     gymId: validated.gymId,
     userId: user.id,
-    action: 'CREATE',
+    action: reactivated ? 'UPDATE' : 'CREATE',
     resourceType: 'MEMBER',
     resourceId: member.id,
-    description: `Created member ${validated.firstName} ${validated.lastName}`,
+    description: reactivated
+      ? `Reactivated member ${validated.firstName} ${validated.lastName}`
+      : `Created member ${validated.firstName} ${validated.lastName}`,
   })
 
-  // Send account setup email with password reset link (fire-and-forget, only if email provided)
-  if (validated.email) {
+  // Send account setup email for new members only (not reactivations)
+  if (!reactivated && validated.email) {
     try {
       const gym = await prisma.gym.findUnique({
         where: { id: validated.gymId },
@@ -324,14 +368,16 @@ export async function createMember(input: CreateMemberInput) {
     }
   }
 
-  sendNotification(
-    validated.gymId,
-    member.id,
-    'GENERAL',
-    'Welcome!',
-    `Your account has been created, ${validated.firstName}. Sign in to explore your member portal.`,
-    '/member/dashboard'
-  )
+  if (!reactivated) {
+    sendNotification(
+      validated.gymId,
+      member.id,
+      'GENERAL',
+      'Welcome!',
+      `Your account has been created, ${validated.firstName}. Sign in to explore your member portal.`,
+      '/member/dashboard'
+    )
+  }
 
   revalidatePath('/admin/members')
   return member
@@ -379,8 +425,20 @@ export async function updateMember(
 export async function deleteMember(gymId: string, memberId: string) {
   const user = await requireGymPermission(gymId, 'members:delete')
 
-  await prisma.user.delete({
+  const member = await prisma.user.findUnique({
     where: { id: memberId, gymId },
+    select: { membership: { select: { status: true, endDate: true } } },
+  })
+
+  if (!member) throw new Error('Member not found')
+
+  if (member.membership?.status === 'ACTIVE' && member.membership.endDate > new Date()) {
+    throw new Error('Cannot delete a member with an active membership. Cancel their membership first.')
+  }
+
+  await prisma.user.update({
+    where: { id: memberId, gymId },
+    data: { deletedAt: new Date() },
   })
 
   logActivity({
@@ -393,6 +451,36 @@ export async function deleteMember(gymId: string, memberId: string) {
   })
 
   revalidatePath('/admin/members')
+}
+
+export async function bulkDeleteMembers(gymId: string, memberIds: string[]): Promise<{ deleted: number }> {
+  const user = await requireGymPermission(gymId, 'members:delete')
+
+  if (memberIds.length === 0) throw new Error('No members selected')
+  if (memberIds.length > 100) throw new Error('Maximum 100 members per bulk delete')
+
+  // Enforce the same rule as single delete: cannot delete members with an active membership
+  const deleted = await prisma.user.updateMany({
+    where: {
+      id: { in: memberIds },
+      gymId,
+      deletedAt: null,
+      NOT: { membership: { status: 'ACTIVE', endDate: { gt: new Date() } } },
+    },
+    data: { deletedAt: new Date() },
+  })
+
+  logActivity({
+    gymId,
+    userId: user.id,
+    action: 'DELETE',
+    resourceType: 'MEMBER',
+    description: `Bulk deleted ${deleted.count} member${deleted.count !== 1 ? 's' : ''}`,
+    metadata: { memberIds, deleted: deleted.count },
+  })
+
+  revalidatePath('/admin/members')
+  return { deleted: deleted.count }
 }
 
 export async function assignMembership(

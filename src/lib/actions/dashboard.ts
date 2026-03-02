@@ -12,7 +12,7 @@ export async function getDashboardStats(gymId: string) {
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
   const totalMembers = await prisma.user.count({
-    where: { gymId, role: 'MEMBER', status: 'ACTIVE' },
+    where: { gymId, role: 'MEMBER', status: 'ACTIVE', deletedAt: null },
   })
 
   const newMembersThisMonth = await prisma.user.count({
@@ -20,6 +20,7 @@ export async function getDashboardStats(gymId: string) {
       gymId,
       role: 'MEMBER',
       createdAt: { gte: startOfMonth },
+      deletedAt: null,
     },
   })
 

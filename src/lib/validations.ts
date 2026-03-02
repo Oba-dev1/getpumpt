@@ -291,7 +291,7 @@ export const createMemberSchema = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   planId: z.string().optional(),
-  startDate: z.date().optional(),
+  startDate: z.coerce.date().optional(),
 });
 
 export const updateMemberSchema = z.object({
@@ -487,6 +487,14 @@ export const bulkMemberRowSchema = z.object({
     z.string().email('Invalid email address').optional()
   ),
   phone: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().optional()
+  ),
+  planName: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().max(100).optional()
+  ),
+  startDate: z.preprocess(
     (v) => (v === '' ? undefined : v),
     z.string().optional()
   ),

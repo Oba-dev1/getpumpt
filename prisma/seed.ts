@@ -128,60 +128,57 @@ async function main() {
   // Create admin user for FitStudio
   const adminPwd = process.env.SEED_ADMIN_PASSWORD || crypto.randomBytes(16).toString('hex');
   const adminPassword = await bcrypt.hash(adminPwd, 10);
-  const adminUser = await prisma.user.upsert({
-    where: { gymId_email: { gymId: fitgym.id, email: 'admin@fitstudio.ng' } },
-    update: {},
-    create: {
-      gymId: fitgym.id,
-      email: 'admin@fitstudio.ng',
-      passwordHash: adminPassword,
-      firstName: 'Admin',
-      lastName: 'User',
-      role: 'ADMIN',
-      status: 'ACTIVE',
-      phone: '+234 800 000 0001',
-    },
-  });
+  const adminUser = await prisma.user.findFirst({ where: { gymId: fitgym.id, email: 'admin@fitstudio.ng' } })
+    ?? await prisma.user.create({
+      data: {
+        gymId: fitgym.id,
+        email: 'admin@fitstudio.ng',
+        passwordHash: adminPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        phone: '+234 800 000 0001',
+      },
+    });
 
   console.log(`Created admin user: ${adminUser.email} (password: ${adminPwd})`);
 
   // Create a test member user
   const memberPwd = process.env.SEED_MEMBER_PASSWORD || crypto.randomBytes(16).toString('hex');
   const memberPassword = await bcrypt.hash(memberPwd, 10);
-  const memberUser = await prisma.user.upsert({
-    where: { gymId_email: { gymId: fitgym.id, email: 'member@test.com' } },
-    update: {},
-    create: {
-      gymId: fitgym.id,
-      email: 'member@test.com',
-      passwordHash: memberPassword,
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'MEMBER',
-      status: 'ACTIVE',
-      phone: '+234 800 000 0002',
-    },
-  });
+  const memberUser = await prisma.user.findFirst({ where: { gymId: fitgym.id, email: 'member@test.com' } })
+    ?? await prisma.user.create({
+      data: {
+        gymId: fitgym.id,
+        email: 'member@test.com',
+        passwordHash: memberPassword,
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'MEMBER',
+        status: 'ACTIVE',
+        phone: '+234 800 000 0002',
+      },
+    });
 
   console.log(`Created test member: ${memberUser.email} (password: ${memberPwd})`);
 
   // Create a staff user (front desk)
   const staffPwd = process.env.SEED_STAFF_PASSWORD || crypto.randomBytes(16).toString('hex');
   const staffPassword = await bcrypt.hash(staffPwd, 10);
-  const staffUser = await prisma.user.upsert({
-    where: { gymId_email: { gymId: fitgym.id, email: 'staff@fitstudio.ng' } },
-    update: {},
-    create: {
-      gymId: fitgym.id,
-      email: 'staff@fitstudio.ng',
-      passwordHash: staffPassword,
-      firstName: 'Front Desk',
-      lastName: 'Staff',
-      role: 'STAFF',
-      status: 'ACTIVE',
-      phone: '+234 800 000 0003',
-    },
-  });
+  const staffUser = await prisma.user.findFirst({ where: { gymId: fitgym.id, email: 'staff@fitstudio.ng' } })
+    ?? await prisma.user.create({
+      data: {
+        gymId: fitgym.id,
+        email: 'staff@fitstudio.ng',
+        passwordHash: staffPassword,
+        firstName: 'Front Desk',
+        lastName: 'Staff',
+        role: 'STAFF',
+        status: 'ACTIVE',
+        phone: '+234 800 000 0003',
+      },
+    });
 
   console.log(`Created staff user: ${staffUser.email} (password: ${staffPwd})`);
 
