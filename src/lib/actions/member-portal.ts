@@ -1,5 +1,6 @@
 'use server'
 
+import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
@@ -10,6 +11,7 @@ import { createBooking } from '@/lib/actions/bookings'
 import type { MemberActionState } from '@/components/member/MemberActionForm'
 import {
   updateProfileSchema,
+  changePasswordSchema,
   membershipPaymentSchema,
   cancelBookingSchema,
   notificationIdSchema,
@@ -71,6 +73,48 @@ export async function updateMemberProfile(
   revalidatePath('/member/profile')
   revalidatePath('/member')
   return { status: 'success' as const, message: 'Profile updated.' }
+}
+
+export async function changeMemberPassword(
+  _prevState: MemberActionState,
+  formData: FormData
+) {
+  const user = await requireAuth()
+
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: formData.get('currentPassword'),
+    newPassword: formData.get('newPassword'),
+    confirmPassword: formData.get('confirmPassword'),
+  })
+
+  if (!parsed.success) {
+    const error = parsed.error.issues[0]
+    return { status: 'error' as const, message: error?.message || 'Invalid input' }
+  }
+
+  const dbUser = await prisma.user.findFirst({
+    where: { id: user.id, gymId: user.gymId, deletedAt: null },
+    select: { passwordHash: true },
+  })
+
+  if (!dbUser?.passwordHash) {
+    return { status: 'error' as const, message: 'Password change is not available for this account.' }
+  }
+
+  const isMatch = await bcrypt.compare(parsed.data.currentPassword, dbUser.passwordHash)
+  if (!isMatch) {
+    return { status: 'error' as const, message: 'Current password is incorrect.' }
+  }
+
+  const newHash = await bcrypt.hash(parsed.data.newPassword, 10)
+
+  await prisma.user.update({
+    where: { id: user.id, gymId: user.gymId },
+    data: { passwordHash: newHash },
+  })
+
+  revalidatePath('/member/profile')
+  return { status: 'success' as const, message: 'Password updated successfully.' }
 }
 
 export async function getMemberMembership() {
@@ -427,7 +471,7 @@ export async function markAllMemberNotificationsReadAction(
   const user = await requireAuth()
 
   await prisma.notification.updateMany({
-    where: { userId: user.id, isRead: false },
+    where: { userId: user.id, gymId: user.gymId, isRead: false },
     data: { isRead: true },
   })
 

@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -30,6 +28,9 @@ const trainerSchema = z.object({
   yearsExperience: z.string().optional(),
   imageUrl: z.string().optional(),
   isActive: z.boolean(),
+  isAvailableForPT: z.boolean(),
+  ptPrice: z.string().optional(),
+  ptDaysPerWeek: z.string().optional(),
 })
 
 type TrainerFormData = z.infer<typeof trainerSchema>
@@ -64,6 +65,7 @@ export default function EditTrainerPage() {
   })
 
   const isActive = watch('isActive')
+  const isAvailableForPT = watch('isAvailableForPT')
 
   useEffect(() => {
     async function fetchTrainer() {
@@ -83,6 +85,9 @@ export default function EditTrainerPage() {
           yearsExperience: trainer.yearsExperience ? String(trainer.yearsExperience) : '',
           imageUrl: trainer.imageUrl || '',
           isActive: trainer.isActive,
+          isAvailableForPT: trainer.isAvailableForPT,
+          ptPrice: trainer.ptPrice ? String(trainer.ptPrice) : '',
+          ptDaysPerWeek: trainer.ptDaysPerWeek ? String(trainer.ptDaysPerWeek) : '3',
         })
       } catch (error: any) {
         toast.error(error.message || 'Failed to load trainer')
@@ -111,6 +116,9 @@ export default function EditTrainerPage() {
         yearsExperience: data.yearsExperience ? Number(data.yearsExperience) : undefined,
         imageUrl: data.imageUrl?.trim() || undefined,
         isActive: data.isActive,
+        isAvailableForPT: data.isAvailableForPT,
+        ptPrice: data.ptPrice ? Number(data.ptPrice) : undefined,
+        ptDaysPerWeek: data.ptDaysPerWeek ? Number(data.ptDaysPerWeek) : 3,
       })
       toast.success('Trainer updated successfully')
       router.push('/admin/trainers')
@@ -208,7 +216,7 @@ export default function EditTrainerPage() {
                       Active status
                     </Label>
                     <p className="text-xs text-gray-500">
-                      Inactive trainers won’t appear in scheduling.
+                      Inactive trainers won't appear in scheduling.
                     </p>
                   </div>
                   <Switch
@@ -216,6 +224,52 @@ export default function EditTrainerPage() {
                     checked={isActive}
                     onCheckedChange={(value) => setValue('isActive', value)}
                   />
+                </div>
+
+                <div className="md:col-span-2 border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Personal Training (PT)</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
+                      <div>
+                        <Label htmlFor="isAvailableForPT" className="text-sm font-medium text-gray-900">
+                          Available for personal training
+                        </Label>
+                        <p className="text-xs text-gray-500">
+                          Members can browse and request PT sessions with this trainer.
+                        </p>
+                      </div>
+                      <Switch
+                        id="isAvailableForPT"
+                        checked={isAvailableForPT}
+                        onCheckedChange={(value) => setValue('isAvailableForPT', value)}
+                      />
+                    </div>
+                    {isAvailableForPT && (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="ptPrice">PT session price (NGN)</Label>
+                          <Input
+                            id="ptPrice"
+                            type="number"
+                            min="0"
+                            placeholder="e.g. 50000"
+                            {...register('ptPrice')}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ptDaysPerWeek">Days per week for PT</Label>
+                          <Input
+                            id="ptDaysPerWeek"
+                            type="number"
+                            min="1"
+                            max="7"
+                            placeholder="e.g. 3"
+                            {...register('ptDaysPerWeek')}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center justify-end gap-3">

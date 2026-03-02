@@ -198,10 +198,14 @@ export async function getGymMembershipPlans(gymId: string) {
 // Get gym trainers
 export async function getGymTrainers(gymId: string) {
   try {
-    return await prisma.trainer.findMany({
+    const trainers = await prisma.trainer.findMany({
       where: { gymId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
+    return trainers.map((t) => ({
+      ...t,
+      ptPrice: t.ptPrice ? Number(t.ptPrice) : null,
+    }));
   } catch (error) {
     return [];
   }

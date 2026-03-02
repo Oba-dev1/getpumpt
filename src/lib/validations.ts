@@ -148,6 +148,9 @@ export const trainerSchema = z.object({
   yearsExperience: z.number().int().nonnegative().optional(),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
+  isAvailableForPT: z.boolean().default(false),
+  ptPrice: z.number().nonnegative().optional(),
+  ptDaysPerWeek: z.number().int().min(1).max(7).default(3),
 });
 
 // ==================== CONTACT SCHEMAS ====================
@@ -402,6 +405,22 @@ export const initializePaymentSchema = z.object({
 export const verifyPaymentSchema = z.object({
   reference: z.string().min(1, 'Payment reference is required'),
 });
+
+// ==================== PT SESSION SCHEMAS ====================
+
+export const ptBookingSchema = z.object({
+  trainerId: z.string().min(1, 'Trainer is required'),
+  date: z.string().min(1, 'Preferred start date is required'),
+  sessionsPerWeek: z.coerce.number().int().min(1).max(7).default(1),
+  notes: z.string().max(500, 'Notes must be 500 characters or fewer').optional(),
+})
+
+export const ptSessionIdSchema = z.object({
+  sessionId: z.string().min(1, 'Session ID is required'),
+})
+
+export type PtBookingInput = z.infer<typeof ptBookingSchema>
+export type PtSessionIdInput = z.infer<typeof ptSessionIdSchema>
 
 // ==================== TYPE EXPORTS ====================
 

@@ -269,24 +269,27 @@ model ClassBooking {
 }
 
 model Trainer {
-  id              String            @id @default(cuid())
-  gymId           String
-  firstName       String
-  lastName        String
-  email           String
-  phone           String?
-  bio             String?
-  specialties     String[]
-  imageUrl        String?
-  certifications  String[]
-  yearsExperience Int?
-  isActive        Boolean           @default(true)
-  sortOrder       Int               @default(0)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  schedules       ClassSchedule[]
-  gym             Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  sessions        TrainingSession[]
+  id                String            @id @default(cuid())
+  gymId             String
+  firstName         String
+  lastName          String
+  email             String
+  phone             String?
+  bio               String?
+  specialties       String[]
+  imageUrl          String?
+  certifications    String[]
+  yearsExperience   Int?
+  isActive          Boolean           @default(true)
+  sortOrder         Int               @default(0)
+  isAvailableForPT  Boolean           @default(false)
+  ptPrice           Decimal?          @db.Decimal(10, 2)
+  ptDaysPerWeek     Int               @default(3)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  schedules         ClassSchedule[]
+  gym               Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  sessions          TrainingSession[]
 
   @@unique([gymId, email])
   @@index([gymId])
@@ -294,19 +297,21 @@ model Trainer {
 }
 
 model TrainingSession {
-  id        String        @id @default(cuid())
-  gymId     String
-  userId    String
-  trainerId String
-  date      DateTime
-  duration  Int
-  notes     String?
-  status    SessionStatus @default(SCHEDULED)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  gym       Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  trainer   Trainer       @relation(fields: [trainerId], references: [id])
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String        @id @default(cuid())
+  gymId           String
+  userId          String
+  trainerId       String
+  date            DateTime
+  duration        Int?
+  notes           String?
+  status          SessionStatus @default(SCHEDULED)
+  amount          Decimal?      @db.Decimal(10, 2)
+  sessionsPerWeek Int           @default(1)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  gym             Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  trainer         Trainer       @relation(fields: [trainerId], references: [id])
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([gymId])
   @@map("training_sessions")

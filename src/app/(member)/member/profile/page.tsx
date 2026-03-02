@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDate } from '@/lib/utils'
-import { getMemberProfile, updateMemberProfile } from '@/lib/actions/member-portal'
+import { getMemberProfile, updateMemberProfile, changeMemberPassword } from '@/lib/actions/member-portal'
 import { MemberActionForm } from '@/components/member/MemberActionForm'
 import { MemberActionProvider } from '@/components/member/MemberActionContext'
 import { MemberActionButton } from '@/components/member/MemberActionButton'
@@ -123,6 +123,65 @@ export default async function ProfilePage() {
                 <p className="text-xs text-slate-400">Member since</p>
                 <p className="text-sm text-slate-100">{formatDate(profile.createdAt)}</p>
               </div>
+            </CardContent>
+          </Card>
+        </section>
+      </MemberActionProvider>
+
+      <MemberActionProvider>
+        <section aria-labelledby="change-password-title">
+          <Card className="member-card">
+            <CardHeader className="member-card-header">
+              <CardTitle id="change-password-title" className="text-base text-white">Change Password</CardTitle>
+            </CardHeader>
+            <CardContent className="member-card-content">
+              <MemberActionForm action={changeMemberPassword} className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword" className="text-slate-200">
+                    Current password
+                  </Label>
+                  <Input
+                    id="currentPassword"
+                    name="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    className="border-white/10 bg-slate-900 text-slate-100"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-slate-200">
+                    New password
+                  </Label>
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    className="border-white/10 bg-slate-900 text-slate-100"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-slate-200">
+                    Confirm new password
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    className="border-white/10 bg-slate-900 text-slate-100"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-slate-500">
+                  Must be 8+ characters with uppercase, lowercase, and a number.
+                </p>
+                <MemberActionButton variant="gym" className="h-9 px-4 text-sm" pendingText="Updating...">
+                  Update password
+                </MemberActionButton>
+              </MemberActionForm>
             </CardContent>
           </Card>
         </section>
