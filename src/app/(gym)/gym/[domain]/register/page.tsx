@@ -6,9 +6,12 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { PasswordInput } from '@/components/ui/password-input';
 import { signupMember } from '@/lib/actions/member-signup';
 import { useGym } from '@/contexts/GymContext';
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 export default function GymRegisterPage() {
   const { gym } = useGym();
@@ -17,6 +20,8 @@ export default function GymRegisterPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -38,6 +43,8 @@ export default function GymRegisterPage() {
         phone,
         password,
         gymId: gym.id,
+        honeypot,
+        turnstileToken: turnstileToken ?? undefined,
       });
 
       if (!result.success) {
@@ -93,6 +100,23 @@ export default function GymRegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="mb-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 backdrop-blur-sm md:p-8">
+          {/* Honeypot — hidden from real users, catches bots that fill all fields */}
+          <div
+            aria-hidden="true"
+            style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }}
+          >
+            <label htmlFor="website">Website</label>
+            <input
+              id="website"
+              name="website"
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
+
           <div className="mb-4 grid grid-cols-2 gap-4">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="firstName">
@@ -167,10 +191,21 @@ export default function GymRegisterPage() {
             />
           </div>
 
+          {TURNSTILE_SITE_KEY && (
+            <div className="mb-4">
+              <Turnstile
+                siteKey={TURNSTILE_SITE_KEY}
+                onSuccess={setTurnstileToken}
+                onError={() => setTurnstileToken(null)}
+                onExpire={() => setTurnstileToken(null)}
+              />
+            </div>
+          )}
+
           <div className="mb-4">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (!!TURNSTILE_SITE_KEY && turnstileToken === null)}
               className="w-full rounded-xl bg-[rgb(var(--gym-primary))] py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 hover:shadow-lg hover:shadow-[rgba(var(--gym-primary-rgb),0.3)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating Your Account...' : 'Create Account'}

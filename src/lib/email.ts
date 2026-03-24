@@ -196,6 +196,38 @@ export const emailTemplates = {
     `,
   }),
 
+  memberEmailVerification: (data: { name: string; gymName: string; verifyUrl: string }) => ({
+    subject: `Verify your email - ${data.gymName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h1 style="color: #18181b; font-size: 24px; margin: 0 0 16px;">Verify your email</h1>
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 8px;">
+                Hi ${data.name},
+              </p>
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                Thanks for joining <strong>${data.gymName}</strong>. Click the button below to verify your email address.
+              </p>
+              <a href="${data.verifyUrl}" style="display: inline-block; background: #6366F1; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
+                Verify Email Address
+              </a>
+              <p style="color: #a1a1aa; font-size: 14px; margin: 32px 0 0;">
+                This link expires in 24 hours. If you didn't create an account, you can ignore this email.
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
   gymOwnerVerification: (data: { name: string; gymName: string; verifyUrl: string }) => ({
     subject: 'Verify your email to activate your gym',
     html: `
@@ -294,6 +326,14 @@ export async function sendClassBookingConfirmationEmail(
 export async function sendPasswordResetEmail(to: string, data: Parameters<typeof emailTemplates.passwordReset>[0], fromEmail?: string) {
   const { subject, html } = emailTemplates.passwordReset(data);
   return sendEmail({ to, subject, html, from: fromEmail });
+}
+
+export async function sendMemberVerificationEmail(
+  to: string,
+  data: Parameters<typeof emailTemplates.memberEmailVerification>[0]
+) {
+  const { subject, html } = emailTemplates.memberEmailVerification(data)
+  return sendEmail({ to, subject, html })
 }
 
 export async function sendGymOwnerVerificationEmail(
