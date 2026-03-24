@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { PasswordInput } from '@/components/ui/password-input';
 import { signupGymOwner } from '@/lib/actions/signup';
 import { ArrowRight, Building2, Users, CreditCard, BarChart3, Mail } from 'lucide-react';
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState('');
@@ -14,6 +17,8 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [gymName, setGymName] = useState('');
   const [country, setCountry] = useState('Nigeria');
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -32,6 +37,8 @@ export default function SignupPage() {
         password,
         gymName,
         country,
+        honeypot,
+        turnstileToken: turnstileToken ?? undefined,
       });
 
       if (!result.success) {
@@ -153,6 +160,23 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Honeypot — hidden from real users, catches bots that fill all fields */}
+            <div
+              aria-hidden="true"
+              style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }}
+            >
+              <label htmlFor="website">Website</label>
+              <input
+                id="website"
+                name="website"
+                type="text"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-300" htmlFor="firstName">
@@ -250,9 +274,18 @@ export default function SignupPage() {
               </select>
             </div>
 
+            {TURNSTILE_SITE_KEY && (
+              <Turnstile
+                siteKey={TURNSTILE_SITE_KEY}
+                onSuccess={setTurnstileToken}
+                onError={() => setTurnstileToken(null)}
+                onExpire={() => setTurnstileToken(null)}
+              />
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (!!TURNSTILE_SITE_KEY && turnstileToken === null)}
               className="group w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-500 hover:shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (

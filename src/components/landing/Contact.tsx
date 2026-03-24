@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { MapPin, Phone, Mail } from 'lucide-react';
 
 const hours = [
-  { day: 'Mon - Fri', time: '5AM - 11PM' },
-  { day: 'Saturday', time: '6AM - 10PM' },
-  { day: 'Sunday', time: '7AM - 9PM' },
-  { day: 'Holidays', time: '8AM - 6PM' },
+  { day: 'Mon - Sat', time: '24 Hours' },
+  { day: 'Sunday', time: 'Closed' },
 ];
 
 export default function Contact() {

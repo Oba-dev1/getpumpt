@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { signupRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter'
 import { getRedis } from '@/lib/redis'
 import { sendGymOwnerVerificationEmail } from '@/lib/email'
+import { verifyTurnstile } from '@/lib/turnstile'
 
 const signupSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
@@ -23,6 +24,11 @@ const signupSchema = z.object({
 })
 
 export type SignupInput = z.infer<typeof signupSchema>
+
+type SignupFormData = SignupInput & {
+  honeypot?: string
+  turnstileToken?: string
+}
 
 function generateSlug(name: string): string {
   return name
@@ -51,11 +57,25 @@ async function generateUniqueSlug(baseName: string): Promise<string> {
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24 // 24 hours in seconds
 
-export async function signupGymOwner(input: SignupInput) {
+export async function signupGymOwner(input: SignupFormData) {
   try {
+    // Honeypot check — silently succeed if a hidden field was filled (bot behaviour)
+    if (input.honeypot) {
+      return { success: true, requiresVerification: true }
+    }
+
     const headersList = await headers()
     const clientIp = getClientIp(headersList)
     await checkRateLimit(signupRateLimiter, clientIp)
+
+    // Turnstile verification
+    const turnstileOk = await verifyTurnstile(input.turnstileToken ?? '', clientIp)
+    if (!turnstileOk) {
+      return {
+        success: false,
+        error: 'Security check failed. Please refresh the page and try again.',
+      }
+    }
 
     const validated = signupSchema.parse(input)
 
