@@ -36,7 +36,12 @@ const memberSchema = z.object({
   address: z.string().optional(),
   emergencyContact: z.string().optional(),
   emergencyPhone: z.string().optional(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
   planId: z.string().optional(),
   startDate: z.string().optional(),
 })
@@ -278,7 +283,7 @@ export default function NewMemberPage() {
                   <PasswordInput
                     id="password"
                     {...register('password')}
-                    placeholder="Min. 8 characters"
+                    placeholder="Min. 8 chars, uppercase, lowercase, number"
                   />
                   {errors.password && (
                     <p className="text-sm text-red-600">
