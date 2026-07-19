@@ -223,37 +223,47 @@ export async function createMember(input: CreateMemberInput) {
   const hashedPassword = await bcrypt.hash(validated.password, 10)
   const phoneNormalized = validated.phone ? normalizePhone(validated.phone) : undefined
 
+  const identityConditions: Prisma.UserWhereInput[] = []
+  if (validated.email) identityConditions.push({ email: validated.email })
+  if (phoneNormalized) identityConditions.push({ phone: phoneNormalized })
+
   let member: Awaited<ReturnType<typeof prisma.user.update>>
   let reactivated = false
 
+  // Resolve duplicates BEFORE writing. The DB unique indexes on (gymId, email) and
+  // (gymId, phone) are partial (WHERE deletedAt IS NULL), so a plain create would NOT
+  // collide with a soft-deleted row — it would silently create a duplicate and orphan
+  // the removed member's history. Branch explicitly instead:
+  //   - active (non-deleted) match -> reject as a genuine duplicate
+  //   - soft-deleted match         -> reactivate that record in place (keeps id/history)
+  //   - no match                   -> create fresh
+  const activeConflict = identityConditions.length > 0
+    ? await prisma.user.findFirst({
+        where: { gymId: validated.gymId, deletedAt: null, OR: identityConditions },
+        select: { email: true, phone: true },
+      })
+    : null
+
+  if (activeConflict) {
+    if (phoneNormalized && activeConflict.phone === phoneNormalized) {
+      throw new Error('A member with this phone number already exists in your gym.')
+    }
+    if (validated.email && activeConflict.email === validated.email) {
+      throw new Error('A member with this email address already exists in your gym.')
+    }
+    throw new Error('A member with these details already exists.')
+  }
+
+  const softDeleted = identityConditions.length > 0
+    ? await prisma.user.findFirst({
+        where: { gymId: validated.gymId, deletedAt: { not: null }, OR: identityConditions },
+        select: { id: true },
+      })
+    : null
+
   try {
-    member = await prisma.user.create({
-      data: {
-        gymId: validated.gymId,
-        firstName: validated.firstName,
-        lastName: validated.lastName,
-        email: validated.email,
-        phone: phoneNormalized,
-        passwordHash: hashedPassword,
-        role: 'MEMBER',
-        status: 'ACTIVE',
-      },
-    })
-  } catch (error) {
-    if (isPrismaUniqueError(error)) {
-      // Check if the conflict is with a previously soft-deleted member
-      const orConditions: Prisma.UserWhereInput[] = []
-      if (validated.email) orConditions.push({ email: validated.email })
-      if (phoneNormalized) orConditions.push({ phone: phoneNormalized })
-
-      const softDeleted = orConditions.length > 0
-        ? await prisma.user.findFirst({
-            where: { gymId: validated.gymId, deletedAt: { not: null }, OR: orConditions },
-          })
-        : null
-
-      if (softDeleted) {
-        member = await prisma.user.update({
+    member = softDeleted
+      ? await prisma.user.update({
           where: { id: softDeleted.id },
           data: {
             firstName: validated.firstName,
@@ -265,20 +275,34 @@ export async function createMember(input: CreateMemberInput) {
             status: 'ACTIVE',
           },
         })
-        reactivated = true
-      } else {
-        const fields = (error.meta?.target as string[]) ?? []
-        if (fields.includes('phone')) {
-          throw new Error('A member with this phone number already exists in your gym.')
-        }
-        if (fields.includes('email')) {
-          throw new Error('A member with this email address already exists in your gym.')
-        }
-        throw new Error('A member with these details already exists.')
+      : await prisma.user.create({
+          data: {
+            gymId: validated.gymId,
+            firstName: validated.firstName,
+            lastName: validated.lastName,
+            email: validated.email,
+            phone: phoneNormalized,
+            passwordHash: hashedPassword,
+            role: 'MEMBER',
+            status: 'ACTIVE',
+          },
+        })
+    reactivated = Boolean(softDeleted)
+  } catch (error) {
+    // Safety net for the race where a conflicting row is inserted between the
+    // checks above and this write — translate the unique violation into a clear message.
+    if (isPrismaUniqueError(error)) {
+      const target = error.meta?.target
+      const targetStr = Array.isArray(target) ? target.join(',') : String(target ?? '')
+      if (targetStr.includes('phone')) {
+        throw new Error('A member with this phone number already exists in your gym.')
       }
-    } else {
-      throw error
+      if (targetStr.includes('email')) {
+        throw new Error('A member with this email address already exists in your gym.')
+      }
+      throw new Error('A member with these details already exists.')
     }
+    throw error
   }
 
   if (validated.planId) {
@@ -391,11 +415,17 @@ export async function updateMember(
   const validated = updateMemberSchema.parse(input)
   const user = await requireGymPermission(gymId, 'members:edit')
 
+  // Normalize phone to the same E.164 format used at creation/login so a member
+  // whose phone is edited can still be found by phone lookup (OTP + password login).
+  const data = validated.phone
+    ? { ...validated, phone: normalizePhone(validated.phone) }
+    : validated
+
   let member: Awaited<ReturnType<typeof prisma.user.update>>
   try {
     member = await prisma.user.update({
       where: { id: memberId, gymId },
-      data: validated,
+      data,
     })
   } catch (error) {
     if (isPrismaUniqueError(error)) {

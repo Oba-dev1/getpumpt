@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { redirect } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-helpers'
+import { normalizePhone } from '@/lib/otp-helpers'
 import { initializeMembershipPayment } from '@/lib/actions/payments'
 import { createBooking } from '@/lib/actions/bookings'
 import type { MemberActionState } from '@/components/member/MemberActionForm'
@@ -61,14 +62,22 @@ export async function updateMemberProfile(
     return { status: 'error' as const, message: error?.message || 'Invalid input' }
   }
 
-  await prisma.user.update({
-    where: { id: user.id, gymId: user.gymId },
-    data: {
-      firstName: parsed.data.firstName,
-      lastName: parsed.data.lastName,
-      phone: parsed.data.phone || null,
-    },
-  })
+  try {
+    await prisma.user.update({
+      where: { id: user.id, gymId: user.gymId },
+      data: {
+        firstName: parsed.data.firstName,
+        lastName: parsed.data.lastName,
+        // Store phone in E.164 so it matches the format used by phone/OTP login lookups.
+        phone: parsed.data.phone ? normalizePhone(parsed.data.phone) : null,
+      },
+    })
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: unknown }).code === 'P2002') {
+      return { status: 'error' as const, message: 'That phone number is already in use by another member.' }
+    }
+    throw error
+  }
 
   revalidatePath('/member/profile')
   revalidatePath('/member')

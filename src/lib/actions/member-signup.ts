@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { signupRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter'
 import { getRedis } from '@/lib/redis'
 import { verifyTurnstile } from '@/lib/turnstile'
+import { normalizePhone } from '@/lib/otp-helpers'
 import { sendMemberVerificationEmail } from '@/lib/email'
 
 const memberSignupSchema = z.object({
@@ -55,10 +56,13 @@ export async function signupMember(input: MemberSignupFormData) {
 
     const validated = memberSignupSchema.parse(input)
 
+    // Only non-deleted members block re-registration — the DB unique index is
+    // partial (WHERE deletedAt IS NULL), so a previously removed member may sign up again.
     const existingUser = await prisma.user.findFirst({
       where: {
         email: validated.email,
         gymId: validated.gymId,
+        deletedAt: null,
       },
     })
 
@@ -81,19 +85,37 @@ export async function signupMember(input: MemberSignupFormData) {
     }
 
     const hashedPassword = await bcrypt.hash(validated.password, 10)
+    // Store phone in E.164 so self-registered members can log in by phone/OTP,
+    // which look members up by the same normalized format.
+    const normalizedPhone = validated.phone ? normalizePhone(validated.phone) : undefined
 
-    const member = await prisma.user.create({
-      data: {
-        gymId: validated.gymId,
-        firstName: validated.firstName,
-        lastName: validated.lastName,
-        email: validated.email,
-        phone: validated.phone,
-        passwordHash: hashedPassword,
-        role: 'MEMBER',
-        status: 'ACTIVE',
-      },
-    })
+    let member: Awaited<ReturnType<typeof prisma.user.create>>
+    try {
+      member = await prisma.user.create({
+        data: {
+          gymId: validated.gymId,
+          firstName: validated.firstName,
+          lastName: validated.lastName,
+          email: validated.email,
+          phone: normalizedPhone,
+          passwordHash: hashedPassword,
+          role: 'MEMBER',
+          status: 'ACTIVE',
+        },
+      })
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: unknown }).code === 'P2002') {
+        const target = (error as { meta?: { target?: unknown } }).meta?.target
+        const targetStr = Array.isArray(target) ? target.join(',') : String(target ?? '')
+        return {
+          success: false,
+          error: targetStr.includes('phone')
+            ? 'An account with this phone number already exists at this gym'
+            : 'An account with this email already exists at this gym',
+        }
+      }
+      throw error
+    }
 
     if (validated.planId) {
       const plan = await prisma.membershipPlan.findUnique({
