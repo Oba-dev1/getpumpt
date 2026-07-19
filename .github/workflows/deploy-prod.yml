@@ -31,6 +31,9 @@ jobs:
       - name: Deploy to Vercel (Production)
         uses: amondnet/vercel-action@v25
         with:
+          # Pin a current Vercel CLI; the version bundled with the action (25.x)
+          # is rejected by Vercel's API, which now requires >= 47.2.2.
+          vercel-version: latest
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
