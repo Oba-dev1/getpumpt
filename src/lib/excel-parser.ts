@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { normalizePhone, normalizePlanName } from '@/lib/utils'
+import { normalizePlanName, normalizePhone } from '@/lib/utils'
 
 export type MemberField = 'firstName' | 'lastName' | 'fullName' | 'email' | 'phone' | 'planName' | 'startDate' | 'skip'
 
@@ -190,9 +190,9 @@ export function applyColumnMapping(
         mapped[field] = value
       } else if (field === 'phone') {
         if (value) {
-          const { value: normalized, changed } = normalizePhone(value)
+          const normalized = normalizePhone(value)
           mapped.phone = normalized
-          if (changed) qualityIssues.push({ field: 'phone', original: value, normalized })
+          if (normalized !== value) qualityIssues.push({ field: 'phone', original: value, normalized })
         } else {
           mapped.phone = value
         }

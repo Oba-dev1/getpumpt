@@ -5,27 +5,12 @@
 
 import crypto from 'crypto'
 
+// Phone normalisation lives in the client-safe utils module so browser code
+// (e.g. Excel import preview) can share the exact same E.164 logic without
+// pulling this file's node:crypto import into the client bundle.
+export { normalizePhone } from '@/lib/utils'
+
 const OTP_MAX_ATTEMPTS = 5
-
-/**
- * Normalise a Nigerian phone number to E.164 format (+234...).
- * Accepts: 08012345678, +2348012345678, 2348012345678
- * Returns: +2348012345678
- */
-export function normalizePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '')
-
-  if (digits.startsWith('234')) {
-    return `+${digits}`
-  }
-
-  if (digits.startsWith('0') && digits.length >= 10) {
-    return `+234${digits.slice(1)}`
-  }
-
-  // Already in a usable format — prefix + if missing
-  return phone.startsWith('+') ? phone : `+${digits}`
-}
 
 /**
  * Generate a cryptographically random 6-digit OTP code.

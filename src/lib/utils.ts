@@ -85,17 +85,25 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Normalize a Nigerian phone number.
-// Strips non-digit characters, then prepends "0" to any 10-digit number that
-// starts with 7, 8, or 9 (the valid MTN/Airtel/Glo/9mobile prefixes).
-// Returns both the cleaned value and a flag indicating whether it changed.
-export function normalizePhone(raw: string): { value: string; changed: boolean } {
-  const digits = raw.replace(/\D/g, '')
-  if (digits.length === 10 && /^[789]/.test(digits)) {
-    return { value: '0' + digits, changed: true }
+// Normalize a Nigerian phone number to E.164 format (+234...).
+// This is the single source of truth used everywhere phones are stored or looked
+// up (member creation, imports, profile edits, and phone/OTP login), so a number
+// entered as 08012345678, 2348012345678, or +2348012345678 always matches.
+// Kept in this client-safe module (no node built-ins) so it can also run in the
+// browser during Excel import preview.
+export function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+
+  if (digits.startsWith('234')) {
+    return `+${digits}`
   }
-  const cleaned = digits.length > 0 ? digits : raw
-  return { value: cleaned, changed: cleaned !== raw }
+
+  if (digits.startsWith('0') && digits.length >= 10) {
+    return `+234${digits.slice(1)}`
+  }
+
+  // Already in a usable format — prefix + if missing
+  return phone.startsWith('+') ? phone : `+${digits}`
 }
 
 // Normalize a membership plan name by stripping common decorators that real
